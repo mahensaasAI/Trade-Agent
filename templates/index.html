@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>📈 Stock Analysis Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="header">
+            <div class="logo">📈 StockBot</div>
+            <div class="search-bar">
+                <input type="text" id="symbolInput" placeholder="Enter stock symbol (e.g., AAPL, TSLA, GOOGL)" />
+                <select id="periodSelect">
+                    <option value="1mo">1 Month</option>
+                    <option value="3mo">3 Months</option>
+                    <option value="6mo">6 Months</option>
+                    <option value="1y" selected>1 Year</option>
+                    <option value="5y">5 Years</option>
+                    <option value="max">Max</option>
+                </select>
+                <button id="analyzeBtn" onclick="analyzeStock()">🔍 Analyze</button>
+                <button id="newsBtn" onclick="analyzeNews()">📰 News</button>
+                <button id="strategyBtn" onclick="analyzeStrategy()">🧠 Strategy</button>
+                <button id="optionsBtn" onclick="analyzeOptions()">🎲 Options</button>
+            </div>
+        </header>
+
+        <!-- LIVE TICKER BAR -->
+        <div class="live-ticker-bar">
+            <div class="ticker-label">🔴 LIVE</div>
+            <div class="ticker-track">
+                <div class="ticker-content" id="tickerContent">
+                    <span class="ticker-item">Loading live data...</span>
+                </div>
+            </div>
+            <div class="ticker-time" id="tickerTime">--:--:--</div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- LEFT PANEL - Dashboard -->
+            <div class="dashboard">
+                <!-- Loading Spinner -->
+                <div id="loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Analyzing stock data...</p>
+                </div>
+
+                <!-- Welcome Screen -->
+                <div id="welcome" class="welcome-screen">
+                    <h1>Welcome to Stock Analysis Chatbot 📊</h1>
+                    <p>Enter a stock symbol above to get started</p>
+                    <div class="feature-cards">
+                        <div class="feature-card">
+                            <span class="icon">📈</span>
+                            <h3>Price Analysis</h3>
+                            <p>Candlestick charts, moving averages & trends</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="icon">💰</span>
+                            <h3>ROI Calculator</h3>
+                            <p>Track returns over time with interactive graphs</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="icon">📰</span>
+                            <h3>News Sentiment</h3>
+                            <p>AI-powered positive/negative news analysis</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="icon">🤖</span>
+                            <h3>Smart Chatbot</h3>
+                            <p>Ask questions about stocks, options & futures</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metrics Cards -->
+                <div id="metricsSection" class="metrics-section hidden">
+                    <h2 id="stockTitle" class="stock-title"></h2>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <span class="metric-label">Current Price</span>
+                            <span class="metric-value" id="mPrice">—</span>
+                        </div>
+                        <div class="metric-card roi-card">
+                            <span class="metric-label">ROI</span>
+                            <span class="metric-value" id="mROI">—</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">52W High</span>
+                            <span class="metric-value" id="mHigh">—</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">52W Low</span>
+                            <span class="metric-value" id="mLow">—</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">Market Cap</span>
+                            <span class="metric-value" id="mCap">—</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">P/E Ratio</span>
+                            <span class="metric-value" id="mPE">—</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">EPS</span>
+                            <span class="metric-value" id="mEPS">—</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">Dividend</span>
+                            <span class="metric-value" id="mDiv">—</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">Beta</span>
+                            <span class="metric-value" id="mBeta">—</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">Avg Volume</span>
+                            <span class="metric-value" id="mVol">—</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">Sector</span>
+                            <span class="metric-value small" id="mSector">—</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">Industry</span>
+                            <span class="metric-value small" id="mIndustry">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div id="chartsSection" class="charts-section hidden">
+                    <div class="chart-tabs">
+                        <button class="tab active" onclick="showChart('price', this)">📈 Price</button>
+                        <button class="tab live-tab" onclick="showLiveChart(this)"><span class="live-dot"></span> Live</button>
+                        <button class="tab" onclick="showChart('roi', this)">💰 ROI</button>
+                        <button class="tab" onclick="showChart('volume', this)">📊 Volume</button>
+                        <button class="tab" onclick="showChart('ma', this)">📉 Moving Avg</button>
+                        <button class="tab" onclick="showChart('rsi', this)">🔥 RSI</button>
+                        <button class="tab" onclick="showChart('macd', this)">⚡ MACD</button>
+                        <button class="tab" onclick="showChart('bollinger', this)">🎯 Bollinger</button>
+                    </div>
+                    <div class="live-bar hidden" id="liveBar">
+                        <span class="live-indicator"><span class="live-pulse"></span> LIVE</span>
+                        <span id="livePrice" class="live-price">—</span>
+                        <span id="liveChange" class="live-change">—</span>
+                        <span id="liveHighLow" class="live-hl">—</span>
+                        <span id="liveTimestamp" class="live-ts">—</span>
+                    </div>
+                    <div id="chartContainer" class="chart-container"></div>
+                </div>
+
+                <!-- News Section -->
+                <div id="newsSection" class="news-section hidden">
+                    <h2>📰 News Sentiment Analysis</h2>
+                    <div id="sentimentSummary" class="sentiment-summary"></div>
+                    <div id="sentimentChartContainer" class="sentiment-chart"></div>
+                    <div id="newsList" class="news-list"></div>
+                </div>
+
+                <!-- Strategy Section -->
+                <div id="strategySection" class="strategy-section hidden">
+                    <h2>🧠 Trading Strategy Analysis</h2>
+
+                    <!-- Overall Recommendation -->
+                    <div id="overallSignal" class="overall-signal"></div>
+
+                    <!-- Strategy Cards Grid -->
+                    <div class="strategy-grid">
+                        <!-- RSI -->
+                        <div class="strategy-card">
+                            <div class="strategy-card-header">
+                                <span class="strategy-icon">📊</span>
+                                <h3>RSI (Relative Strength Index)</h3>
+                            </div>
+                            <div class="strategy-value" id="sRSIValue">—</div>
+                            <div class="strategy-signal" id="sRSISignal">—</div>
+                            <div class="strategy-desc">Measures momentum. Below 30 = oversold, Above 70 = overbought</div>
+                        </div>
+
+                        <!-- MACD -->
+                        <div class="strategy-card">
+                            <div class="strategy-card-header">
+                                <span class="strategy-icon">📈</span>
+                                <h3>MACD</h3>
+                            </div>
+                            <div class="strategy-value" id="sMACDValue">—</div>
+                            <div class="strategy-signal" id="sMACDSignal">—</div>
+                            <div class="strategy-desc">Trend-following indicator. Bullish when MACD crosses above signal line</div>
+                        </div>
+
+                        <!-- Bollinger Bands -->
+                        <div class="strategy-card">
+                            <div class="strategy-card-header">
+                                <span class="strategy-icon">📉</span>
+                                <h3>Bollinger Bands</h3>
+                            </div>
+                            <div class="strategy-value" id="sBBValue">—</div>
+                            <div class="strategy-signal" id="sBBSignal">—</div>
+                            <div class="strategy-desc">Shows volatility. Price near upper band = overbought, lower = oversold</div>
+                        </div>
+
+                        <!-- Support & Resistance -->
+                        <div class="strategy-card">
+                            <div class="strategy-card-header">
+                                <span class="strategy-icon">🎯</span>
+                                <h3>Support & Resistance</h3>
+                            </div>
+                            <div class="strategy-value" id="sSRValue">—</div>
+                            <div class="strategy-signal" id="sSRSignal">—</div>
+                            <div class="strategy-desc">Key price levels where stock tends to bounce or reverse</div>
+                        </div>
+
+                        <!-- MA Crossover -->
+                        <div class="strategy-card">
+                            <div class="strategy-card-header">
+                                <span class="strategy-icon">✨</span>
+                                <h3>MA Crossover</h3>
+                            </div>
+                            <div class="strategy-value" id="sMAValue">MA50 vs MA200</div>
+                            <div class="strategy-signal" id="sMASignal">—</div>
+                            <div class="strategy-desc">Golden Cross (bullish) or Death Cross (bearish)</div>
+                        </div>
+                    </div>
+
+                    <!-- Strategy Charts -->
+                    <div class="strategy-charts">
+                        <div class="chart-tabs">
+                            <button class="stab active" onclick="showStratChart('rsi', this)">📊 RSI</button>
+                            <button class="stab" onclick="showStratChart('macd', this)">📈 MACD</button>
+                            <button class="stab" onclick="showStratChart('bollinger', this)">📉 Bollinger</button>
+                        </div>
+                        <div id="stratChartContainer" class="chart-container"></div>
+                    </div>
+                </div>
+
+                <!-- Options Section -->
+                <div id="optionsSection" class="strategy-section hidden">
+                    <h2>🎲 Options & Iron Condor Analysis</h2>
+
+                    <div id="optionsExpiry" class="overall-signal"></div>
+
+                    <div class="strategy-grid">
+                        <!-- Put/Call Ratio -->
+                        <div class="strategy-card">
+                            <div class="strategy-card-header">
+                                <span class="strategy-icon">📊</span>
+                                <h3>Put/Call Ratio</h3>
+                            </div>
+                            <div class="strategy-value" id="oPCValue">—</div>
+                            <div class="strategy-signal" id="oPCSignal">—</div>
+                            <div class="strategy-desc">Ratio > 1.2 = bearish sentiment, < 0.7 = bullish</div>
+                        </div>
+
+                        <!-- Implied Volatility -->
+                        <div class="strategy-card">
+                            <div class="strategy-card-header">
+                                <span class="strategy-icon">🌊</span>
+                                <h3>Implied Volatility</h3>
+                            </div>
+                            <div class="strategy-value" id="oIVValue">—</div>
+                            <div class="strategy-signal" id="oIVSignal">—</div>
+                            <div class="strategy-desc">High IV = expensive premiums, Low IV = cheap premiums</div>
+                        </div>
+
+                        <!-- Iron Condor -->
+                        <div class="strategy-card" style="grid-column: span 2;">
+                            <div class="strategy-card-header">
+                                <span class="strategy-icon">🦅</span>
+                                <h3>Iron Condor</h3>
+                            </div>
+                            <div class="strategy-value" id="oICValue">—</div>
+                            <div class="strategy-signal" id="oICSignal">—</div>
+                            <div class="strategy-desc">Sell OTM put + call spreads. Profits if price stays in range. Limited risk & reward.</div>
+                        </div>
+
+                        <!-- Call Info -->
+                        <div class="strategy-card">
+                            <div class="strategy-card-header">
+                                <span class="strategy-icon">📈</span>
+                                <h3>Calls Summary</h3>
+                            </div>
+                            <div class="strategy-value" id="oCallValue">—</div>
+                            <div class="strategy-signal" id="oCallSignal">—</div>
+                            <div class="strategy-desc">Total call volume and open interest</div>
+                        </div>
+
+                        <!-- Put Info -->
+                        <div class="strategy-card">
+                            <div class="strategy-card-header">
+                                <span class="strategy-icon">📉</span>
+                                <h3>Puts Summary</h3>
+                            </div>
+                            <div class="strategy-value" id="oPutValue">—</div>
+                            <div class="strategy-signal" id="oPutSignal">—</div>
+                            <div class="strategy-desc">Total put volume and open interest</div>
+                        </div>
+                    </div>
+
+                    <!-- Options Charts -->
+                    <div class="strategy-charts">
+                        <div class="chart-tabs">
+                            <button class="otab active" onclick="showOptChart('putcall', this)">📊 Put/Call OI</button>
+                            <button class="otab" onclick="showOptChart('ironCondor', this)">🦅 Iron Condor Payoff</button>
+                        </div>
+                        <div id="optChartContainer" class="chart-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL - Chatbot -->
+            <div class="chatbot-panel">
+                <div class="chat-header">
+                    <span>🤖 Stock Assistant</span>
+                    <span class="status">Online</span>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot">
+                        <div class="message-content">
+                            👋 Hi! I'm your <strong>Stock Analysis Assistant</strong>.<br><br>
+                            You can ask me:<br>
+                            • <em>What is ROI?</em><br>
+                            • <em>What are options?</em><br>
+                            • <em>Analyze AAPL</em><br>
+                            • <em>What is PE ratio?</em><br><br>
+                            Or use the search bar to analyze any stock! 📈
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="Ask me about stocks..." onkeydown="if(event.key==='Enter')sendChat()" />
+                    <button onclick="sendChat()">Send</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

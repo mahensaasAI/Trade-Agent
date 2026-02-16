@@ -1,0 +1,6 @@
+flask
+yfinance
+vaderSentiment
+requests
+pandas
+plotly
