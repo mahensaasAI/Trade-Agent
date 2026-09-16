@@ -1,0 +1,13 @@
+{
+  "name": "ysquare-workplace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Y Square Workplace: Athlete Edge, StudyPals and Event Planner agents on n8n, same architecture as Neon Logistics.",
+  "scripts": {
+    "gen": "node workflows/gen_ui.js && node workflows/gen_workflows.js",
+    "gen:ui": "node workflows/gen_ui.js",
+    "gen:workflows": "node workflows/gen_workflows.js",
+    "deploy:ui": "node workflows/gen_ui.js && node workflows/deploy_ui.js",
+    "check": "node workflows/check.js"
+  }
+}
