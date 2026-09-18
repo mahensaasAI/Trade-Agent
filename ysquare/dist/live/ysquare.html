@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en" data-t="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Y Square Workplace</title>
+<meta name="description" content="Y Square Workplace: Athlete Edge, StudyPals (tutor, lessons, quizzes) and Event Planner agents, plus volunteer opportunities. Free with Gemini Flash, Mistral and Groq; Premium adds Claude and ChatGPT.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23e0562b'/%3E%3Ctext x='32' y='42' font-family='Inter,Arial' font-weight='800' font-size='30' fill='white' text-anchor='middle'%3EY²%3C/text%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f5f6f8;--panel:#fff;--panel2:#fafbfc;--line:#e5e7eb;--line2:#d5d9e0;--tx:#0f1218;--tx2:#5a6170;--tx3:#8b91a0;--ac:#e0562b;--ac2:#f2784f;--acs:#fff1ec;--acl:#fdd9cc;--ok:#0d8a5f;--oks:#e6f5ee;--warn:#b45309;--warns:#fdf2e2;--err:#c0392b;--errs:#fdeceb;--info:#2563eb;--infos:#e8efff;--mut:#6b7280;--muts:#f0f1f4;--sh:0 1px 2px rgba(16,20,30,.05),0 1px 3px rgba(16,20,30,.05);--sh2:0 10px 30px rgba(16,20,30,.13);--r:12px}
+[data-t="dark"]{--bg:#0c0e13;--panel:#151821;--panel2:#1a1e28;--line:#252a35;--line2:#343a48;--tx:#e9ebf1;--tx2:#9aa1b1;--tx3:#6d7484;--ac:#f2784f;--ac2:#ff9a78;--acs:#2a1a14;--acl:#4a2a1f;--ok:#3fd699;--oks:#0f2a20;--warn:#f0b429;--warns:#2a2211;--err:#ff7070;--errs:#2d1618;--info:#7ea2ff;--infos:#1a2340;--mut:#8b91a0;--muts:#1c202a;--sh:0 1px 2px rgba(0,0,0,.45);--sh2:0 12px 34px rgba(0,0,0,.55)}
+html,body{height:100%}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--ac);text-decoration:none}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:6px}
+.ic{width:16px;height:16px;flex:none;display:block}.ic18{width:18px;height:18px}.ic22{width:22px;height:22px}
+.hide{display:none!important}
+.spin{animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+/* SHELL */
+.shell{display:flex;min-height:100vh;width:100%}
+.sb{width:248px;flex:none;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.sb-brand{display:flex;align-items:center;gap:11px;padding:18px 18px 14px;border-bottom:1px solid var(--line)}
+.logo{width:36px;height:36px;flex:none;border-radius:10px;background:linear-gradient(135deg,var(--ac),#f8b26a);display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px;letter-spacing:-.5px}
+.sb-brand b{display:block;font-size:15px;letter-spacing:-.3px}.sb-brand small{display:block;color:var(--tx3);font-size:11.5px;margin-top:-2px}
+.nav{padding:12px 10px;display:grid;gap:2px}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;color:var(--tx2);font-weight:500}
+.nav a:hover{background:var(--muts);color:var(--tx)}.nav a.on{background:var(--acs);color:var(--ac)}
+.nav .sec{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--tx3);padding:12px 11px 4px;font-weight:600}
+.sb-foot{margin-top:auto;padding:12px;border-top:1px solid var(--line);display:grid;gap:8px}
+.plan-card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel2);font-size:12.5px}
+.plan-card b{display:block;margin-bottom:2px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:12px;padding:12px 22px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+.top h1{font-size:16px;font-weight:650;letter-spacing:-.3px}
+.top .sp{flex:1}
+.who{display:flex;align-items:center;gap:8px;padding:5px 10px 5px 5px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);font-size:12.5px}
+.av{width:26px;height:26px;border-radius:50%;background:var(--acs);color:var(--ac);display:grid;place-items:center;font-size:11px;font-weight:700;flex:none;overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+.content{padding:22px;flex:1;min-width:0}
+.wrap{max-width:1180px;margin:0 auto}
+/* BUTTONS + FORMS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 14px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);color:var(--tx);font-weight:550;cursor:pointer;white-space:nowrap;line-height:1.2}
+.btn:hover{background:var(--muts)}.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.p{background:var(--ac);border-color:var(--ac);color:#fff}.btn.p:hover{background:var(--ac2)}
+.btn.g{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.s{padding:5px 10px;font-size:12.5px;border-radius:7px}.btn.xs{padding:3px 8px;font-size:12px;border-radius:6px}
+.btn.ghost{border-color:transparent;background:transparent}.btn.ghost:hover{background:var(--muts)}
+.btn.icon{padding:7px;border-radius:8px}
+.f{display:grid;gap:5px;margin-bottom:12px}.f label{font-size:12.5px;font-weight:600;color:var(--tx2)}
+.f input,.f select,.f textarea{padding:9px 11px;border:1px solid var(--line2);border-radius:9px;background:var(--panel);width:100%}
+.f textarea{min-height:76px;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--ac);outline:none;box-shadow:0 0 0 3px var(--acl)}
+.f .help{font-size:11.5px;color:var(--tx3)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row.between{justify-content:space-between}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+/* CARDS */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
+.card .hd{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line)}
+.card .hd h3{font-size:14px;font-weight:650}.card .hd .sp{flex:1}
+.card .bd{padding:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi b{display:block;font-size:22px;letter-spacing:-.6px;font-weight:700}.kpi span{font-size:12px;color:var(--tx3)}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--muts);color:var(--tx2);white-space:nowrap}
+.badge.ok{background:var(--oks);color:var(--ok)}.badge.warn{background:var(--warns);color:var(--warn)}.badge.err{background:var(--errs);color:var(--err)}.badge.ac{background:var(--acs);color:var(--ac)}.badge.info{background:var(--infos);color:var(--info)}
+.muted{color:var(--tx3)}.small{font-size:12.5px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.empty{padding:34px 16px;text-align:center;color:var(--tx3)}
+/* HOME */
+.hero{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;align-items:stretch;margin-bottom:22px}
+.hero .lead{padding:30px 32px;border-radius:16px;background:linear-gradient(140deg,#1b1a2f,#3b2b52 55%,var(--ac));color:#fff;display:flex;flex-direction:column;gap:12px;justify-content:center}
+.hero .lead h2{font-size:30px;letter-spacing:-.9px;line-height:1.15;font-weight:750}
+.hero .lead p{opacity:.88;max-width:540px;font-size:15px}
+.hero .lead .row{margin-top:6px}
+.hero .lead .btn{background:#fff;border-color:#fff;color:#1b1a2f}.hero .lead .btn.o{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+.tiers{display:grid;gap:10px}
+.tier{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--panel);box-shadow:var(--sh)}
+.tier b{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:6px}.tier ul{list-style:none;display:grid;gap:4px;font-size:13px;color:var(--tx2)}
+.tier li{display:flex;gap:7px;align-items:flex-start}.tier li:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ac);margin-top:7px;flex:none}
+.tier.prem{border-color:var(--acl);background:linear-gradient(180deg,var(--acs),var(--panel))}
+.agents{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.agent{display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:14px;cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative;overflow:hidden}
+.agent:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
+.agent .ai{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;color:#fff}
+.agent h3{font-size:16px;letter-spacing:-.3px}.agent p{color:var(--tx2);font-size:13px}
+.agent .caps{display:flex;flex-wrap:wrap;gap:5px}.agent .caps span{font-size:11.5px;background:var(--muts);border-radius:6px;padding:2px 7px;color:var(--tx2)}
+.agent .go{margin-top:auto;display:flex;align-items:center;justify-content:space-between;font-weight:600;color:var(--ac)}
+/* WORKSPACE (side panel + chat) */
+.ws{display:grid;grid-template-columns:330px 1fr;gap:18px;align-items:start;min-height:calc(100vh - 110px)}
+.ws .side{display:grid;gap:14px;position:sticky;top:76px}
+.chat{display:flex;flex-direction:column;height:calc(100vh - 110px);min-height:520px}
+.chat .hd .ai{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:#fff}
+.msgs{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+.msg{display:flex;gap:10px;max-width:86%}.msg.me{align-self:flex-end;flex-direction:row-reverse}
+.msg .bub{padding:10px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);font-size:14px;line-height:1.55;min-width:60px;overflow-wrap:anywhere}
+.msg.me .bub{background:var(--ac);border-color:var(--ac);color:#fff;border-bottom-right-radius:4px}
+.msg:not(.me) .bub{border-bottom-left-radius:4px}
+.msg .meta{font-size:11px;color:var(--tx3);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.msg.me .meta{justify-content:flex-end}
+.bub h1,.bub h2,.bub h3{font-size:14.5px;margin:8px 0 4px}.bub p{margin:0 0 8px}.bub p:last-child{margin:0}
+.bub ul,.bub ol{margin:0 0 8px 18px}.bub li{margin:2px 0}.bub code{background:rgba(127,127,127,.15);padding:1px 5px;border-radius:5px;font-size:12.5px}
+.bub pre{background:rgba(127,127,127,.12);padding:10px;border-radius:8px;overflow:auto;margin:0 0 8px;font-size:12.5px}
+.bub .expl-img{display:block;width:100%;max-height:340px;object-fit:contain;border-radius:12px;margin:8px 0;border:1px solid var(--line2);background:var(--panel2)}
+.sec-card .vis img{display:block;width:100%;max-height:320px;object-fit:contain;border-radius:10px;margin-top:6px;border:1px solid var(--line2);background:var(--panel2)}
+.bub .tw{overflow-x:auto;margin:6px 0 10px;border:1px solid var(--line2);border-radius:10px}.bub table{border-collapse:collapse;font-size:13px;width:100%}.bub th,.bub td{border-bottom:1px solid var(--line2);padding:7px 10px;text-align:left;vertical-align:top}.bub tr:last-child td{border-bottom:0}.bub th{background:var(--acs);color:var(--ac);font-weight:600;white-space:nowrap}.bub tbody tr:nth-child(even) td{background:rgba(127,127,127,.06)}.bub td:first-child{font-weight:600;min-width:84px}
+.bub blockquote{border-left:3px solid var(--ac);background:var(--acs);padding:8px 12px;border-radius:0 8px 8px 0;margin:4px 0 10px}.bub h3{color:var(--ac);font-size:14.5px;margin:12px 0 4px}.bub h3:first-child{margin-top:2px}.bub p>b:only-child{font-size:15px}
+.sphint{margin:0 0 10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.sphint .ic{width:14px;height:14px}
+.srcs{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.srcs span{font-size:11px;border:1px solid var(--line2);border-radius:6px;padding:1px 6px;color:var(--tx2)}
+.plan{margin-top:10px;border:1px solid var(--acl);background:var(--acs);border-radius:10px;padding:10px 12px}
+.plan b{display:block;margin-bottom:6px}.plan .it{display:grid;grid-template-columns:110px 1fr;gap:8px;padding:5px 0;border-top:1px dashed var(--acl);font-size:13px}
+.plan .it em{font-style:normal;font-weight:600;color:var(--ac)}.plan .it small{display:block;color:var(--tx2)}
+.act{margin-top:10px;border:1px solid var(--line2);background:var(--panel);border-radius:10px;padding:10px 12px}
+.act b{display:block;margin-bottom:6px}.act ul{margin:0 0 8px 16px;font-size:13px;color:var(--tx2)}
+.starters{display:flex;flex-wrap:wrap;gap:7px;padding:0 18px 12px}
+.starters button{border:1px solid var(--line2);background:var(--panel);border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer;color:var(--tx2)}
+.starters button:hover{border-color:var(--ac);color:var(--ac)}
+.composer{border-top:1px solid var(--line);padding:12px 14px;display:grid;gap:8px}
+.composer .box{display:flex;gap:8px;align-items:flex-end;border:1px solid var(--line2);border-radius:12px;padding:6px 6px 6px 12px;background:var(--panel)}
+.composer textarea{flex:1;border:0;background:transparent;resize:none;min-height:24px;max-height:160px;padding:6px 0;outline:none}
+.composer .tools{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:12px;color:var(--tx3)}
+.mp{position:relative}
+.mp .cur{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--line2);border-radius:999px;background:var(--panel2);cursor:pointer;font-size:12.5px;font-weight:550;color:var(--tx)}
+.mp .menu{position:absolute;bottom:38px;left:0;min-width:270px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh2);padding:6px;z-index:20}
+.mp .menu .sec{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--tx3);padding:6px 10px 2px;font-weight:600}
+.mp .menu button{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:8px;cursor:pointer}
+.mp .menu button:hover{background:var(--muts)}.mp .menu button.on{background:var(--acs)}
+.mp .menu button .d{font-size:11.5px;color:var(--tx3);display:block}
+.mp .menu button .lock{margin-left:auto;font-size:11px;color:var(--warn)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
+.typing{display:inline-flex;gap:4px;align-items:center;padding:4px 2px}.typing i{width:6px;height:6px;border-radius:50%;background:var(--tx3);animation:bl 1.2s infinite}.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}@keyframes bl{0%,80%,100%{opacity:.25}40%{opacity:1}}
+/* EVENTS */
+.evs{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.ev{padding:16px;display:grid;gap:8px;cursor:pointer}
+.ev:hover{box-shadow:var(--sh2)}
+.ev h3{font-size:15px;letter-spacing:-.2px}.ev .when{color:var(--tx2);font-size:13px}
+.ev .stats{display:flex;gap:12px;font-size:12px;color:var(--tx3)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding:0 16px;overflow:auto}
+.tabs button{border:0;background:transparent;padding:11px 12px;font-weight:550;color:var(--tx2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button.on{color:var(--ac);border-bottom-color:var(--ac)}
+.task{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.task:first-child{border-top:0}
+.task input[type=checkbox]{margin-top:4px;width:16px;height:16px;accent-color:var(--ok)}
+.task .t{flex:1}.task .t b{font-weight:550}.task .t.done b{text-decoration:line-through;color:var(--tx3)}
+.task .m{display:flex;gap:6px;flex-wrap:wrap;margin-top:3px}
+.upd{padding:12px 0;border-top:1px solid var(--line)}.upd:first-child{border-top:0}
+.upd h4{font-size:14px;display:flex;gap:8px;align-items:center}.upd p{color:var(--tx2);white-space:pre-wrap;margin-top:4px}
+.upd .m{font-size:11.5px;color:var(--tx3);margin-top:4px}
+.chatline{display:flex;gap:8px;padding:6px 0}.chatline .av{width:28px;height:28px;font-size:10px}
+.chatline .b{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:7px 11px;max-width:80%}
+.chatline .b small{display:block;color:var(--tx3);font-size:11px}
+.chatline.me{flex-direction:row-reverse}.chatline.me .b{background:var(--acs);border-color:var(--acl)}
+.code-pill{font-family:ui-monospace,Menlo,monospace;background:var(--muts);padding:3px 8px;border-radius:7px;letter-spacing:1.5px;font-weight:700}
+.rsvp{display:flex;gap:6px}.rsvp button.on{background:var(--oks);border-color:var(--ok);color:var(--ok)}
+/* TABLES */
+table.t{width:100%;border-collapse:collapse;font-size:13px}table.t th,table.t td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}table.t th{color:var(--tx3);font-weight:600;font-size:12px}
+/* MODAL + TOAST */
+.ovl{position:fixed;inset:0;background:rgba(10,12,18,.55);display:grid;place-items:center;z-index:50;padding:16px}
+.modal{width:min(480px,100%);background:var(--panel);border-radius:16px;box-shadow:var(--sh2);padding:22px;max-height:92vh;overflow:auto}
+.modal h2{font-size:19px;letter-spacing:-.4px;margin-bottom:4px}.modal p.sub{color:var(--tx2);margin-bottom:14px}
+.toasts{position:fixed;right:16px;bottom:16px;display:grid;gap:8px;z-index:60}
+.toast{background:var(--tx);color:var(--bg);padding:10px 14px;border-radius:10px;box-shadow:var(--sh2);font-size:13px;max-width:360px}
+.toast.err{background:var(--err);color:#fff}.toast.ok{background:var(--ok);color:#fff}
+.gbtn{min-height:40px}
+.or{display:flex;align-items:center;gap:10px;color:var(--tx3);font-size:12px;margin:12px 0}.or:before,.or:after{content:"";flex:1;height:1px;background:var(--line)}
+.sk{background:linear-gradient(90deg,var(--muts),var(--panel2),var(--muts));background-size:200% 100%;animation:sk 1.2s infinite;border-radius:8px;height:14px}@keyframes sk{to{background-position:-200% 0}}
+/* STUDYPALS */
+.spbar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:14px 16px 10px}
+.spbar .f{margin:0;min-width:130px}
+.spbar .note-line{flex-basis:100%;font-size:12px;color:var(--tx3)}
+.spchat .chat{height:calc(100vh - 270px);min-height:460px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+.split .rail{display:grid;gap:14px;position:sticky;top:76px}
+.lesson h2{font-size:23px;letter-spacing:-.6px;margin:6px 0 4px}
+.lesson h4.lbl{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--tx3);margin:18px 0 6px}
+.lesson ul.obj{margin:0 0 0 18px;color:var(--tx2);display:grid;gap:3px}
+.sec-card{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:10px;background:var(--panel2)}
+.sec-card h4{font-size:15px;margin-bottom:6px;display:flex;gap:8px;align-items:center}
+.sec-card h4 .n{width:22px;height:22px;border-radius:7px;background:var(--infos);color:var(--info);display:grid;place-items:center;font-size:12px;flex:none}
+.sec-card p{color:var(--tx);line-height:1.6}
+.sec-card .ex{margin-top:10px;border-left:3px solid var(--info);padding:8px 12px;background:var(--infos);border-radius:0 8px 8px 0;font-size:13.5px}
+.sec-card .ex b{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--info);margin-bottom:2px}
+.sec-card .vis{margin-top:8px;font-size:12px;color:var(--tx3);font-style:italic}
+.pq{border-top:1px solid var(--line);padding:10px 0}.pq:first-child{border-top:0}
+.pq details{margin-top:4px;font-size:13px}.pq summary{cursor:pointer;color:var(--ac);font-weight:550;display:inline-block;margin-right:12px}
+.pq details div{padding:6px 10px;margin-top:4px;background:var(--muts);border-radius:8px}
+.qz{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:10px;background:var(--panel)}
+.qz.ok{border-color:var(--ok);background:var(--oks)}.qz.bad{border-color:var(--err);background:var(--errs)}
+.qz .qh{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.qz .qh b{font-weight:600;line-height:1.45}
+.qz .opt{display:flex;gap:9px;align-items:center;padding:8px 11px;border:1px solid var(--line2);border-radius:9px;margin-top:7px;cursor:pointer;background:var(--panel)}
+.qz .opt:hover{border-color:var(--ac)}
+.qz .opt input{accent-color:var(--ac);width:16px;height:16px;flex:none}
+.qz .opt.right{border-color:var(--ok);background:var(--oks)}
+.qz input[type=text],.qz textarea{width:100%;padding:9px 11px;border:1px solid var(--line2);border-radius:9px;background:var(--panel);margin-top:9px}
+.qz textarea{min-height:80px;resize:vertical}
+.qz .fb{margin-top:9px;font-size:13px;display:grid;gap:3px}
+.score{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;background:var(--acs);border:1px solid var(--acl);margin-bottom:6px}
+.score b{font-size:26px;letter-spacing:-.8px}
+.note{border:1px solid var(--warn);background:var(--warns);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.hist{display:grid;gap:2px}
+.hist button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--tx)}
+.hist button:hover,.hist button.on{background:var(--muts)}
+.hist button b{font-weight:550;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mat{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.mat:first-child{border-top:0}
+.mat .fi{width:36px;height:36px;border-radius:9px;background:var(--infos);color:var(--info);display:grid;place-items:center;font-size:10px;font-weight:700;text-transform:uppercase;flex:none}
+.mat .t{flex:1;min-width:0}.mat .t b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.loading{display:flex;flex-direction:column;align-items:center;gap:10px;padding:48px 20px;text-align:center;color:var(--tx2)}
+.loading .ring{width:34px;height:34px;border-radius:50%;border:3px solid var(--line2);border-top-color:var(--ac);animation:sp 0.9s linear infinite}
+/* SIGN-IN */
+.gbtn-fb{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:9px 14px;border:1px solid var(--line2);border-radius:999px;background:var(--panel);color:var(--tx);font-weight:600;cursor:pointer}
+.gbtn-fb:hover{background:var(--muts)}
+.gbtn{display:flex;justify-content:center}
+.gate{border:1px dashed var(--line2);border-radius:12px;padding:14px;text-align:center;display:grid;gap:9px;background:var(--panel2)}
+.gate b{display:flex;gap:7px;align-items:center;justify-content:center}
+/* VOLUNTEER */
+.vol{padding:16px;display:grid;gap:9px;align-content:start}
+.vol h3{font-size:15.5px;letter-spacing:-.2px}
+.vol .m{display:flex;gap:6px;flex-wrap:wrap}
+.vol p{color:var(--tx2);font-size:13px;white-space:pre-wrap}
+.qz .fb b,.score b,.tabs button .tl{display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.lead.green{background:linear-gradient(140deg,#0f3d2e,#157a55 60%,#3fb57f)!important}
+@media (max-width:760px){.top .who>span:not(.av){display:none}.top .who{padding:3px}.spbar .f{min-width:0;flex:1 1 120px}}
+@media (max-width:1000px){.split{grid-template-columns:1fr}.split .rail{position:static}.spchat .chat{height:70vh}}
+/* RESPONSIVE */
+@media (max-width:1000px){.ws{grid-template-columns:1fr}.ws .side{position:static}.chat{height:70vh}.agents{grid-template-columns:1fr}.hero{grid-template-columns:1fr}.grid3{grid-template-columns:1fr}}
+@media (max-width:760px){.shell{flex-direction:column}.sb{width:100%;height:auto;position:static;border-right:0;border-bottom:1px solid var(--line)}.sb-brand{padding:12px 16px}.nav{display:flex;overflow:auto;padding:6px 8px;gap:4px}.nav .sec{display:none}.nav a{white-space:nowrap;padding:7px 10px}.sb-foot{display:none}.content{padding:14px}.top{padding:10px 14px}.grid2{grid-template-columns:1fr}.msg{max-width:96%}.hero .lead{padding:22px}.hero .lead h2{font-size:24px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal"></div>
+<div id="toasts" class="toasts"></div>
+<script>
+(function(){
+"use strict";
+// ---- configuration --------------------------------------------------------------------------------------------
+var FALLBACK_BASE="https://n8n-neonai.duckdns.org/webhook/Y2Workplace";
+function detectBase(){var p=location.pathname;var m=p.match(/^(.*?\/(?:webhook\/)?Y2Workplace)(?:\/|$)/i);if(m)return location.origin+m[1];return FALLBACK_BASE;}
+var BASE=detectBase();
+var STUDYPALS_BASE=BASE.replace(/\/Y2Workplace$/i,"");
+var AGE_GROUPS=["8-11","12-14","15-17","18-22"];
+var SESSION_TIMES=["morning","afternoon","evening"];
+var SUBJECTS=["Math","Science","English","Social Studies","Computer Science","Physics","Chemistry","Biology","History","Geography","Other"];
+var TASK_CATS=["logistics","venue","food","comms","budget","program","other"];
+var EVENT_TYPES=["community","sports","school","family","cultural","corporate","other"];
+// ---- storage + state -------------------------------------------------------------------------------------------
+var LS={get:function(k,d){try{var v=localStorage.getItem("ys."+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set:function(k,v){try{localStorage.setItem("ys."+k,JSON.stringify(v));}catch(e){}},del:function(k){try{localStorage.removeItem("ys."+k);}catch(e){}}};
+function uid(p){var a="abcdefghijklmnopqrstuvwxyz0123456789",s="";for(var i=0;i<12;i++)s+=a[Math.floor(Math.random()*a.length)];return (p||"")+s;}
+var S={boot:null,token:LS.get("token",null),user:LS.get("user",null),guestId:LS.get("guest",null)||uid("guest-"),theme:LS.get("theme",matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"),model:LS.get("model","groq"),convs:LS.get("convs",{}),sp:LS.get("sp",{grade:"8",subject:"Math",topic:""}),route:{view:"home"},event:null,tab:"overview",busy:{},modal:null,admin:null,account:null,menu:false,err:null,authSignup:null,authForgot:null};
+LS.set("guest",S.guestId);
+S.spTab=LS.get("spTab","tutor");S.lessons=LS.get("lessons",[]);S.quizzes=LS.get("quizzes",[]);S.askLog=LS.get("ask",[]);S.lessonView=S.lessons[0]||null;S.quizView=S.quizzes[0]||null;S.lib=null;S.libAll=false;S.pdraft=LS.get("pdraft",null);
+document.documentElement.setAttribute("data-t",S.theme);
+function actor(){return (S.boot&&S.boot.actor)||(S.user?Object.assign({kind:"member"},S.user):{id:S.guestId,name:"Guest",kind:"guest",plan:"free",role:"guest",initials:"G"});}
+function isPremium(){return actor().plan==="premium";}
+function isAdmin(){return actor().role==="admin";}
+function isTeacher(){var r=actor().role;return r==="teacher"||r==="admin";}
+function signedIn(){return !!S.token&&actor().kind==="member";}
+// ---- utils ------------------------------------------------------------------------------------------------------
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function attr(s){return esc(s).replace(/\n/g,"&#10;");}
+function fmtD(v,o){if(!v)return "";var d=new Date(v);if(isNaN(d))return String(v);return d.toLocaleDateString(undefined,o||{weekday:"short",day:"numeric",month:"short",year:"numeric"});}
+function fmtDT(v){if(!v)return "";var d=new Date(v);if(isNaN(d))return String(v);return d.toLocaleString(undefined,{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});}
+function hhmm(v){var d=new Date(v);return isNaN(d)?"":d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});}
+function ago(v){if(!v)return "";var ms=Date.now()-new Date(v).getTime();var m=Math.round(ms/60000);if(m<1)return "just now";if(m<60)return m+" min ago";var h=Math.round(m/60);if(h<48)return h+" h ago";return Math.round(h/24)+" d ago";}
+function until(v){if(!v)return "";var d=(new Date(v).getTime()-Date.now())/86400000;if(d<-1)return Math.round(-d)+" days ago";if(d<0)return "today";if(d<1)return "tomorrow";return "in "+Math.round(d)+" days";}
+function toLocalInput(v){if(!v)return "";var d=new Date(v);if(isNaN(d))return "";var p=function(n){return (n<10?"0":"")+n;};return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes());}
+function initialsOf(n){return String(n||"?").split(/\s+/).slice(0,2).map(function(w){return w[0]||"";}).join("").toUpperCase();}
+var ICONS={home:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',book:'<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v16H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5V4.5"/>',cal:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',cog:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>',spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9z"/>',check:'<path d="M20 6L9 17l-5-5"/>',lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/>',star:'<path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/>',plus:'<path d="M12 5v14M5 12h14"/>',out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',link:'<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>',chart:'<path d="M18 20V10M12 20V4M6 20v-6"/>',chk:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',x:'<path d="M18 6L6 18M6 6l12 12"/>',pin:'<path d="M12 17v5M5 17h14l-2-6V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6z"/>',refresh:'<path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/>',copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',msg:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>',file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',down:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',help:'<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/>',map:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'};
+function ic(n,cls){return '<svg class="ic '+(cls||"")+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[n]||ICONS.spark)+'</svg>';}
+function md(src){
+ var s=texClean(String(src||""));var out=[];var lines=s.split(/\r?\n/);var i=0;
+ function inline(t){t=esc(t);t=t.replace(/`([^`]+)`/g,"<code>$1</code>");t=t.replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>");t=t.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g,"$1<i>$2</i>");t=t.replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');t=t.replace(/\[K(\d+)\]/g,'<span class="badge ac" style="font-size:10px;padding:0 5px">K$1</span>');return t;}
+ while(i<lines.length){
+  var l=lines[i];
+  if(/^```/.test(l)){var buf=[];i++;while(i<lines.length&&!/^```/.test(lines[i])){buf.push(lines[i]);i++;}i++;out.push("<pre>"+esc(buf.join("\n"))+"</pre>");continue;}
+  var h=l.match(/^(#{1,6})\s+(.*)/);if(h){out.push("<h3>"+inline(h[2])+"</h3>");i++;continue;}
+  if(/^\s*\|.*\|\s*$/.test(l)&&i+1<lines.length&&/^\s*\|[\s:|-]+\|\s*$/.test(lines[i+1])){var rows=[];while(i<lines.length&&/^\s*\|.*\|\s*$/.test(lines[i])){rows.push(lines[i]);i++;}var cells=function(r){return r.trim().replace(/^\||\|$/g,"").split("|").map(function(c){return c.trim();});};var head=cells(rows[0]);var body=rows.slice(2).map(cells);out.push("<div class=\"tw\"><table><thead><tr>"+head.map(function(c){return "<th>"+inline(c)+"</th>";}).join("")+"</tr></thead><tbody>"+body.map(function(r){return "<tr>"+r.map(function(c){return "<td>"+inline(c)+"</td>";}).join("")+"</tr>";}).join("")+"</tbody></table></div>");continue;}
+  if(/^\s*([-*•])\s+/.test(l)){var items=[];while(i<lines.length&&/^\s*([-*•])\s+/.test(lines[i])){items.push(lines[i].replace(/^\s*([-*•])\s+/,""));i++;}out.push("<ul>"+items.map(function(x){return "<li>"+inline(x)+"</li>";}).join("")+"</ul>");continue;}
+  if(/^\s*\d+[.)]\s+/.test(l)){var oi=[];while(i<lines.length&&/^\s*\d+[.)]\s+/.test(lines[i])){oi.push(lines[i].replace(/^\s*\d+[.)]\s+/,""));i++;}out.push("<ol>"+oi.map(function(x){return "<li>"+inline(x)+"</li>";}).join("")+"</ol>");continue;}
+  if(/^\s*>\s?/.test(l)){var q=[];while(i<lines.length&&/^\s*>\s?/.test(lines[i])){q.push(lines[i].replace(/^\s*>\s?/,""));i++;}out.push("<blockquote>"+inline(q.join(" "))+"</blockquote>");continue;}
+  if(!l.trim()){i++;continue;}
+  var para=[];while(i<lines.length&&lines[i].trim()&&!/^(#{1,6}\s|```|\s*[-*•]\s|\s*\d+[.)]\s|\s*>|\s*\|)/.test(lines[i])){para.push(lines[i]);i++;}
+  if(para.length)out.push("<p>"+inline(para.join(" "))+"</p>");else i++;
+ }
+ return out.join("");
+}
+// ---- api --------------------------------------------------------------------------------------------------------
+function headers(){var h={"Content-Type":"application/json","X-Guest-Id":S.guestId};if(S.token)h.Authorization="Bearer "+S.token;return h;}
+function api(action,payload){
+ return fetch(BASE+"/svc/api",{method:"POST",headers:headers(),body:JSON.stringify({action:action,payload:payload||{},guestId:S.guestId})}).then(function(r){return r.json().catch(function(){return {success:false,error:{code:"BAD_RESPONSE",message:"The server returned an unexpected response ("+r.status+")."}};});}).then(function(j){
+  if(j&&j.success)return j.data;
+  var e=(j&&j.error)||{code:"ERROR",message:"Request failed."};
+  if(e.code==="INVALID_SESSION"||e.code==="ACCOUNT_DISABLED"){clearSession();toast("Please sign in again.","err");}
+  throw {code:e.code,message:friendlyMsg(e)};
+ },function(){throw {code:"NETWORK",message:"We could not connect. Check your internet connection and try again."};});
+}
+function chatApi(body){body.guestId=S.guestId;body.guestName=actor().name;return fetch(BASE+"/svc/chat",{method:"POST",headers:headers(),body:JSON.stringify(body)}).then(function(r){return r.json();}).catch(function(){return {success:false,error:{code:"NETWORK",message:"We could not connect. Check your internet connection and try again."}};});}
+function clearSession(){S.token=null;S.user=null;LS.del("token");LS.del("user");}
+function boot(){
+ return api("bootstrap").then(function(d){S.boot=d;patchAgents(d);afterBoot(d);if(d.actor&&d.actor.kind==="member"){S.user=d.actor;LS.set("user",S.user);}var ids=(d.models||[]).map(function(m){return m.id;});if(ids.indexOf(S.model)<0)S.model=ids.indexOf("groq")>=0?"groq":(ids[0]||"groq");S.err=null;render();loadGIS();}).catch(function(e){S.err=e;render();});
+}
+// ---- toast + modal ---------------------------------------------------------------------------------------------
+function toast(msg,kind){var t=document.getElementById("toasts");var el=document.createElement("div");el.className="toast "+(kind||"");el.textContent=msg;t.appendChild(el);setTimeout(function(){el.remove();},kind==="err"?6000:3500);}
+function openModal(html){S.modal=html;renderModal();}
+function closeModal(){S.modal=null;renderModal();}
+function renderModal(){var el=document.getElementById("modal");if(!S.modal){el.innerHTML="";return;}el.innerHTML='<div class="ovl" onclick="if(event.target===this)A.closeModal()"><div class="modal">'+S.modal+'</div></div>';renderGoogleButtons();}
+// ---- Google sign-in --------------------------------------------------------------------------------------------
+var gisLoaded=false,gisInit=false;
+function googleClientId(){return (((S.boot||{}).settings||{}).auth||{}).googleClientId||"";}
+function loadGIS(){var cid=googleClientId();if(!cid||gisLoaded)return;gisLoaded=true;var sc=document.createElement("script");sc.src="https://accounts.google.com/gsi/client";sc.async=true;sc.onload=function(){try{google.accounts.id.initialize({client_id:cid,callback:function(r){onGoogle(r.credential);}});gisInit=true;renderGoogleButtons();}catch(e){}};document.head.appendChild(sc);}
+function renderGoogleButtons(){if(!gisInit)return;document.querySelectorAll(".gbtn").forEach(function(el){if(el.dataset.done)return;el.dataset.done="1";var w=Math.max(200,Math.min(400,el.clientWidth||320));try{el.innerHTML="";google.accounts.id.renderButton(el,{theme:S.theme==="dark"?"filled_black":"outline",size:"large",shape:"pill",width:w,text:"continue_with",logo_alignment:"left"});}catch(e){}});}
+var GSVG='<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+function googleBtn(){var fb=function(fn){return '<button type="button" class="gbtn-fb" onclick="'+fn+'">'+GSVG+'<span>Sign in with Google</span></button>';};return googleClientId()?'<div class="gbtn">'+fb("A.googleWait()")+'</div>':fb("A.googleUnavailable()");}
+function openSignIn(){if(signedIn())return;var v=S.route.view;S.returnTo=(v&&v!=="account")?location.hash:"";closeModal();go("#/account");}
+function onGoogle(idToken){api("login.google",{idToken:idToken}).then(onSignedIn).catch(function(e){toast(e.message,"err");});}
+function onSignedIn(d){S.token=d.token;S.user=d.user;LS.set("token",S.token);LS.set("user",S.user);S.guestId=uid("guest-");LS.set("guest",S.guestId);closeModal();toast("Welcome, "+d.user.name+(d.migrated?" - your guest events and profile were moved to your account.":""),"ok");if(S.route.view==="account")S.account=null;S.admin=null;S.pg=null;S.pgAccess=null;S.materials=null;S.matAt=0;S.authSignup=null;S.authForgot=null;
+ var draft=S.pdraft;var back=S.returnTo;S.returnTo="";if(back)go(back);
+ return boot().then(function(){
+  if(!draft||!Object.keys(draft).some(function(k){return String(draft[k]||"").trim();}))return;
+  return api("profile.save",draft).then(function(r){if(S.boot)S.boot.profile=r.profile;S.pdraft=null;LS.del("pdraft");toast("Your athlete profile was saved to your account","ok");render();}).catch(function(e){toast(e.message,"err");});
+ });}
+// ---- conversations ----------------------------------------------------------------------------------------------
+function convKey(agentId,ctx){return agentId+(ctx&&ctx.eventId?":"+ctx.eventId:"");}
+function getConv(agentId,ctx){var k=convKey(agentId,ctx);if(!S.convs[k])S.convs[k]={id:"conv-"+uid(),messages:[]};return S.convs[k];}
+function saveConvs(){var keys=Object.keys(S.convs);keys.forEach(function(k){S.convs[k].messages=S.convs[k].messages.slice(-40);});LS.set("convs",S.convs);}
+function agentById(id){return ((S.boot||{}).agents||[]).filter(function(a){return a.id===id;})[0];}
+function modelById(id){return ((S.boot||{}).models||[]).filter(function(m){return m.id===id;})[0];}
+function send(agentId,text,ctx){
+ text=String(text||"").trim();if(!text)return;
+ var conv=getConv(agentId,ctx);var k=convKey(agentId,ctx);
+ if(S.busy[k])return;
+ var m=modelById(S.model);
+ if(agentId!=="agent-studypals"&&m&&m.tier==="premium"&&!isPremium()){openUpgrade(m.label);return;}
+ conv.messages.push({role:"user",content:text,at:Date.now()});S.busy[k]=true;saveConvs();renderMsgs(agentId,ctx);
+ var body={agentId:agentId,message:text,model:agentId==="agent-studypals"?"studypals":S.model,conversationId:conv.id,context:ctx||{}};
+ chatApi(body).then(function(j){
+  S.busy[k]=false;
+  if(j&&j.success){var msg=j.message||{};conv.messages.push({role:"assistant",content:msg.content||"",model:(j.model||{}).label,provider:(j.model||{}).id,sources:msg.sources||[],plan:msg.plan||null,actions:msg.actions||[],imageUrl:msg.imageUrl||"",imageAlt:msg.imageAlt||"",ms:j.durationMs,at:Date.now()});if(S.boot)S.boot.usageToday=(S.boot.usageToday||0)+1;}
+  else{var e=(j&&j.error)||{code:"ERROR",message:""};conv.messages.push({role:"assistant",content:"**"+(e.code==="PREMIUM_REQUIRED"?"Premium feature":e.code==="RATE_LIMITED"?"That is all for today":"Sorry")+"** - "+friendlyMsg(e,"I could not answer that just now. Please try again in a moment."),error:true,at:Date.now()});if(e.code==="PREMIUM_REQUIRED"||e.code==="SIGNUP_REQUIRED")openUpgrade();if(e.code==="INVALID_SESSION"){clearSession();boot();}}
+  saveConvs();renderMsgs(agentId,ctx);
+ });
+}
+// ---- rendering: shell ---------------------------------------------------------------------------------------------
+function parseHash(){var h=location.hash.replace(/^#\/?/,"");var parts=h.split("/");var v=parts[0]||"home";return {view:v,id:parts[1]?decodeURIComponent(parts[1]):null};}
+function go(h){location.hash=h;}
+function render(){
+ S.route=parseHash();var root=document.getElementById("app");
+ if(!S.boot&&!S.err){root.innerHTML='<div class="shell">'+sidebar()+'<div class="main">'+header("Loading")+'<div class="content"><div class="wrap"><div class="card"><div class="bd"><div class="sk" style="width:40%"></div><br><div class="sk"></div><br><div class="sk" style="width:70%"></div></div></div></div></div></div></div>';return;}
+ if(S.err&&!S.boot){root.innerHTML='<div class="shell">'+sidebar()+'<div class="main">'+header("Y Square")+'<div class="content"><div class="wrap"><div class="card"><div class="bd"><h3>Y Square could not start</h3><p class="muted" style="margin:6px 0 12px">'+esc(friendlyMsg(S.err,"We could not load Y Square right now. Please check your connection and try again."))+'</p><button class="btn p" onclick="A.retry()">Try again</button></div></div></div></div></div></div>';return;}
+ var v=S.route.view,body="",title="";
+ if(v==="athlete"){title="Athlete Edge";body=vAgent("agent-athlete");}
+ else if(v==="studypals"){title="StudyPals";body=vStudyPals();}
+ else if(v==="volunteer"){title="Volunteer opportunities";body=vVolunteer();}
+ else if(v==="events"&&S.route.id){title="Event";body=vEvent(S.route.id);}
+ else if(v==="events"){title="Event Planner";body=vEvents();}
+ else if(v==="account"){title="Account";body=vAccount();}
+ else if(v==="admin"){title="Admin";body=vAdmin();}
+ else if(v==="teacher"){title="Teacher Tools";body=vTeacherTools();}
+ else if(v==="playground"){title="AI Playground";body=vPlayground(S.route.id);}
+ else{title=(((S.boot||{}).settings||{}).organization||{}).name||"Y Square";body=vHome();}
+ root.innerHTML='<div class="shell">'+sidebar()+'<div class="main">'+header(title)+'<div class="content"><div class="wrap">'+body+'</div></div></div></div>';
+ renderModal();renderGoogleButtons();
+ var ms=document.querySelector(".msgs");if(ms)ms.scrollTop=ms.scrollHeight;var am=document.getElementById("askmsgs");if(am)am.scrollTop=am.scrollHeight;
+}
+function sidebar(){
+ var v=S.route.view;var a=actor();var org=(((S.boot||{}).settings||{}).organization||{});
+ function item(h,icn,label,on){return '<a href="#/'+h+'" class="'+(on?"on":"")+'">'+ic(icn)+esc(label)+'</a>';}
+ if(!S.pgAccess&&!S.busy.pgAccess){S.busy.pgAccess=true;api("playground.access").then(function(d){S.busy.pgAccess=false;S.pgAccess=d;render();}).catch(function(){S.busy.pgAccess=false;});}
+ var pgOk=S.pgAccess||{};
+ var showMid=isTeacher()||!!pgOk.middle;
+ var showHigh=isTeacher()||!!pgOk.high;
+ return '<aside class="sb"><div class="sb-brand"><div class="logo">Y²</div><div><b>'+esc(org.name||"Y Square")+'</b><small>Workplace</small></div></div><nav class="nav"><div class="sec">Agents</div>'+item("",'home',"Home",v==="home")+item("athlete","bolt","Athlete Edge",v==="athlete")+item("studypals","book","StudyPals",v==="studypals")+item("events","cal","Event Planner",v==="events")+(showMid||showHigh?'<div class="sec">AI Playground</div>'+(showMid?item("playground/middle","spark","Middle School",v==="playground"&&S.route.id==="middle"):"")+(showHigh?item("playground/high","spark","High School",v==="playground"&&S.route.id==="high"):""):"")+'<div class="sec">Community</div>'+item("volunteer","heart","Volunteer",v==="volunteer")+'<div class="sec">You</div>'+item("account","user",signedIn()?"Account":"Sign in / Sign up",v==="account")+(isTeacher()?item("teacher","cog","Teacher Tools",v==="teacher"):"")+(isAdmin()?item("admin","cog","Admin",v==="admin"):"")+'</nav><div class="sb-foot"><div class="plan-card">'+(a.kind==="guest"?'<b>Free version</b><span class="muted">Gemini Flash, Mistral and Groq. No sign-up needed.</span><div style="margin-top:8px;display:grid;gap:6px"><button class="btn s" onclick="A.openSignIn()">'+ic("user")+'Sign in</button><button class="btn s p" onclick="A.openUpgrade()">Unlock Claude + ChatGPT</button></div>':(isPremium()?'<b>'+ic("star")+' Premium</b><span class="muted">Claude and ChatGPT are unlocked.</span>':'<b>Free account</b><span class="muted">Upgrade for Claude and ChatGPT.</span><div style="margin-top:8px"><button class="btn s p" onclick="A.openUpgrade()">Go Premium</button></div>'))+'</div></div></aside>';
+}
+function header(title){var a=actor();var used=(S.boot||{}).usageToday||0;return '<div class="top"><h1>'+esc(title)+'</h1><div class="sp"></div><span class="badge small muted" title="Messages used today">'+used+' today</span><button class="btn icon ghost" title="Toggle theme" onclick="A.theme()">'+ic(S.theme==="dark"?"sun":"moon")+'</button>'+(a.kind==="guest"?'<button class="btn s p" onclick="A.openSignIn()">'+ic("user")+'Sign in</button>':'')+'<a class="who" href="#/account"><span class="av">'+(a.avatarUrl?'<img src="'+attr(a.avatarUrl)+'" alt="">':esc(a.initials||initialsOf(a.name)))+'</span><span>'+esc(a.name||"Guest")+'</span>'+(a.kind==="guest"?'<span class="badge">guest</span>':(isPremium()?'<span class="badge ac">premium</span>':'<span class="badge">free</span>'))+'</a></div>';}
+// ---- home ----------------------------------------------------------------------------------------------------------
+function vHome(){
+ var b=S.boot;var org=(b.settings||{}).organization||{};var bill=(b.settings||{}).billing||{};
+ var free=(b.models||[]).filter(function(m){return m.tier==="free";}).map(function(m){return m.label;}).join(", ");
+ var prem=(b.models||[]).filter(function(m){return m.tier==="premium";}).map(function(m){return m.label;}).join(" and ");
+ var cards=(b.agents||[]).map(function(a){var h=a.id==="agent-athlete"?"athlete":(a.id==="agent-studypals"?"studypals":"events");return '<div class="card agent" onclick="A.go(\'#/'+h+'\')"><div class="ai" style="background:'+attr(a.color)+'">'+ic(a.icon,"ic22")+'</div><div><h3>'+esc(a.name)+'</h3><div class="muted small">'+esc(a.title)+'</div></div><p>'+esc(a.description)+'</p><div class="caps">'+(a.capabilities||[]).slice(0,5).map(function(c){return "<span>"+esc(c)+"</span>";}).join("")+'</div><div class="go"><span>Open '+esc(a.name)+'</span>'+ic("send")+'</div></div>';}).join("");
+ return '<div class="hero"><div class="lead"><span class="badge" style="background:rgba(255,255,255,.18);color:#fff;width:max-content">'+esc(org.platform||"Y Square Workplace")+'</span><h2>'+esc(org.tagline||"Three agents for young athletes, students and community events")+'</h2><p>Athlete Edge tells young athletes what to eat for their sport. StudyPals tutors and builds lessons and quizzes from real class materials. Event Planner puts logistics, information and communication in one place instead of WhatsApp threads. Start free, no sign-up.</p><div class="row"><button class="btn" onclick="A.go(\'#/athlete\')">'+ic("bolt")+'Try Athlete Edge</button><button class="btn o" onclick="A.go(\'#/events\')">'+ic("cal")+'Plan an event</button></div></div><div class="tiers"><div class="tier"><b>'+ic("check")+' Free - no sign-up</b><ul><li>All three agents</li><li>Models: '+esc(free)+'</li><li>Your events, RSVPs and athlete profile stay on this device until you sign up</li></ul></div><div class="tier prem"><b>'+ic("star")+' Premium '+(bill.priceLabel?'<span class="badge ac">'+esc(bill.priceLabel)+'</span>':"")+'</b><ul><li>'+esc(prem||"Claude and ChatGPT")+' on every agent</li>'+((bill.premiumBenefits||[]).slice(1).map(function(x){return "<li>"+esc(x)+"</li>";}).join(""))+'<li>Quick sign-up with Google or email, then subscribe</li></ul><div style="margin-top:10px">'+(isPremium()?'<span class="badge ok">You are Premium</span>':'<button class="btn p s" onclick="A.openUpgrade()">'+(signedIn()?"Go Premium":"Sign up and go Premium")+'</button>')+'</div></div></div></div><div class="agents">'+cards+'</div>'+volBanner();
+}
+// ---- agent workspaces (Athlete Edge, StudyPals) ---------------------------------------------------------------------
+function vAgent(agentId){
+ var a=agentById(agentId);if(!a)return '<div class="empty">Agent not available.</div>';
+ var side=athletePanel();
+ return '<div class="ws"><div class="side">'+side+'</div>'+chatPanel(a,agentId==="agent-studypals"?{grade:S.sp.grade,subject:S.sp.subject,topic:S.sp.topic}:{})+'</div>';
+}
+function athletePanel(){
+ var p=(S.boot||{}).profile||{};var me=signedIn();var d=me?{}:(S.pdraft||{});
+ function v(snake,camel){var x=(!me&&d[camel]!=null)?d[camel]:p[snake];return x==null?"":x;}
+ function sel(name,opts,cur,labels){return '<select name="'+name+'"><option value="">Choose</option>'+opts.map(function(o,i){return '<option value="'+attr(o)+'"'+(o===cur?" selected":"")+'>'+esc(labels?labels[i]:o)+'</option>';}).join("")+'</select>';}
+ var badge=me?(p.owner_id?'<span class="badge ok">saved</span>':'<span class="badge warn">not saved</span>'):'<span class="badge">sign in to save</span>';
+ var foot=me?'<button class="btn p" type="submit" style="width:100%">Save profile</button>':'<div class="gate"><span class="muted small">Sign in to save your athlete profile. What you type here is saved to your account right after you sign in.</span><button type="button" class="btn p" style="width:100%" onclick="A.openSignIn()">'+ic("user")+'Sign in to save profile</button></div>';
+ return '<div class="card"><div class="hd">'+ic("bolt")+'<h3>Athlete profile</h3><div class="sp"></div>'+badge+'</div><div class="bd"><form onsubmit="return A.saveProfile(this)" oninput="A.pdraft(this)" onchange="A.pdraft(this)"><div class="grid2"><div class="f"><label>Athlete name</label><input name="athleteName" value="'+attr(v("athlete_name","athleteName"))+'" placeholder="First name"></div><div class="f"><label>Age group</label>'+sel("ageGroup",AGE_GROUPS,v("age_group","ageGroup"))+'</div></div><div class="grid2"><div class="f"><label>Sport</label><input name="sport" value="'+attr(v("sport","sport"))+'" placeholder="Soccer, swimming, cricket..."></div><div class="f"><label>Position / event</label><input name="position" value="'+attr(v("position","position"))+'" placeholder="Goalkeeper, 400m..."></div></div><div class="grid2"><div class="f"><label>Training days / week</label><input name="trainingDays" type="number" min="0" max="14" value="'+attr(v("training_days","trainingDays"))+'"></div><div class="f"><label>Usual session time</label>'+sel("sessionTime",SESSION_TIMES,v("session_time","sessionTime"),["Morning","Afternoon","Evening"])+'</div></div><div class="f"><label>Goals</label><input name="goals" value="'+attr(v("goals","goals"))+'" placeholder="More energy in the second half, recover faster..."></div><div class="f"><label>Diet, allergies and food rules</label><input name="dietaryNotes" value="'+attr(v("dietary_notes","dietaryNotes"))+'" placeholder="Vegetarian, nut allergy, halal, lactose..."><div class="help">Athlete Edge never suggests foods that break these.</div></div><div class="f"><label>Favourite foods</label><input name="favouriteFoods" value="'+attr(v("favourite_foods","favouriteFoods"))+'" placeholder="Rice and dal, pasta, bananas..."></div>'+foot+'</form></div></div><div class="card"><div class="bd small muted">Athlete Edge gives food-first guidance for healthy young athletes. It is not medical advice and never recommends supplements or diets for children. For health concerns talk to a parent, doctor or registered dietitian.</div></div>';
+}
+function chatPanel(a,ctx){
+ var conv=getConv(a.id,ctx);var k=convKey(a.id,ctx);
+ return '<div class="card chat" data-agent="'+attr(a.id)+'"><div class="hd"><div class="ai" style="background:'+attr(a.color)+'">'+ic(a.icon)+'</div><div><h3>'+esc(a.name)+'</h3><div class="muted small">'+esc(a.title)+'</div></div><div class="sp"></div>'+(a.external?'<span class="badge info">powered by StudyPals</span>':'')+'<button class="btn xs ghost" title="New conversation" onclick="A.newConv(\''+attr(a.id)+'\')">'+ic("refresh")+' New</button></div><div class="msgs" id="msgs-'+attr(k)+'">'+msgsHtml(a,conv,k)+'</div>'+(conv.messages.length?'':'<div class="starters">'+(a.starters||[]).map(function(s){return '<button onclick="A.starter(this)">'+esc(s)+'</button>';}).join("")+'</div>')+'<div class="composer"><div class="box"><textarea rows="1" placeholder="'+attr(a.placeholder||("Ask "+a.name+"..."))+'" onkeydown="A.key(event,this)" oninput="this.style.height=\'auto\';this.style.height=Math.min(160,this.scrollHeight)+\'px\'"></textarea><button class="btn p icon" title="Send" onclick="A.sendFrom(this)">'+ic("send")+'</button></div><div class="tools">'+(a.supportsModels?modelPicker():'<span>'+esc(a.footnote||"Answers come from your class materials")+'</span>')+'<span>'+(actor().kind==="guest"?'Free version - <a href="#" onclick="A.openSignIn();return false">sign in</a> to keep your history':'Signed in as '+esc(actor().name))+'</span></div></div></div>';
+}
+function msgsHtml(a,conv,k){
+ if(!conv.messages.length)return '<div class="empty"><div class="ai" style="width:48px;height:48px;border-radius:14px;background:'+attr(a.color)+';display:grid;place-items:center;color:#fff;margin:0 auto 10px">'+ic(a.icon,"ic22")+'</div><b>'+esc(a.name)+'</b><div class="small">'+esc(a.description)+'</div></div>';
+ var h=conv.messages.map(function(m){
+  if(m.role==="user")return '<div class="msg me"><div><div class="bub">'+esc(m.content)+'</div><div class="meta">'+hhmm(m.at)+'</div></div></div>';
+  var extra="";
+  if(m.plan&&m.plan.items)extra+='<div class="plan"><b>'+esc(m.plan.title||"Your plan")+'</b>'+(m.plan.items||[]).map(function(it){return '<div class="it"><em>'+esc(it.when||"")+'</em><div>'+esc(it.what||"")+(it.why?'<small>'+esc(it.why)+'</small>':"")+'</div></div>';}).join("")+(m.plan.hydration?'<div class="it"><em>Hydration</em><div>'+esc(m.plan.hydration)+'</div></div>':"")+(m.plan.pack&&m.plan.pack.length?'<div class="it"><em>Pack</em><div>'+esc(m.plan.pack.join(", "))+'</div></div>':"")+'</div>';
+  (m.actions||[]).forEach(function(ac,i){extra+=actionCard(ac,k,conv.messages.indexOf(m),i);});
+  if(m.sources&&m.sources.length)extra+='<div class="srcs">'+m.sources.map(function(s){return '<span title="'+attr(s.category||"")+'">'+esc(s.marker)+' '+esc(s.title)+'</span>';}).join("")+'</div>';
+  if(m.imageUrl)extra+='<img class="expl-img" src="'+attr(m.imageUrl)+'" alt="'+attr(m.imageAlt||"Explanation picture")+'" loading="lazy" onerror="this.remove()">';
+  return '<div class="msg"><div><div class="bub">'+md(cleanReply(m.content))+extra+'</div><div class="meta">'+(m.model?'<span class="badge">'+esc(m.model)+'</span>':"")+hhmm(m.at)+'</div></div></div>';
+ }).join("");
+ if(S.busy[k])h+='<div class="msg"><div><div class="bub"><span class="typing"><i></i><i></i><i></i></span></div></div></div>';
+ return h;
+}
+function actionCard(ac,k,mi,ai){
+ var done=ac.done?'<span class="badge ok">'+ic("check")+' done</span>':"";
+ if(ac.type==="create_tasks"&&Array.isArray(ac.tasks))return '<div class="act"><b>'+ic("chk")+' Add '+ac.tasks.length+' task'+(ac.tasks.length===1?"":"s")+' to the event</b><ul>'+ac.tasks.slice(0,12).map(function(t){return "<li>"+esc(t.title)+(t.dueAt?' <span class="muted">('+esc(t.dueAt)+")</span>":"")+"</li>";}).join("")+(ac.tasks.length>12?"<li>...</li>":"")+'</ul>'+(ac.done?done:'<button class="btn s p" onclick="A.runAction(\''+attr(k)+'\','+mi+','+ai+')">Add tasks</button>')+'</div>';
+ if(ac.type==="post_update")return '<div class="act"><b>'+ic("mail")+' Post update: '+esc(ac.title||"")+'</b><div class="small muted" style="white-space:pre-wrap;margin-bottom:8px">'+esc(ac.body||"")+'</div>'+(ac.done?done:'<button class="btn s p" onclick="A.runAction(\''+attr(k)+'\','+mi+','+ai+')">Post to Updates</button> <button class="btn s" onclick="A.copyText(this)" data-text="'+attr((ac.title||"")+"\n"+(ac.body||""))+'">'+ic("copy")+' Copy</button>')+'</div>';
+ return "";
+}
+function renderMsgs(agentId,ctx){var k=convKey(agentId,ctx);var el=document.getElementById("msgs-"+k);var a=agentById(agentId);if(!el||!a){render();return;}el.innerHTML=msgsHtml(a,getConv(agentId,ctx),k);el.scrollTop=el.scrollHeight;var st=el.parentElement.querySelector(".starters");if(st&&getConv(agentId,ctx).messages.length)st.remove();}
+function modelPicker(){
+ var ms=(S.boot||{}).models||[];var cur=modelById(S.model)||ms[0]||{label:"Model"};
+ var free=ms.filter(function(m){return m.tier==="free";}),prem=ms.filter(function(m){return m.tier==="premium";});
+ function it(m){var locked=m.tier==="premium"&&!isPremium();return '<button class="'+(m.id===S.model?"on":"")+'" onclick="A.pickModel(\''+attr(m.id)+'\')"><span class="dot" style="background:'+(m.tier==="premium"?"var(--ac)":"var(--ok)")+'"></span><span><b>'+esc(m.label)+'</b><span class="d">'+esc(m.description||m.model_id)+'</span></span>'+(locked?'<span class="lock">'+ic("lock")+'</span>':"")+'</button>';}
+ return '<div class="mp"><button class="cur" onclick="A.toggleMenu()">'+ic("spark")+esc(cur.label)+(cur.tier==="premium"?' <span class="badge ac" style="font-size:10px">premium</span>':"")+'</button>'+(S.menu?'<div class="menu"><div class="sec">Free</div>'+free.map(it).join("")+'<div class="sec">Premium '+(isPremium()?"":"- sign up and subscribe")+'</div>'+prem.map(it).join("")+'</div>':"")+'</div>';
+}
+// ---- events ---------------------------------------------------------------------------------------------------------
+function vEvents(){
+ var evs=(S.boot||{}).events||[];
+ var list=evs.length?'<div class="evs">'+evs.map(function(e){return '<div class="card ev" onclick="A.go(\'#/events/'+attr(e.id)+'\')"><div class="row between"><span class="badge '+(e.status==="live"?"ok":e.status==="done"?"":"info")+'">'+esc(e.status)+'</span><span class="badge">'+esc(e.my_role)+'</span></div><h3>'+esc(e.title)+'</h3><div class="when">'+(e.starts_at?fmtDT(e.starts_at)+' <span class="muted">('+until(e.starts_at)+')</span>':'<span class="muted">date not set</span>')+(e.venue?' - '+esc(e.venue):"")+'</div><div class="stats"><span>'+ic("users")+' '+e.going+' going / '+e.members+'</span><span>'+ic("chk")+' '+e.open_tasks+' open of '+e.tasks+'</span></div></div>';}).join("")+'</div>':'<div class="card"><div class="empty">No events yet. Create one, or join with the code the organiser shared.</div></div>';
+ return '<div class="row between" style="margin-bottom:14px"><div><h2 style="font-size:20px;letter-spacing:-.4px">Your events</h2><div class="muted small">Logistics, information and communication for each event in one place. '+(actor().kind==="guest"?'Events you create as a guest move to your account when you <a href="#" onclick="A.openSignIn();return false">sign in</a>.':"")+'</div></div><div class="row"><form class="row" onsubmit="return A.joinEvent(this)"><input name="code" placeholder="Event code" maxlength="12" style="padding:8px 10px;border:1px solid var(--line2);border-radius:9px;width:130px;text-transform:uppercase" required><button class="btn" type="submit">Join</button></form><button class="btn p" onclick="A.newEvent()">'+ic("plus")+'New event</button></div></div>'+list+'<div class="card" style="margin-top:16px"><div class="hd">'+ic("cal")+'<h3>Event Planner agent</h3><div class="sp"></div><span class="muted small">Open an event to plan it with live data</span></div><div class="bd small muted">The planner drafts checklists, roles, budgets and announcements from a short brief. It works best inside an event, where it can see the tasks, RSVPs and updates and add its suggestions with one click.</div></div>';
+}
+function eventForm(e){
+ e=e||{};
+ return '<div class="grid2"><div class="f"><label>Title</label><input name="title" required value="'+attr(e.title||"")+'" placeholder="Community Sports Day"></div><div class="f"><label>Type</label><select name="type">'+EVENT_TYPES.map(function(t){return '<option'+(t===(e.type||"community")?" selected":"")+'>'+t+'</option>';}).join("")+'</select></div></div><div class="grid2"><div class="f"><label>Starts</label><input name="startsAt" type="datetime-local" value="'+attr(toLocalInput(e.starts_at))+'"></div><div class="f"><label>Ends</label><input name="endsAt" type="datetime-local" value="'+attr(toLocalInput(e.ends_at))+'"></div></div><div class="grid2"><div class="f"><label>Venue</label><input name="venue" value="'+attr(e.venue||"")+'" placeholder="Riverside Park"></div><div class="f"><label>Address / map link</label><input name="address" value="'+attr(e.address||"")+'"></div></div><div class="grid2"><div class="f"><label>Expected guests</label><input name="expectedGuests" type="number" min="0" value="'+attr(e.expected_guests==null?"":e.expected_guests)+'"></div><div class="f"><label>Budget</label><input name="budget" type="number" min="0" step="0.01" value="'+attr(e.budget==null?"":e.budget)+'"></div></div><div class="f"><label>Brief</label><textarea name="description" placeholder="What is the event, who is it for, what matters most?">'+esc(e.description||"")+'</textarea></div>';
+}
+function vEvent(id){
+ if(!S.event||S.event.event.id!==id){if(!S.busy["ev:"+id]){S.busy["ev:"+id]=true;api("events.get",{eventId:id}).then(function(d){S.busy["ev:"+id]=false;S.event=d;render();}).catch(function(e){S.busy["ev:"+id]=false;S.event=null;toast(e.message,"err");go("#/events");});}return '<div class="card"><div class="bd"><div class="sk" style="width:40%"></div><br><div class="sk"></div></div></div>';}
+ var d=S.event,e=d.event,st=d.stats||{};var me=(d.members||[]).filter(function(m){return m.member_id===actor().id;})[0]||{role:"guest",rsvp:"pending"};
+ var canEdit=me.role==="organizer",canPost=me.role==="organizer"||me.role==="helper";
+ var tabs=[["overview","Overview"],["tasks","Tasks ("+(st.tasks-st.done)+")"],["updates","Updates ("+st.updates+")"],["chat","Chat ("+st.messages+")"],["planner","AI Planner"]];
+ var head='<div class="card" style="margin-bottom:14px"><div class="bd"><div class="row between" style="align-items:flex-start"><div><div class="row" style="margin-bottom:4px"><span class="badge '+(e.status==="live"?"ok":e.status==="done"?"":"info")+'">'+esc(e.status)+'</span><span class="badge">'+esc(e.type)+'</span><span class="muted small">Event code <span class="code-pill">'+esc(e.code)+'</span> <button class="btn xs ghost" onclick="A.copyText(this)" data-text="'+attr(e.code)+'">'+ic("copy")+'</button></span></div><h2 style="font-size:22px;letter-spacing:-.5px">'+esc(e.title)+'</h2><div class="muted">'+(e.starts_at?fmtDT(e.starts_at)+' ('+until(e.starts_at)+')':'Date not set')+(e.venue?' - '+esc(e.venue):"")+(e.address?' <a href="'+(/^https?:/.test(e.address)?attr(e.address):"https://www.google.com/maps/search/"+encodeURIComponent(e.address))+'" target="_blank" rel="noopener">map</a>':"")+'</div>'+(e.description?'<p style="margin-top:6px;max-width:720px">'+esc(e.description)+'</p>':"")+'</div><div style="display:grid;gap:8px;justify-items:end"><div class="rsvp"><span class="muted small" style="align-self:center">Your RSVP</span>'+["yes","maybe","no"].map(function(r){return '<button class="btn s '+(me.rsvp===r?"on":"")+'" onclick="A.rsvp(\''+attr(e.id)+'\',\''+r+'\')">'+r+'</button>';}).join("")+'</div><div class="row">'+(canEdit?'<button class="btn s" onclick="A.editEvent()">'+ic("cog")+' Edit</button>':"")+'<button class="btn s ghost" onclick="A.refreshEvent()">'+ic("refresh")+'</button><a class="btn s ghost" href="#/events">All events</a></div></div></div></div><div class="tabs">'+tabs.map(function(t){return '<button class="'+(S.tab===t[0]?"on":"")+'" onclick="A.tab(\''+t[0]+'\')">'+esc(t[1])+'</button>';}).join("")+'</div></div>';
+ var body="";
+ if(S.tab==="overview"){
+  var pinned=(d.updates||[]).filter(function(u){return u.pinned;});var next=(d.tasks||[]).filter(function(t){return t.status!=="done";}).slice(0,6);
+  body='<div class="kpis" style="margin-bottom:14px"><div class="kpi"><b>'+st.going+'</b><span>people going</span></div><div class="kpi"><b>'+st.pending+'</b><span>no reply yet</span></div><div class="kpi"><b>'+(st.tasks-st.done)+'</b><span>open tasks</span></div><div class="kpi"><b style="color:'+(st.overdue?"var(--err)":"inherit")+'">'+st.overdue+'</b><span>overdue</span></div><div class="kpi"><b>'+(e.expected_guests==null?"-":e.expected_guests)+'</b><span>expected guests</span></div><div class="kpi"><b>'+(e.budget==null?"-":e.currency+" "+e.budget)+'</b><span>budget</span></div></div><div class="grid2" style="gap:14px"><div class="card"><div class="hd">'+ic("pin")+'<h3>Pinned information</h3></div><div class="bd">'+(pinned.length?pinned.map(updHtml).join(""):'<div class="muted small">Nothing pinned yet. Pin the essentials: time, venue, what to bring, who to contact.</div>')+'</div></div><div class="card"><div class="hd">'+ic("chk")+'<h3>Next tasks</h3><div class="sp"></div><button class="btn xs" onclick="A.tab(\'tasks\')">All</button></div><div class="bd">'+(next.length?next.map(function(t){return taskHtml(t);}).join(""):'<div class="muted small">No open tasks. Ask the AI Planner for a checklist.</div>')+'</div></div><div class="card"><div class="hd">'+ic("users")+'<h3>People ('+st.members+')</h3></div><div class="bd">'+(d.members||[]).map(function(m){return '<div class="row between" style="padding:5px 0;border-top:1px solid var(--line)"><span><span class="av" style="display:inline-grid;vertical-align:middle;margin-right:6px">'+esc(initialsOf(m.name))+'</span>'+esc(m.name||m.member_id)+' <span class="badge">'+esc(m.role)+'</span></span><span class="row"><span class="badge '+(m.rsvp==="yes"?"ok":m.rsvp==="no"?"err":m.rsvp==="maybe"?"warn":"")+'">'+esc(m.rsvp)+(m.party_size>1?" x"+m.party_size:"")+'</span>'+(canEdit&&m.member_id!==actor().id?'<select class="small" onchange="A.setRole(\''+attr(m.member_id)+'\',this.value)"><option'+(m.role==="guest"?" selected":"")+'>guest</option><option'+(m.role==="helper"?" selected":"")+'>helper</option><option'+(m.role==="organizer"?" selected":"")+'>organizer</option></select>':"")+'</span></div>';}).join("")+'<div class="muted small" style="margin-top:8px">Share the code <b>'+esc(e.code)+'</b> so people can join, RSVP and follow updates here instead of a WhatsApp group.</div></div></div><div class="card"><div class="hd">'+ic("msg")+'<h3>Latest in chat</h3><div class="sp"></div><button class="btn xs" onclick="A.tab(\'chat\')">Open</button></div><div class="bd">'+((d.messages||[]).slice(-4).map(chatLine).join("")||'<div class="muted small">No messages yet.</div>')+'</div></div></div>';
+ }else if(S.tab==="tasks"){
+  var open=(d.tasks||[]).filter(function(t){return t.status!=="done";}),done=(d.tasks||[]).filter(function(t){return t.status==="done";});
+  body='<div class="card"><div class="hd">'+ic("chk")+'<h3>Logistics checklist</h3><div class="sp"></div><span class="muted small">'+done.length+' of '+(d.tasks||[]).length+' done</span></div><div class="bd"><form class="row" onsubmit="return A.addTask(this)" style="margin-bottom:12px"><input name="title" placeholder="New task" required style="flex:1;min-width:180px;padding:8px 10px;border:1px solid var(--line2);border-radius:9px"><select name="category" style="padding:8px;border:1px solid var(--line2);border-radius:9px">'+TASK_CATS.map(function(c){return "<option>"+c+"</option>";}).join("")+'</select><input name="assignee" placeholder="Owner" style="width:120px;padding:8px 10px;border:1px solid var(--line2);border-radius:9px"><input name="dueAt" type="date" style="padding:8px;border:1px solid var(--line2);border-radius:9px"><select name="priority" style="padding:8px;border:1px solid var(--line2);border-radius:9px"><option>normal</option><option>high</option><option>low</option></select><button class="btn p" type="submit">'+ic("plus")+'Add</button></form>'+(open.length?open.map(taskHtml).join(""):'<div class="muted small">Nothing open.</div>')+(done.length?'<div class="muted small" style="margin:14px 0 4px;font-weight:600">Done</div>'+done.map(taskHtml).join(""):"")+'</div></div>';
+ }else if(S.tab==="updates"){
+  body=(canPost?'<div class="card" style="margin-bottom:14px"><div class="hd">'+ic("mail")+'<h3>Post an update</h3><div class="sp"></div><span class="muted small">Everyone in the event sees it here</span></div><div class="bd"><form onsubmit="return A.postUpdate(this)"><div class="grid2"><div class="f"><label>Title</label><input name="title" required placeholder="Parking and arrival"></div><div class="f"><label>Kind</label><select name="kind"><option>announcement</option><option>info</option><option>schedule</option><option>reminder</option></select></div></div><div class="f"><label>Message</label><textarea name="body" placeholder="Short and clear: what, when, what people need to do."></textarea></div><div class="row between"><label class="small"><input type="checkbox" name="pinned"> Pin to the top</label><button class="btn p" type="submit">Post update</button></div></form></div></div>':'<div class="card" style="margin-bottom:14px"><div class="bd small muted">Only organisers and helpers post updates. Ask the organiser to make you a helper.</div></div>')+'<div class="card"><div class="hd">'+ic("pin")+'<h3>Information and announcements</h3></div><div class="bd">'+((d.updates||[]).map(updHtml).join("")||'<div class="muted small">No updates yet.</div>')+'</div></div>';
+ }else if(S.tab==="chat"){
+  body='<div class="card"><div class="hd">'+ic("msg")+'<h3>Event chat</h3><div class="sp"></div><span class="muted small">Questions and coordination. Decisions go into Updates.</span></div><div class="bd" style="max-height:52vh;overflow:auto" id="evchat">'+((d.messages||[]).map(chatLine).join("")||'<div class="muted small">Say hello.</div>')+'</div><div class="composer"><form class="box" onsubmit="return A.postMessage(this)"><textarea name="body" rows="1" placeholder="Message everyone in this event" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();this.form.requestSubmit();}"></textarea><button class="btn p icon" type="submit">'+ic("send")+'</button></form></div></div>';
+ }else if(S.tab==="planner"){
+  var a=agentById("agent-events");body=a?'<div class="ws" style="grid-template-columns:1fr;min-height:0">'+chatPanel(a,{eventId:e.id})+'</div>':"";
+ }
+ return head+body;
+}
+function taskHtml(t){var over=t.status!=="done"&&t.due_at&&new Date(t.due_at)<new Date();return '<div class="task"><input type="checkbox" '+(t.status==="done"?"checked":"")+' onchange="A.toggleTask(\''+attr(t.id)+'\',this.checked)"><div class="t '+(t.status==="done"?"done":"")+'"><b>'+esc(t.title)+'</b><div class="m"><span class="badge">'+esc(t.category)+'</span>'+(t.priority==="high"?'<span class="badge err">high</span>':"")+(t.assignee?'<span class="badge info">'+esc(t.assignee)+'</span>':'<span class="badge warn">unassigned</span>')+(t.due_at?'<span class="badge '+(over?"err":"")+'">'+fmtD(t.due_at,{day:"numeric",month:"short"})+'</span>':"")+(t.status==="doing"?'<span class="badge ok">in progress</span>':"")+'</div>'+(t.notes?'<div class="muted small">'+esc(t.notes)+'</div>':"")+'</div>'+(t.status!=="done"?'<button class="btn xs ghost" title="Mark in progress" onclick="A.taskStatus(\''+attr(t.id)+'\',\''+(t.status==="doing"?"todo":"doing")+'\')">'+(t.status==="doing"?"pause":"start")+'</button>':"")+'</div>';}
+function updHtml(u){return '<div class="upd"><h4>'+(u.pinned?ic("pin"):"")+esc(u.title)+' <span class="badge">'+esc(u.kind)+'</span></h4>'+(u.body?'<p>'+esc(u.body)+'</p>':"")+'<div class="m">'+esc(u.author||"")+' - '+ago(u.created_at)+' <button class="btn xs ghost" onclick="A.pinUpdate(\''+attr(u.id)+'\','+(u.pinned?"false":"true")+')">'+(u.pinned?"unpin":"pin")+'</button></div></div>';}
+function chatLine(m){var me=m.author_id===actor().id;return '<div class="chatline '+(me?"me":"")+'"><span class="av">'+esc(initialsOf(m.author))+'</span><div class="b"><small>'+esc(m.author||"")+' - '+ago(m.created_at)+'</small>'+esc(m.body)+'</div></div>';}
+// ---- account ----------------------------------------------------------------------------------------------------------
+function authForms(){
+ if(S.authForgot){
+  if(S.authForgot.step==="otp")return '<div style="max-width:380px;margin:0 auto"><b style="display:block;margin-bottom:4px">Reset your password</b><p class="muted small" style="margin-bottom:14px">Enter the 6-digit code we emailed to '+esc(S.authForgot.email)+' and choose a new password. The code expires in 10 minutes.</p><form onsubmit="return A.forgotReset(this)"><div class="f"><label>6-digit code</label><input name="otp" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="one-time-code" autofocus></div><div class="f"><label>New password (8+ characters)</label><input name="password" type="password" minlength="8" required autocomplete="new-password"></div><button class="btn p" style="width:100%" type="submit">Reset password</button></form><div class="row" style="margin-top:10px;justify-content:space-between"><a href="#" class="small" onclick="A.forgotResend();return false">Resend code</a><a href="#" class="small" onclick="A.forgotCancel();return false">Back to sign in</a></div></div>';
+  return '<div style="max-width:380px;margin:0 auto"><b style="display:block;margin-bottom:4px">Reset your password</b><p class="muted small" style="margin-bottom:14px">Enter the email on your account and we will send a 6-digit code to confirm it is you. This only works for accounts created with email and password - Google accounts sign in with the Google button below.</p><form onsubmit="return A.forgotRequest(this)"><div class="f"><label>Email</label><input name="email" type="email" required autocomplete="email" value="'+attr(S.authForgot.email||"")+'"></div><button class="btn p" style="width:100%" type="submit">Send code</button></form><div style="margin-top:10px"><a href="#" class="small" onclick="A.forgotCancel();return false">Back to sign in</a></div></div>';
+ }
+ var cid=googleClientId();
+ var google=googleBtn()+(!cid&&isAdmin()?'<div class="muted small" style="margin-top:6px;text-align:center">Admin: add the Google client id in Admin, Settings to switch Google sign-in on.</div>':'');
+ var signIn='<div><b style="display:block;margin-bottom:8px">Sign in</b><form onsubmit="return A.login(this)"><div class="f"><label>Email</label><input name="email" type="email" required autocomplete="email"></div><div class="f"><label>Password</label><input name="password" type="password" required autocomplete="current-password"></div><button class="btn p" style="width:100%" type="submit">Sign in</button></form><div style="margin-top:8px"><a href="#" class="small" onclick="A.openForgot();return false">Forgot password?</a></div></div>';
+ var signUp;
+ if(S.authSignup){
+  signUp='<div><b style="display:block;margin-bottom:4px">Verify your email</b><p class="muted small" style="margin-bottom:10px">We emailed a 6-digit code to '+esc(S.authSignup.email)+'. Enter it below to finish creating your account.</p><form onsubmit="return A.signupVerify(this)"><div class="f"><label>6-digit code</label><input name="otp" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="one-time-code" autofocus></div><button class="btn p" style="width:100%" type="submit">Create account</button></form><div class="row" style="margin-top:10px;justify-content:space-between"><a href="#" class="small" onclick="A.signupResend();return false">Resend code</a><a href="#" class="small" onclick="A.signupCancel();return false">Use a different email</a></div></div>';
+ }else{
+  signUp='<div><b style="display:block;margin-bottom:8px">Create account (free)</b><form onsubmit="return A.signup(this)"><div class="f"><label>Name</label><input name="name" required autocomplete="name"></div><div class="f"><label>Email</label><input name="email" type="email" required autocomplete="email"></div><div class="f"><label>Password (8+ characters)</label><input name="password" type="password" minlength="8" required autocomplete="new-password"></div><button class="btn" style="width:100%" type="submit">Send code and create account</button></form></div>';
+ }
+ return '<div style="max-width:380px;margin:0 auto;display:grid;gap:18px">'+google+'<div class="or">or use your email</div>'+signIn+'<div class="or">new here?</div>'+signUp+'</div>';
+}
+function vAccount(){
+ if(!signedIn())return '<div class="card"><div class="hd">'+ic("user")+'<h3>Sign in or create a free account</h3></div><div class="bd"><p class="muted" style="margin-bottom:14px">The free version needs no account. Sign up to keep your events, RSVPs and athlete profile across devices, and to subscribe to Premium for Claude and ChatGPT. Anything you created as a guest on this device moves to your account.</p>'+authForms()+'</div></div>';
+ if(!S.account){if(!S.busy.account){S.busy.account=true;api("account.get").then(function(d){S.busy.account=false;S.account=d;render();}).catch(function(e){S.busy.account=false;S.account={error:e};render();});}return '<div class="card"><div class="bd"><div class="sk" style="width:40%"></div></div></div>';}
+ var u=S.account.user||actor();var bill=((S.boot||{}).settings||{}).billing||{};
+ return '<div class="grid2" style="gap:14px;align-items:start"><div class="card"><div class="hd">'+ic("user")+'<h3>Your account</h3></div><div class="bd"><div class="row" style="margin-bottom:12px"><span class="av" style="width:44px;height:44px;font-size:15px">'+(u.avatar_url||u.avatarUrl?'<img src="'+attr(u.avatar_url||u.avatarUrl)+'" alt="">':esc(u.initials||initialsOf(u.name)))+'</span><div><b>'+esc(u.name)+'</b><div class="muted small">'+esc(u.email)+' - '+esc(u.auth_provider||u.authProvider||"email")+' sign-in</div></div></div><div class="row" style="margin-bottom:12px"><span class="badge '+(isPremium()?"ac":"")+'">'+(isPremium()?"Premium":"Free plan")+'</span>'+(u.plan_expires_at?'<span class="muted small">renews / expires '+fmtD(u.plan_expires_at)+'</span>':"")+(u.role==="admin"?'<span class="badge info">admin</span>':"")+'</div><div class="row"><button class="btn" onclick="A.signOut()">'+ic("out")+'Sign out</button><button class="btn ghost" onclick="A.refreshAccount()">'+ic("refresh")+'</button></div></div></div><div class="card '+(isPremium()?"":"")+'"><div class="hd">'+ic("star")+'<h3>Premium</h3>'+(bill.priceLabel?'<span class="badge ac">'+esc(bill.priceLabel)+'</span>':"")+'</div><div class="bd">'+(isPremium()?'<p>Claude and ChatGPT are unlocked on Athlete Edge and Event Planner. Pick them from the model selector in any chat.</p>':'<ul style="margin:0 0 12px 18px;color:var(--tx2)">'+((bill.premiumBenefits||["Claude and ChatGPT on every agent"]).map(function(x){return "<li>"+esc(x)+"</li>";}).join(""))+'</ul><button class="btn p" onclick="A.checkout()">Subscribe to Premium</button>'+(bill.configured?"":'<div class="muted small" style="margin-top:8px">Online payment is not configured yet; the team can activate Premium manually.</div>'))+'</div></div><div class="card"><div class="hd">'+ic("chart")+'<h3>Usage</h3></div><div class="bd">'+((S.account.usage||[]).length?'<table class="t"><tr><th>Day</th><th>Messages</th></tr>'+S.account.usage.map(function(x){return "<tr><td>"+fmtD(x.day,{day:"numeric",month:"short"})+"</td><td>"+x.messages+"</td></tr>";}).join("")+'</table>':'<div class="muted small">No messages yet.</div>')+'</div></div><div class="card"><div class="hd">'+ic("spark")+'<h3>Recent agent runs</h3></div><div class="bd">'+((S.account.runs||[]).length?'<table class="t"><tr><th>Agent</th><th>Model</th><th>Status</th><th>When</th></tr>'+S.account.runs.map(function(r){return "<tr><td>"+esc(r.agent_id)+"</td><td>"+esc(r.provider)+"</td><td>"+esc(r.status)+"</td><td>"+ago(r.at)+"</td></tr>";}).join("")+'</table>':'<div class="muted small">Nothing yet.</div>')+'</div></div></div>';
+}
+function openUpgrade(modelLabel){
+ var bill=((S.boot||{}).settings||{}).billing||{};
+ var benefits=(bill.premiumBenefits||["Claude and ChatGPT on every agent"]).map(function(x){return "<li>"+esc(x)+"</li>";}).join("");
+ var html='<div class="row between"><h2>'+(modelLabel?esc(modelLabel)+' is a Premium model':'Y Square Premium')+'</h2><button class="btn icon ghost" onclick="A.closeModal()">'+ic("x")+'</button></div><p class="sub">Gemini Flash, Mistral and Groq stay free. Premium adds:</p><ul style="margin:0 0 14px 18px;color:var(--tx2)">'+benefits+'</ul>';
+ if(signedIn())html+='<button class="btn p" style="width:100%" onclick="A.checkout()">Subscribe'+(bill.priceLabel?" - "+esc(bill.priceLabel):"")+'</button>';
+ else html+='<p class="small muted" style="margin-bottom:10px">Step 1 - quick sign-up with Google or email (free). Step 2 - subscribe. Your guest events and profile come with you.</p>'+authForms();
+ openModal(html);
+}
+// ---- admin -------------------------------------------------------------------------------------------------------------
+function vAdmin(){
+ if(!isAdmin())return '<div class="card"><div class="empty">Administrators only.</div></div>';
+ if(!S.admin){if(!S.busy.admin){S.busy.admin=true;api("admin.overview").then(function(d){S.busy.admin=false;S.admin=d;render();}).catch(function(e){S.busy.admin=false;toast(e.message,"err");});}return '<div class="card"><div class="bd"><div class="sk" style="width:40%"></div></div></div>';}
+ var d=S.admin,k=d.kpis||{},st=d.settings||{};
+ function val(o,p){return attr((o||{})[p]==null?"":(o||{})[p]);}
+ return '<div class="card" style="margin-bottom:14px"><div class="hd">'+ic("book")+'<h3>Class materials and AI Playground</h3><div class="sp"></div><a class="btn s" href="#/teacher">Open Teacher Tools</a></div><div class="bd small muted">Upload and manage class materials (PDF, DOCX or TXT - indexed automatically for the AI tutor, lessons and quizzes), and manage the Middle School and High School AI Playground sections (announcements, schedule, whitelist, pending work) from Teacher Tools.</div></div><div class="kpis" style="margin-bottom:14px"><div class="kpi"><b>'+k.users+'</b><span>accounts</span></div><div class="kpi"><b>'+k.premium+'</b><span>premium</span></div><div class="kpi"><b>'+k.guests7d+'</b><span>guests (7 d)</span></div><div class="kpi"><b>'+k.runs7d+'</b><span>agent runs (7 d)</span></div><div class="kpi"><b>'+k.errors7d+'</b><span>errors (7 d)</span></div><div class="kpi"><b>'+k.events+'</b><span>events</span></div></div><div class="grid2" style="gap:14px;align-items:start"><div class="card"><div class="hd">'+ic("users")+'<h3>Users</h3><div class="sp"></div><button class="btn xs ghost" onclick="A.refreshAdmin()">'+ic("refresh")+'</button></div><div class="bd" style="overflow:auto"><table class="t"><tr><th>Name</th><th>Plan</th><th>Set plan</th><th>Role</th></tr>'+(d.users||[]).map(function(u){return '<tr><td><b>'+esc(u.name)+'</b><div class="muted small">'+esc(u.email)+' - '+esc(u.auth_provider)+(u.role==="admin"?" - admin":u.role==="teacher"?" - teacher":"")+(u.active?"":" - inactive")+'</div></td><td><span class="badge '+(u.effective_plan==="premium"?"ac":"")+'">'+esc(u.effective_plan)+'</span>'+(u.plan_expires_at?'<div class="muted small">until '+fmtD(u.plan_expires_at,{day:"numeric",month:"short"})+'</div>':"")+'</td><td><div class="row" style="gap:4px"><select id="pl-'+attr(u.id)+'"><option value="premium">premium</option><option value="free">free</option></select><input id="pm-'+attr(u.id)+'" type="number" placeholder="months" min="0" style="width:74px;padding:5px;border:1px solid var(--line2);border-radius:7px"><button class="btn xs" onclick="A.setPlan(\''+attr(u.id)+'\')">Apply</button></div></td><td><div class="row" style="gap:4px"><select id="ur-'+attr(u.id)+'"><option value="member"'+(u.role==="member"?" selected":"")+'>member</option><option value="teacher"'+(u.role==="teacher"?" selected":"")+'>teacher</option><option value="admin"'+(u.role==="admin"?" selected":"")+'>admin</option></select><button class="btn xs" onclick="A.setUserRole(\''+attr(u.id)+'\')">Apply</button></div></td></tr>';}).join("")+'</table></div></div><div class="card"><div class="hd">'+ic("spark")+'<h3>Models and agents</h3></div><div class="bd"><table class="t"><tr><th>Model</th><th>Tier</th><th>Enabled</th></tr>'+(d.models||[]).map(function(m){return '<tr><td><b>'+esc(m.label)+'</b><div class="muted small mono">'+esc(m.model_id)+'</div></td><td><select onchange="A.model(\''+attr(m.id)+'\',{tier:this.value})"><option'+(m.tier==="free"?" selected":"")+'>free</option><option'+(m.tier==="premium"?" selected":"")+'>premium</option></select></td><td><input type="checkbox" '+(m.enabled?"checked":"")+' onchange="A.model(\''+attr(m.id)+'\',{enabled:this.checked})"></td></tr>';}).join("")+'</table><div class="muted small" style="margin:10px 0 6px;font-weight:600">Default model per agent</div>'+["agent-athlete","agent-events"].map(function(ag){var cur=((S.boot.agentSettings||{})[ag]||{}).defaultModel||"";return '<div class="row between" style="padding:5px 0"><span>'+esc((agentById(ag)||{}).name||ag)+'</span><select onchange="A.agentModel(\''+ag+'\',this.value)">'+(d.models||[]).map(function(m){return '<option value="'+attr(m.id)+'"'+(m.id===cur?" selected":"")+'>'+esc(m.label)+'</option>';}).join("")+'</select></div>';}).join("")+'</div></div><div class="card"><div class="hd">'+ic("cog")+'<h3>Settings</h3></div><div class="bd"><form onsubmit="return A.settings(this,\'auth\')"><div class="f"><label>Google client id (for Google sign-in)</label><input name="googleClientId" value="'+val(st.auth,"googleClientId")+'" placeholder="xxxx.apps.googleusercontent.com"><div class="help">Create an OAuth client (Web) in Google Cloud and add this site origin to its authorised JavaScript origins.</div></div><button class="btn s" type="submit">Save auth</button></form><hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><form onsubmit="return A.settings(this,\'billing\')"><div class="f"><label>Checkout URL (Stripe Payment Link)</label><input name="checkoutUrl" value="'+val(st.billing,"checkoutUrl")+'" placeholder="https://buy.stripe.com/..."></div><div class="f"><label>Price label</label><input name="priceLabel" value="'+val(st.billing,"priceLabel")+'"></div><button class="btn s" type="submit">Save billing</button></form><hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><form onsubmit="return A.settings(this,\'studypals\')"><div class="f"><label>StudyPals base URL</label><input name="baseUrl" value="'+val(st.studypals,"baseUrl")+'"></div><div class="f"><label>Tutor path</label><input name="tutorPath" value="'+val(st.studypals,"tutorPath")+'"><div class="help">Lessons, quizzes and Q&amp;A use the same base URL.</div></div><button class="btn s" type="submit">Save StudyPals</button></form><hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><form onsubmit="return A.settings(this,\'limits\',true)"><div class="grid2"><div class="f"><label>Guest messages / day</label><input name="guestDailyMessages" type="number" value="'+val(st.limits,"guestDailyMessages")+'"></div><div class="f"><label>Free members / day</label><input name="freeDailyMessages" type="number" value="'+val(st.limits,"freeDailyMessages")+'"></div></div><button class="btn s" type="submit">Save limits</button></form></div></div><div class="card"><div class="hd">'+ic("chart")+'<h3>Agent runs (30 days)</h3></div><div class="bd"><table class="t"><tr><th>Agent</th><th>Provider</th><th>Runs</th><th>Avg</th><th>Errors</th></tr>'+((d.runsByAgent||[]).map(function(r){return "<tr><td>"+esc(r.agent_id)+"</td><td>"+esc(r.provider)+"</td><td>"+r.runs+"</td><td>"+(r.avg_ms/1000).toFixed(1)+"s</td><td>"+r.errors+"</td></tr>";}).join("")||'<tr><td colspan="5" class="muted">No runs yet.</td></tr>')+'</table><div class="muted small" style="margin:10px 0 6px;font-weight:600">Recent activity</div>'+(d.activity||[]).slice(0,12).map(function(a){return '<div class="small" style="padding:4px 0;border-top:1px solid var(--line)"><b>'+esc(a.actor)+'</b> '+esc(a.action)+' <span class="muted">'+esc(a.target||a.object_id||"")+' - '+ago(a.at)+'</span></div>';}).join("")+'</div></div></div>';
+}
+// ---- StudyPals workspace (student view) -----------------------------------------------------------------------------
+// Tutor, lessons and quizzes all go through the Y Square Agents backend (/svc/chat), which calls the existing
+// StudyPals n8n webhooks with the student id from the session. No live classes or voice.
+function patchAgents(d){(d.agents||[]).forEach(function(a){if(a.id==="agent-studypals"){a.title="Tutor, lessons and quizzes from class materials";a.description="Your StudyPals study space: a personal tutor that gives hints before answers, a lesson generator, practice quizzes and answers from the materials your teacher uploaded.";a.capabilities=["Personal tutor with hints","Lesson generator","Quiz generator","Ask about class materials"];a.starters=["Explain this topic with a real-life example.","Give me a hint for my homework question.","What should I review before my test?","Check my understanding with three questions."];}});}
+var SP_RETRY_MS=15000;
+function spGrade(){return Number(S.sp.grade)||8;}
+function spLabel(){return "Grade "+spGrade()+" "+(S.sp.subject||"");}
+function loadingHtml(title,sub){return '<div class="card"><div class="loading"><div class="ring"></div><b>'+esc(title)+'</b><span class="small muted">'+esc(sub||"")+'</span></div></div>';}
+var SP_TABS=[["tutor","Tutor","msg"],["lessons","Lessons","book"],["quiz","Quiz","chk"],["askai","Ask AI","spark"]];
+// Ask AI: a general study helper for questions beyond the class materials (Y Square Agents workflow, persona agent-askai).
+var ASKAI={id:"agent-askai",name:"Ask AI",title:"Any question - even beyond your class materials",description:"Ask about anything you are learning, including topics your teacher has not uploaded. For answers from your class materials, use the Tutor tab.",color:"#7c3aed",icon:"spark",placeholder:"Ask anything you are learning...",footnote:"General answers - check important facts with your teacher",starters:["Explain photosynthesis in simple words","How do I find the area of a triangle?","Give me tips to remember vocabulary","What caused World War I?"]};
+// StudyPals lesson / quiz go through the Y Square backend, which sets the student id from the session and applies the guardrails.
+function spTask(task,topic,extra,tries){if(tries==null)tries=1;
+ var ctx=Object.assign({grade:String(spGrade()),subject:S.sp.subject,topic:topic},extra||{});
+ return chatApi({agentId:"agent-studypals",task:task,message:topic,model:"studypals",conversationId:"sp-"+task,context:ctx}).then(function(j){
+  if(j&&j.success&&j.data)return j.data;
+  var e=(j&&j.error)||{};
+  if(e.code==="BLOCKED"||e.code==="RATE_LIMITED"||e.code==="INVALID_REQUEST"||e.code==="INVALID_SESSION"||e.code==="NETWORK"||tries<=0)throw {code:e.code,message:friendlyMsg(e,"StudyPals could not finish that just now. Please try again in a moment.")};
+  toast("Still working on it - one moment...");
+  return new Promise(function(res){setTimeout(res,SP_RETRY_MS);}).then(function(){return spTask(task,topic,extra,tries-1);});
+ });}
+function vStudyPals(){
+ var a=agentById("agent-studypals");if(!a)return '<div class="empty">StudyPals is not available right now.</div>';
+ var tab=S.spTab;if(!SP_TABS.some(function(t){return t[0]===tab;}))tab="tutor";
+ var head='<div class="card" style="margin-bottom:14px">'+spBar()+'<div class="tabs">'+SP_TABS.map(function(t){return '<button class="'+(tab===t[0]?"on":"")+'" onclick="A.spTab(\''+t[0]+'\')"><span class="tl">'+ic(t[2])+esc(t[1])+'</span></button>';}).join("")+'</div></div>';
+ var body;
+ if(tab==="lessons")body=spLessons();
+ else if(tab==="quiz")body=spQuiz();
+ else if(tab==="askai")body='<div class="sphint small muted">'+ic("spark")+' Ask AI answers any question, even outside your class materials. For answers from what your teacher uploaded, use <a href="#" onclick="A.spTab(\'tutor\');return false">Tutor</a>.</div><div class="spchat">'+chatPanel(ASKAI,ctxFor("agent-askai"))+'</div>';
+ else body='<div class="sphint small muted">'+ic("msg")+' Tutor answers from your class materials for '+esc(spLabel())+'. For anything else, try <a href="#" onclick="A.spTab(\'askai\');return false">Ask AI</a>.</div><div class="spchat">'+chatPanel(a,ctxFor("agent-studypals"))+'</div>';
+ return head+body;
+}
+function spBar(){
+ return '<div class="spbar"><div class="f"><label>Grade</label><select onchange="A.sp(\'grade\',this.value)">'+[1,2,3,4,5,6,7,8,9,10,11,12].map(function(g){return '<option value="'+g+'"'+(String(g)===String(S.sp.grade)?" selected":"")+'>Grade '+g+'</option>';}).join("")+'</select></div><div class="f"><label>Subject</label><select onchange="A.sp(\'subject\',this.value)">'+SUBJECTS.map(function(s){return '<option'+(s===S.sp.subject?" selected":"")+'>'+esc(s)+'</option>';}).join("")+'</select></div><div class="f" style="flex:1;min-width:200px"><label>Topic</label><input id="sp-topic" value="'+attr(S.sp.topic||"")+'" placeholder="Fractions, limits, photosynthesis..." onchange="A.sp(\'topic\',this.value)"></div>'+(signedIn()?'':'<div class="f" style="min-width:0;justify-content:end"><label>&nbsp;</label><button type="button" class="btn p" onclick="A.openSignIn()">'+ic("user")+'Sign in</button></div>')+'<div class="note-line">Tutor, lessons and quizzes use the curriculum and the materials your teacher uploaded for '+esc(spLabel())+'. Ask AI can help with anything else.</div></div>';
+}
+// lessons
+function spLessons(){
+ var busy=S.busy.lesson;
+ var form='<div class="card"><div class="hd">'+ic("spark")+'<h3>Lesson generator</h3></div><div class="bd"><form onsubmit="return A.genLesson(this)"><div class="f"><label>What do you want to learn?</label><input name="topic" required value="'+attr(S.sp.topic||"")+'" placeholder="e.g. Limits, the water cycle"></div><button class="btn p" type="submit" style="width:100%"'+(busy?" disabled":"")+'>'+ic("book")+(busy?"Building your lesson...":"Generate lesson")+'</button></form><div class="help small muted" style="margin-top:8px">'+esc(spLabel())+' - usually ready in 15 to 40 seconds.</div></div></div>';
+ var hist=S.lessons.length?'<div class="card"><div class="hd">'+ic("refresh")+'<h3>Your lessons</h3><div class="sp"></div><button class="btn xs ghost" onclick="A.clearLessons()">Clear</button></div><div class="bd hist" style="padding:8px">'+S.lessons.map(function(l,i){var L=l.lesson||{};return '<button class="'+(S.lessonView&&S.lessonView.id===l.id?"on":"")+'" onclick="A.openLesson('+i+')"><b>'+esc(L.title||l.topic)+'</b><span class="muted small">Grade '+esc(l.grade)+' '+esc(l.subject)+' - '+ago(l.at)+'</span></button>';}).join("")+'</div></div>':"";
+ var main;
+ if(busy)main=loadingHtml("Building a lesson on "+busy.topic,"StudyPals is reading your class materials for "+busy.label+".");
+ else if(S.lessonView)main=lessonHtml(S.lessonView);
+ else main='<div class="card"><div class="empty">'+ic("book","ic22")+'<br><b>No lesson yet</b><div class="small">Type a topic and press Generate lesson. You get objectives, explained sections with examples, practice questions with hints and a quick check for understanding.</div></div></div>';
+ return '<div class="split"><div>'+main+'</div><div class="rail">'+form+hist+'</div></div>';
+}
+// Explanation image: generated live (free, no sign-up) only for sections that asked for one - not shown for every
+// section. If it fails to load in the browser, fall back to the short text description instead of a broken image.
+function secImg(s){
+ if(s.imageUrl)return '<div class="vis"><img class="expl-img" src="'+attr(s.imageUrl)+'" alt="'+attr(s.visualPrompt||"Explanation picture")+'" loading="lazy" data-fb="'+attr("Picture it: "+String(s.visualPrompt||""))+'" onerror="A.imgErr(this)"></div>';
+ if(s.visualPrompt)return '<div class="vis">Picture it: '+esc(s.visualPrompt)+'</div>';
+ return "";
+}
+function lessonHtml(rec){
+ var L=rec.lesson||{};
+ var warn=L.groundedInMaterial===false?'<div class="note">'+ic("help")+' There is no class material for this topic in Grade '+esc(rec.grade)+' '+esc(rec.subject)+' yet. Ask your teacher to upload it, or try another topic.</div>':"";
+ var h='<div class="card"><div class="bd lesson">'+warn+'<div class="row" style="gap:6px"><span class="badge info">Grade '+esc(rec.grade)+'</span><span class="badge">'+esc(rec.subject)+'</span>'+(L.estimatedMinutes?'<span class="badge">'+ic("clock")+' ~'+esc(L.estimatedMinutes)+' min</span>':"")+(L.groundedInMaterial?'<span class="badge ok">'+ic("check")+' from class materials</span>':"")+'</div><h2>'+esc(L.title||rec.topic)+'</h2><div class="muted small">Topic: '+esc(rec.topic)+' - '+fmtDT(rec.at)+'</div>';
+ if((L.objectives||[]).length)h+='<h4 class="lbl">You will learn to</h4><ul class="obj">'+L.objectives.map(function(o){return "<li>"+esc(o)+"</li>";}).join("")+'</ul>';
+ if((L.sections||[]).length)h+='<h4 class="lbl">Lesson</h4>'+L.sections.map(function(s,i){return '<div class="sec-card"><h4><span class="n">'+(i+1)+'</span>'+esc(s.heading||"")+'</h4><p>'+esc(s.explanation||"")+'</p>'+(s.example?'<div class="ex"><b>Example</b>'+esc(s.example)+'</div>':"")+secImg(s)+'</div>';}).join("");
+ if((L.practiceQuestions||[]).length)h+='<h4 class="lbl">Practice</h4><div>'+L.practiceQuestions.map(function(q,i){return '<div class="pq"><b>'+(i+1)+'. '+esc(q.question||"")+'</b><div>'+(q.hint?'<details><summary>Hint</summary><div>'+esc(q.hint)+'</div></details>':"")+(q.answer?'<details><summary>Answer</summary><div>'+esc(q.answer)+'</div></details>':"")+'</div></div>';}).join("")+'</div>';
+ if((L.checkForUnderstanding||[]).length)h+='<h4 class="lbl">Check your understanding</h4><ul class="obj">'+L.checkForUnderstanding.map(function(o){return "<li>"+esc(o)+"</li>";}).join("")+'</ul>';
+ if((L.sources||[]).length)h+='<div class="srcs" style="margin-top:14px">'+L.sources.map(function(s){return "<span>"+esc(s)+"</span>";}).join("")+'</div>';
+ h+='<div class="row" style="margin-top:16px"><button class="btn p" onclick="A.quizFromLesson()">'+ic("chk")+'Quiz me on this</button><button class="btn" onclick="A.tutorFromLesson()">'+ic("msg")+'Ask the tutor about it</button></div></div></div>';
+ return h;
+}
+// quiz
+function qObjective(q){if(typeof q.objective==="boolean")return q.objective;return ["multiple_choice","fill_blank","true_false"].indexOf(q.type)>=0;}
+function qNorm(s){return String(s==null?"":s).toLowerCase().replace(/[.,;:!?'"`()\[\]{}]/g,"").replace(/\s+/g," ").trim();}
+function qRight(q,ans){
+ if(ans==null||!String(ans).trim())return false;
+ var a=qNorm(ans),k=qNorm(q.answer);if(!k)return false;
+ if(a===k||a.replace(/ /g,"")===k.replace(/ /g,""))return true;
+ if(Array.isArray(q.options)){var idx=q.options.map(qNorm).indexOf(a);if(idx>=0){var letter="abcdefgh".charAt(idx);if(k===letter||k===String(idx+1)||k.indexOf(letter+" ")===0&&qNorm(k.slice(2))===a)return true;}}
+ var na=Number(a.replace(/ /g,"")),nk=Number(k.replace(/ /g,""));if(a&&k&&isFinite(na)&&isFinite(nk)&&Math.abs(na-nk)<1e-9)return true;
+ return false;
+}
+function qTotals(rec){var qs=(rec.quiz||{}).questions||[];var got=0,max=0,open=0;qs.forEach(function(q,i){var pts=Number(q.points)||1;if(qObjective(q)){max+=pts;if(qRight(q,rec.answers[i]))got+=pts;}else open++;});return {got:got,max:max,open:open};}
+function spQuiz(){
+ var busy=S.busy.quiz;
+ function opt(v,cur,label){return '<option value="'+v+'"'+(String(v)===String(cur)?" selected":"")+'>'+(label||v)+'</option>';}
+ var pref=LS.get("quizPref",{n:5,d:"medium"});
+ var form='<div class="card"><div class="hd">'+ic("spark")+'<h3>Quiz generator</h3></div><div class="bd"><form onsubmit="return A.genQuiz(this)"><div class="f"><label>Topic</label><input name="topic" required value="'+attr(S.sp.topic||"")+'" placeholder="e.g. Limits, food chains"></div><div class="grid2"><div class="f"><label>Questions</label><select name="numQuestions">'+[3,5,8,10].map(function(n){return opt(n,pref.n);}).join("")+'</select></div><div class="f"><label>Difficulty</label><select name="difficulty">'+opt("easy",pref.d,"Easy")+opt("medium",pref.d,"Medium")+opt("hard",pref.d,"Hard")+'</select></div></div><button class="btn p" type="submit" style="width:100%"'+(busy?" disabled":"")+'>'+ic("chk")+(busy?"Writing your quiz...":"Generate quiz")+'</button></form><div class="help small muted" style="margin-top:8px">'+esc(spLabel())+' - multiple choice and fill-in answers are marked instantly.</div></div></div>';
+ var hist=S.quizzes.length?'<div class="card"><div class="hd">'+ic("chart")+'<h3>Your quizzes</h3><div class="sp"></div><button class="btn xs ghost" onclick="A.clearQuizzes()">Clear</button></div><div class="bd hist" style="padding:8px">'+S.quizzes.map(function(r,i){var t=r.submitted?qTotals(r):null;return '<button class="'+(S.quizView&&S.quizView.id===r.id?"on":"")+'" onclick="A.openQuiz('+i+')"><b>'+esc((r.quiz||{}).title||r.topic)+'</b><span class="muted small">'+(t?'Score '+t.got+'/'+t.max:'Not submitted')+' - '+ago(r.at)+'</span></button>';}).join("")+'</div></div>':"";
+ var main;
+ if(busy)main=loadingHtml("Writing a "+busy.difficulty+" quiz on "+busy.topic,"Questions come from your class materials for "+busy.label+".");
+ else if(S.quizView)main=quizHtml(S.quizView);
+ else main='<div class="card"><div class="empty">'+ic("chk","ic22")+'<br><b>No quiz yet</b><div class="small">Pick a topic, the number of questions and the difficulty, then press Generate quiz.</div></div></div>';
+ return '<div class="split"><div>'+main+'</div><div class="rail">'+form+hist+'</div></div>';
+}
+function quizHtml(rec){
+ var Q=rec.quiz||{};var qs=Q.questions||[];var done=!!rec.submitted;
+ var h='<div class="card"><div class="bd">';
+ if(Q.groundedInMaterial===false)h+='<div class="note">'+ic("help")+' There is no class material for this topic in Grade '+esc(rec.grade)+' '+esc(rec.subject)+' yet, so StudyPals could not write real questions. Ask your teacher to upload it, or try another topic.</div>';
+ h+='<div class="row" style="gap:6px"><span class="badge info">Grade '+esc(rec.grade)+'</span><span class="badge">'+esc(rec.subject)+'</span><span class="badge">'+esc(rec.difficulty)+'</span><span class="badge">'+qs.length+' questions</span></div><h2 style="font-size:21px;letter-spacing:-.5px;margin:6px 0 10px">'+esc(Q.title||rec.topic)+'</h2>';
+ if(done){var t=qTotals(rec);h+='<div class="score"><b>'+t.got+' / '+t.max+'</b><div><div style="font-weight:600">'+(t.max&&t.got===t.max?"Perfect score!":t.max&&t.got/t.max>=0.7?"Great work!":"Keep practising - you are getting there.")+'</div><div class="small muted">Marked automatically'+(t.open?'. Compare your '+t.open+' written answer'+(t.open===1?"":"s")+' with the rubric below.':'.')+'</div></div></div>';}
+ h+='<form onsubmit="return A.submitQuiz()">'+qs.map(function(q,i){
+  var ans=rec.answers[i];var obj=qObjective(q);var right=done&&obj?qRight(q,ans):null;
+  var cls=done&&obj?(right?"ok":"bad"):"";
+  var input;
+  if(Array.isArray(q.options)&&q.options.length){input=q.options.map(function(o){var isAns=done&&qNorm(o)===qNorm(q.answer);return '<label class="opt'+(isAns?" right":"")+'"><input type="radio" name="q'+i+'" value="'+attr(o)+'"'+(String(ans)===String(o)?" checked":"")+(done?" disabled":"")+' onchange="A.qAns('+i+',this.value)"><span>'+esc(o)+'</span></label>';}).join("");}
+  else if(!obj||q.type==="essay"||q.type==="short_answer"){input='<textarea placeholder="Write your answer" oninput="A.qAns('+i+',this.value)"'+(done?" disabled":"")+'>'+esc(ans||"")+'</textarea>';}
+  else input='<input type="text" placeholder="Your answer" value="'+attr(ans||"")+'" oninput="A.qAns('+i+',this.value)"'+(done?" disabled":"")+'>';
+  var fb="";
+  if(done){
+   if(obj)fb='<div class="fb">'+(right?'<b style="color:var(--ok)">'+ic("check")+' Correct</b>':'<b style="color:var(--err)">Not quite.</b><span>Correct answer: <b>'+esc(q.answer)+'</b></span>')+'</div>';
+   else fb='<div class="fb"><b>How to check your answer</b><span class="muted">'+esc(q.rubric||"Compare with your class notes or ask the tutor.")+'</span></div>';
+  }
+  return '<div class="qz '+cls+'"><div class="qh"><b>'+(i+1)+'. '+esc(q.prompt||q.question||"")+'</b><span class="badge">'+(Number(q.points)||1)+' pt'+((Number(q.points)||1)===1?"":"s")+'</span></div>'+input+fb+'</div>';
+ }).join("");
+ h+='<div class="row" style="margin-top:14px">'+(done?'<button type="button" class="btn p" onclick="A.retryQuiz()">'+ic("refresh")+'Try again</button><button type="button" class="btn" onclick="A.tutorFromQuiz()">'+ic("msg")+'Ask the tutor what I missed</button>':'<button type="submit" class="btn p">'+ic("check")+'Submit answers</button><span class="small muted">You can change answers until you submit.</span>')+'</div></form></div></div>';
+ return h;
+}
+// ---- volunteer opportunities (separate tab; admins post them, stored in the organization setting) -----------------
+function volList(){if(Array.isArray(S.vol))return S.vol;var o=((S.boot||{}).settings||{}).organization||{};return Array.isArray(o.volunteerOpportunities)?o.volunteerOpportunities:[];}
+function loadVol(force){if(S.volLoading)return;if(!force&&S.volAt&&Date.now()-S.volAt<60000)return;S.volLoading=true;S.volAt=Date.now();
+ api("vol.list").then(function(d){S.vol=(d&&Array.isArray(d.opportunities))?d.opportunities:[];S.volErr=null;},function(e){S.volErr=e;}).then(function(){S.volLoading=false;S.volAt=Date.now();var v=S.route.view;if(v==="volunteer"||v==="home")render();});}
+function safeUrl(u){u=String(u||"").trim();return /^(https?:\/\/|mailto:)/i.test(u)?u:"";}
+function volBanner(){var n=volList().length;return '<div class="card agent" style="margin-top:16px;flex-direction:row;align-items:center;flex-wrap:wrap" onclick="A.go(\'#/volunteer\')"><div class="ai" style="background:#157a55">'+ic("heart","ic22")+'</div><div style="flex:1;min-width:200px"><h3>Volunteer opportunities</h3><p>'+(n?n+" opportunit"+(n===1?"y":"ies")+" open for students right now.":"Ways for students to give back to the community. New opportunities will be posted here.")+'</p></div><div class="go" style="margin:0;gap:8px"><span>Browse</span>'+ic("send")+'</div></div>';}
+function volCard(o){
+ var link=safeUrl(o.link)||(o.contact&&/@/.test(o.contact)?"mailto:"+String(o.contact).trim():"");
+ var canRemove=signedIn()&&(o.mine||isAdmin());
+ return '<div class="card vol"><div class="m">'+(o.category?'<span class="badge info">'+esc(o.category)+'</span>':"")+(o.ages?'<span class="badge">Ages '+esc(o.ages)+'</span>':"")+(o.sample?'<span class="badge warn">Sample</span>':"")+'</div><h3>'+esc(o.title)+'</h3>'+(o.org?'<div class="small muted">'+esc(o.org)+'</div>':"")+'<div class="m">'+(o.date?'<span class="badge">'+ic("cal")+' '+esc(o.date)+'</span>':"")+(o.location?'<span class="badge">'+ic("map")+' '+esc(o.location)+'</span>':"")+(o.hours?'<span class="badge">'+ic("clock")+' '+esc(o.hours)+'</span>':"")+'</div>'+(o.description?'<p>'+esc(o.description)+'</p>':"")+(o.createdByName&&!o.sample?'<div class="small muted">Posted by '+esc(o.mine?"you":o.createdByName)+'</div>':"")+
+  '<div class="row" style="margin-top:4px;flex-wrap:wrap">'+(link?'<a class="btn s p" href="'+attr(link)+'" target="_blank" rel="noopener">'+ic("heart")+'I am interested</a>':'<span class="small muted">Sign-up details coming soon</span>')+'<div class="sp" style="flex:1"></div>'+(canRemove?'<button class="btn xs ghost" onclick="A.delVol(\''+attr(o.id)+'\')">'+ic("x")+' Remove</button>':"")+'</div></div>';
+}
+function volForm(){
+ return '<div class="card" id="volform" style="margin-bottom:16px"><div class="hd">'+ic("plus")+'<h3>Add a volunteer opportunity</h3><div class="sp"></div><button class="btn xs ghost" onclick="A.volForm()">'+ic("x")+' Close</button></div><div class="bd"><form onsubmit="return A.addVol(this)"><div class="grid2"><div class="f"><label>Title *</label><input name="title" required maxlength="140" placeholder="Food bank helper"></div><div class="f"><label>Organisation</label><input name="org" maxlength="140" placeholder="Community Food Pantry"></div></div><div class="grid2"><div class="f"><label>Category</label><input name="category" maxlength="60" list="volcats" placeholder="Community, tutoring, sports..."><datalist id="volcats"><option>Community</option><option>Tutoring</option><option>Sports</option><option>Environment</option><option>Literacy</option><option>Events</option></datalist></div><div class="f"><label>Ages</label><input name="ages" maxlength="30" placeholder="13-18"></div></div><div class="grid2"><div class="f"><label>Date(s)</label><input name="date" maxlength="80" placeholder="Saturdays in October"></div><div class="f"><label>Location</label><input name="location" maxlength="140" placeholder="Community Center or Online"></div></div><div class="grid2"><div class="f"><label>Time commitment</label><input name="hours" maxlength="60" placeholder="3 hours / week"></div><div class="f"><label>Sign-up link or contact email</label><input name="link" maxlength="400" placeholder="https://... or name@example.org"></div></div><div class="f"><label>Description</label><textarea name="description" maxlength="2000" placeholder="What volunteers do, what to bring, who to contact."></textarea></div><div class="row"><button class="btn p" type="submit">'+ic("plus")+'Post opportunity</button><span class="small muted">Everyone can see what you post. You can remove it later.</span></div></form></div></div>';
+}
+function vVolunteer(){
+ loadVol();
+ var list=volList();
+ var h='<div class="hero" style="grid-template-columns:1fr;margin-bottom:16px"><div class="lead green"><span class="badge" style="background:rgba(255,255,255,.18);color:#fff;width:max-content">Community</span><h2>Volunteer opportunities</h2><p>Give back, build experience and meet people. Volunteer roles for students - community events, tutoring, coaching help and more - are listed here.</p><div class="row" style="margin-top:6px"><button class="btn" id="voladd" style="background:#fff;color:#157a55;border-color:#fff" onclick="A.volForm()">'+ic("plus")+'Add opportunity</button>'+(signedIn()?"":'<span class="small" style="color:rgba(255,255,255,.85)">Sign in to post</span>')+'</div></div></div>';
+ if(S.volForm&&signedIn())h+=volForm();
+ if(!Array.isArray(S.vol)&&S.volLoading)return h+loadingHtml("Loading opportunities","One moment...");
+ if(S.volErr&&!Array.isArray(S.vol))h+='<div class="card" style="margin-bottom:12px"><div class="bd small">Could not load opportunities: '+esc(S.volErr.message||"")+' <a href="#" onclick="A.reloadVol();return false">Try again</a></div></div>';
+ if(list.length){
+  h+='<div class="evs">'+list.map(volCard).join("")+'</div>';
+ }else{
+  h+='<div class="card"><div class="empty"><div style="width:48px;height:48px;border-radius:14px;background:#157a55;display:grid;place-items:center;color:#fff;margin:0 auto 10px">'+ic("heart","ic22")+'</div><b>No volunteer opportunities yet</b><div class="small">Be the first to add one with the Add opportunity button.</div></div></div>';
+ }
+ return h;
+}
+// ---- class materials (real StudyPals pipeline) + AI Playground (Teacher Tools + student view) -----------------------
+function materialDownloadUrl(gcsPath){return STUDYPALS_BASE+"/studypals/teacher/library/download?path="+encodeURIComponent(gcsPath);}
+function gradeBand(g){g=Number(g);if(g>=9)return "high";if(g>=6)return "middle";return null;}
+function loadMaterials(force){
+ if(S.matLoading)return;
+ if(!force&&S.matAt&&Date.now()-S.matAt<30000)return;
+ S.matLoading=true;
+ fetch(STUDYPALS_BASE+"/studypals/teacher/library").then(function(r){return r.json();}).then(function(j){S.materials=(j&&Array.isArray(j.rows))?j.rows:[];S.matErr=null;}).catch(function(){S.matErr={message:"Could not load class materials."};}).then(function(){S.matLoading=false;S.matAt=Date.now();render();});
+}
+function pgState(section){if(!S.pg)S.pg={};if(!S.pg[section])S.pg[section]={};return S.pg[section];}
+function pgLoad(section,key,action){
+ var st=pgState(section);
+ if(Array.isArray(st[key])||(st.loading&&st.loading[key]))return;
+ st.loading=st.loading||{};st.loading[key]=true;
+ api(action,{section:section}).then(function(d){st.loading[key]=false;st[key]=Array.isArray(d)?d:[];st[key+"Err"]=null;render();}).catch(function(e){st.loading[key]=false;st[key]=[];st[key+"Err"]=e;render();});
+}
+function pgMatLoad(section){
+ var st=pgState(section);
+ if(Array.isArray(st.materials)||(st.loading&&st.loading.materials))return;
+ st.loading=st.loading||{};st.loading.materials=true;
+ api("materials.list",{gradeBand:section}).then(function(d){st.loading.materials=false;st.materials=Array.isArray(d)?d:[];st.materialsErr=null;render();}).catch(function(e){st.loading.materials=false;st.materials=[];st.materialsErr=e;render();});
+}
+function vClassMaterials(){
+ if(!Array.isArray(S.materials)&&!S.matLoading)loadMaterials();
+ var rows=S.materials||[];
+ var form='<div class="card" style="margin-bottom:14px"><div class="hd">'+ic("plus")+'<h3>Upload class material</h3></div><div class="bd"><form onsubmit="return A.uploadMaterial(this)"><div class="grid2"><div class="f"><label>Subject</label><input name="subject" list="matsubjects" required placeholder="Math"><datalist id="matsubjects">'+SUBJECTS.map(function(s){return "<option>"+esc(s)+"</option>";}).join("")+'</datalist></div><div class="f"><label>Grade</label><select name="grade" required>'+[1,2,3,4,5,6,7,8,9,10,11,12].map(function(g){return '<option value="'+g+'">Grade '+g+'</option>';}).join("")+'</select></div></div><div class="f"><label>File (PDF, DOCX or TXT is indexed for the AI tutor - other types are stored but not searchable)</label><input type="file" name="file" required></div><button class="btn p" type="submit" style="width:100%"'+(S.matUploading?" disabled":"")+'>'+ic("plus")+(S.matUploading?"Uploading...":"Upload")+'</button></form><div class="help small muted" style="margin-top:8px">PDF and DOCX files are chunked and embedded automatically for the AI tutor, lesson generator and quizzes. This can take a moment for large files.</div></div></div>';
+ var list;
+ if(!Array.isArray(S.materials)&&S.matLoading)list=loadingHtml("Loading class materials","One moment...");
+ else if(S.matErr)list='<div class="card"><div class="bd small">Could not load class materials: '+esc(S.matErr.message||"")+' <a href="#" onclick="A.reloadMaterials();return false">Try again</a></div></div>';
+ else if(!rows.length)list='<div class="card"><div class="empty">'+ic("file","ic22")+'<br><b>No class materials yet</b><div class="small">Upload PDFs, DOCX or text files above. They become searchable for the AI tutor, lesson generator and quizzes.</div></div></div>';
+ else list='<div class="card"><div class="hd">'+ic("file")+'<h3>Class materials ('+rows.length+')</h3><div class="sp"></div><button class="btn xs ghost" onclick="A.reloadMaterials()">'+ic("refresh")+'</button></div><div class="bd" style="overflow:auto"><table class="t"><tr><th>File</th><th>Grade / subject</th><th>Status</th><th>Uploaded</th><th></th></tr>'+rows.map(function(m){
+  var indexable=m.fileType==="pdf"||m.fileType==="docx"||m.fileType==="text";
+  var status=!indexable?'<span class="badge">not searchable</span>':(m.chunkCount>0?'<span class="badge ok">'+m.chunkCount+' chunks indexed</span>':'<span class="badge warn">not indexed yet</span>');
+  return '<tr><td><b>'+esc(m.filename)+'</b><div class="muted small">'+esc(m.teacherName||"")+'</div></td><td>Grade '+esc(m.grade)+' - '+esc(m.subject)+'</td><td>'+status+'</td><td class="small muted">'+ago(m.createdAt)+'</td><td><div class="row" style="gap:4px;justify-content:flex-end"><a class="btn xs ghost" href="'+attr(materialDownloadUrl(m.gcsPath))+'" target="_blank" rel="noopener" title="Download">'+ic("down")+'</a><button class="btn xs ghost" title="Delete" onclick="A.confirmDeleteMaterial(\''+attr(m.id)+'\',\''+attr(m.filename)+'\')">'+ic("x")+'</button></div></td></tr>';
+ }).join("")+'</table></div></div>';
+ return form+list;
+}
+function vTeacherTools(){
+ if(!isTeacher())return '<div class="card"><div class="empty">Teachers and admins only.</div></div>';
+ var tab=S.teacherTab||"materials";
+ var tabs=[["materials","Class Materials"],["middle","Middle School"],["high","High School"]];
+ var head='<div class="card" style="margin-bottom:14px"><div class="tabs">'+tabs.map(function(t){return '<button class="'+(tab===t[0]?"on":"")+'" onclick="A.teacherTab(\''+t[0]+'\')">'+esc(t[1])+'</button>';}).join("")+'</div></div>';
+ var body;
+ if(tab==="middle")body=vPlaygroundManage("middle");
+ else if(tab==="high")body=vPlaygroundManage("high");
+ else body=vClassMaterials();
+ return head+body;
+}
+function vPlaygroundManage(section){
+ var st=pgState(section);
+ var label=section==="middle"?"Middle School":"High School";
+ pgLoad(section,"whitelist","playground.whitelist_list");
+ pgLoad(section,"announcements","playground.announcements_list");
+ pgLoad(section,"schedule","playground.schedule_list");
+ pgLoad(section,"pending","playground.pending_list");
+ pgMatLoad(section);
+ var wl=st.whitelist||[];
+ var wlHtml='<div class="card" style="margin-bottom:14px"><div class="hd">'+ic("users")+'<h3>'+esc(label)+' whitelist</h3><div class="sp"></div><span class="muted small">'+wl.length+' approved</span></div><div class="bd"><form class="row" onsubmit="return A.pgWhitelistAdd(this,\''+section+'\')" style="margin-bottom:10px"><input name="email" type="email" required placeholder="student@example.com" style="flex:1;min-width:180px;padding:8px 10px;border:1px solid var(--line2);border-radius:9px"><button class="btn p" type="submit">'+ic("plus")+'Approve</button></form>'+(wl.length?'<table class="t"><tr><th>Email</th><th>Approved by</th><th></th></tr>'+wl.map(function(w){return '<tr><td>'+esc(w.email)+'</td><td class="muted small">'+esc(w.added_by_name||"")+' - '+ago(w.added_at)+'</td><td><button class="btn xs ghost" onclick="A.pgWhitelistRemove(\''+section+'\',\''+attr(w.id)+'\')">'+ic("x")+'</button></td></tr>';}).join("")+'</table>':'<div class="muted small">No students approved yet for '+esc(label)+'.</div>')+'</div></div>';
+ var mt=st.materials||[];
+ var matHtml='<div class="card" style="margin-bottom:14px"><div class="hd">'+ic("file")+'<h3>'+esc(label)+' class material</h3><div class="sp"></div><span class="muted small">'+mt.length+' file'+(mt.length===1?"":"s")+'</span></div><div class="bd"><form onsubmit="return A.pgMaterialUpload(this,\''+section+'\')" style="margin-bottom:10px"><div class="grid2"><div class="f"><label>Title</label><input name="title" required maxlength="160"></div><div class="f"><label>Subject</label><input name="subject" maxlength="80"></div></div><div class="f"><label>File</label><input type="file" name="file" required></div><button class="btn p" type="submit">'+ic("plus")+'Upload</button></form>'+(mt.length?'<table class="t"><tr><th>File</th><th>Subject</th><th>Uploaded</th><th></th></tr>'+mt.map(function(m){return '<tr><td><b>'+esc(m.title)+'</b><div class="muted small">'+esc(m.file_name)+'</div></td><td>'+esc(m.subject||"-")+'</td><td class="small muted">'+ago(m.uploaded_at)+'</td><td><button class="btn xs ghost" title="Delete" onclick="A.pgMaterialDelete(\''+section+'\',\''+attr(m.id)+'\',\''+attr(m.title)+'\')">'+ic("x")+'</button></td></tr>';}).join("")+'</table>':'<div class="muted small">No material uploaded yet for '+esc(label)+'.</div>')+'</div></div>';
+ var an=st.announcements||[];
+ var anHtml='<div class="card" style="margin-bottom:14px"><div class="hd">'+ic("mail")+'<h3>Announcements</h3></div><div class="bd"><form onsubmit="return A.pgAnnouncementAdd(this,\''+section+'\')" style="margin-bottom:10px"><div class="f"><label>Title</label><input name="title" required maxlength="160"></div><div class="f"><label>Message</label><textarea name="body" maxlength="4000"></textarea></div><div class="row between"><label class="small"><input type="checkbox" name="pinned"> Pin to top</label><button class="btn p" type="submit">'+ic("plus")+'Post</button></div></form>'+(an.length?an.map(function(a){return '<div class="upd"><h4>'+(a.pinned?ic("pin"):"")+esc(a.title)+'</h4>'+(a.body?"<p>"+esc(a.body)+"</p>":"")+'<div class="m">'+esc(a.author||"")+' - '+ago(a.created_at)+' <button class="btn xs ghost" onclick="A.pgAnnouncementDelete(\''+section+'\',\''+attr(a.id)+'\')">'+ic("x")+' Remove</button></div></div>';}).join(""):'<div class="muted small">No announcements yet.</div>')+'</div></div>';
+ var sc=st.schedule||[];
+ var scHtml='<div class="card" style="margin-bottom:14px"><div class="hd">'+ic("cal")+'<h3>Class schedule</h3></div><div class="bd"><form onsubmit="return A.pgScheduleAdd(this,\''+section+'\')" style="margin-bottom:10px"><div class="grid2"><div class="f"><label>Class name</label><input name="className" required maxlength="120"></div><div class="f"><label>Subject</label><input name="subject" maxlength="80"></div></div><div class="grid2"><div class="f"><label>Starts</label><input name="startsAt" type="datetime-local"></div><div class="f"><label>Duration (min)</label><input name="durationMin" type="number" min="0"></div></div><div class="f"><label>Join link</label><input name="joinLink" placeholder="https://..."></div><div class="f"><label>Notes</label><input name="notes" maxlength="1000"></div><button class="btn p" type="submit">'+ic("plus")+'Add to schedule</button></form>'+(sc.length?'<table class="t"><tr><th>Class</th><th>When</th><th>Join</th><th></th></tr>'+sc.map(function(s){return '<tr><td><b>'+esc(s.class_name)+'</b>'+(s.subject?'<div class="muted small">'+esc(s.subject)+'</div>':"")+'</td><td class="small">'+(s.starts_at?fmtDT(s.starts_at):"-")+'</td><td>'+(s.join_link?'<a href="'+attr(s.join_link)+'" target="_blank" rel="noopener">Link</a>':"-")+'</td><td><button class="btn xs ghost" onclick="A.pgScheduleDelete(\''+section+'\',\''+attr(s.id)+'\')">'+ic("x")+'</button></td></tr>';}).join("")+'</table>':'<div class="muted small">Nothing scheduled yet.</div>')+'</div></div>';
+ var pd=st.pending||[];
+ var pdHtml='<div class="card"><div class="hd">'+ic("chk")+'<h3>Pending work</h3></div><div class="bd"><form onsubmit="return A.pgPendingAdd(this,\''+section+'\')" style="margin-bottom:10px"><div class="grid2"><div class="f"><label>Title</label><input name="title" required maxlength="200"></div><div class="f"><label>Due</label><input name="dueAt" type="date"></div></div><div class="f"><label>Description</label><textarea name="description" maxlength="2000"></textarea></div><button class="btn p" type="submit">'+ic("plus")+'Add</button></form>'+(pd.length?pd.map(function(p){return '<div class="task"><input type="checkbox" '+(p.status==="done"?"checked":"")+' onchange="A.pgPendingToggle(\''+section+'\',\''+attr(p.id)+'\',this.checked)"><div class="t '+(p.status==="done"?"done":"")+'"><b>'+esc(p.title)+'</b>'+(p.due_at?'<div class="m"><span class="badge">'+fmtD(p.due_at,{day:"numeric",month:"short"})+'</span></div>':"")+(p.description?'<div class="muted small">'+esc(p.description)+'</div>':"")+'</div><button class="btn xs ghost" onclick="A.pgPendingDelete(\''+section+'\',\''+attr(p.id)+'\')">'+ic("x")+'</button></div>';}).join(""):'<div class="muted small">Nothing pending.</div>')+'</div></div>';
+ return wlHtml+matHtml+anHtml+scHtml+pdHtml;
+}
+function vPlayground(section){
+ if(["middle","high"].indexOf(section)<0)return '<div class="card"><div class="empty">Not found.</div></div>';
+ var label=section==="middle"?"Middle School":"High School";
+ var head='<div class="hero" style="grid-template-columns:1fr;margin-bottom:16px"><div class="lead"><span class="badge" style="background:rgba(255,255,255,.18);color:#fff;width:max-content">AI Playground</span><h2>'+esc(label)+'</h2><p>Announcements, your class schedule, downloadable class material, a class chat and your pending work - all in one place.</p></div></div>';
+ if(!S.pgAccess){if(!S.busy.pgAccess){S.busy.pgAccess=true;api("playground.access").then(function(d){S.busy.pgAccess=false;S.pgAccess=d;render();}).catch(function(e){S.busy.pgAccess=false;toast(e.message,"err");});}return head+loadingHtml("Checking access","One moment...");}
+ var allowed=!!S.pgAccess[section];
+ if(!allowed){
+  var msg=!signedIn()?('The '+esc(label)+' AI Playground is only for students your teacher has approved. <a href="#" onclick="A.openSignIn();return false">Sign in</a> first, then ask your teacher to add your email.'):('Ask your teacher or admin to approve <b>'+esc(actor().email||"")+'</b> for the '+esc(label)+' AI Playground.');
+  return head+'<div class="card"><div class="empty">'+ic("lock","ic22")+'<br><b>Not yet approved</b><div class="small">'+msg+'</div></div></div>';
+ }
+ pgLoad(section,"announcements","playground.announcements_list");
+ pgLoad(section,"schedule","playground.schedule_list");
+ pgLoad(section,"chat","playground.chat_list");
+ pgLoad(section,"pending","playground.pending_list");
+ pgLoad(section,"pgMaterials","playground.materials_list");
+ var st=pgState(section);
+ var mats=st.pgMaterials||[];
+ var anCard='<div class="card"><div class="hd">'+ic("mail")+'<h3>Announcements</h3></div><div class="bd">'+((st.announcements||[]).length?st.announcements.map(function(a){return '<div class="upd"><h4>'+(a.pinned?ic("pin"):"")+esc(a.title)+'</h4>'+(a.body?"<p>"+esc(a.body)+"</p>":"")+'<div class="m">'+esc(a.author||"")+' - '+ago(a.created_at)+'</div></div>';}).join(""):'<div class="muted small">No announcements yet.</div>')+'</div></div>';
+ var scCard='<div class="card"><div class="hd">'+ic("cal")+'<h3>Next class</h3></div><div class="bd">'+((st.schedule||[]).length?st.schedule.slice(0,5).map(function(s){return '<div class="row between" style="padding:6px 0;border-top:1px solid var(--line)"><span><b>'+esc(s.class_name)+'</b>'+(s.subject?' <span class="muted small">'+esc(s.subject)+'</span>':"")+'<div class="small muted">'+(s.starts_at?fmtDT(s.starts_at):"Time not set")+'</div></span>'+(s.join_link?'<a class="btn xs p" href="'+attr(s.join_link)+'" target="_blank" rel="noopener">Join</a>':"")+'</div>';}).join(""):'<div class="muted small">No classes scheduled yet.</div>')+'</div></div>';
+ var matCard='<div class="card"><div class="hd">'+ic("file")+'<h3>Class material</h3></div><div class="bd">'+(mats.length?mats.map(function(m){return '<div class="mat"><div class="fi">'+esc((m.file_name||"file").split(".").pop().slice(0,3))+'</div><div class="t"><b>'+esc(m.title)+'</b><div class="muted small">'+esc(m.subject||"")+'</div></div><button class="btn xs ghost" title="Download" onclick="A.pgMaterialDownload(\''+attr(m.id)+'\',\''+attr(m.file_name)+'\',\''+attr(m.mime_type||"")+'\')">'+ic("down")+'</button></div>';}).join(""):'<div class="muted small">No class material uploaded for '+esc(label)+' yet.</div>')+'</div></div>';
+ var pdCard='<div class="card"><div class="hd">'+ic("chk")+'<h3>Pending work</h3></div><div class="bd">'+((st.pending||[]).length?st.pending.map(function(p){return '<div class="task"><span class="badge '+(p.status==="done"?"ok":"warn")+'" style="margin-top:2px">'+esc(p.status)+'</span><div class="t"><b>'+esc(p.title)+'</b>'+(p.due_at?'<div class="m"><span class="badge">'+fmtD(p.due_at,{day:"numeric",month:"short"})+'</span></div>':"")+(p.description?'<div class="muted small">'+esc(p.description)+'</div>':"")+'</div></div>';}).join(""):'<div class="muted small">Nothing pending. Nice work!</div>')+'</div></div>';
+ var chatMsgs=(st.chat||[]).slice().reverse();
+ var chatCard='<div class="card"><div class="hd">'+ic("msg")+'<h3>Class chat</h3></div><div class="bd" style="max-height:44vh;overflow:auto" id="pgchat">'+(chatMsgs.length?chatMsgs.map(function(m){return '<div class="chatline '+(m.mine?"me":"")+'"><span class="av">'+esc(initialsOf(m.author))+'</span><div class="b"><small>'+esc(m.author||"")+' - '+ago(m.created_at)+'</small>'+esc(m.body)+'</div></div>';}).join(""):'<div class="muted small">Say hello to your class.</div>')+'</div><div class="composer"><form class="box" onsubmit="return A.pgChatPost(this,\''+section+'\')"><textarea name="body" rows="1" placeholder="Message your class" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();this.form.requestSubmit();}"></textarea><button class="btn p icon" type="submit">'+ic("send")+'</button></form></div></div>';
+ return head+'<div class="grid2" style="gap:14px;align-items:start;margin-bottom:14px">'+anCard+scCard+matCard+pdCard+'</div>'+chatCard;
+}
+
+// ---- per-account sync: StudyPals (grade/subject, lessons, quizzes, Ask log), chat history and model choice ----------
+var SYNC_MAP={sp:"studypals",lessons:"studypals",quizzes:"studypals",ask:"studypals",quizPref:"studypals",convs:"chats",model:"prefs"};
+var SYNC_T={},SYNC_READY=false,LS_SET0=LS.set;
+LS.set=function(k,v){LS_SET0(k,v);var ag=SYNC_MAP[k];if(ag)queueSync(ag);};
+if(!LS.get("modelv",0)){if(S.model==="gemini")S.model="groq";LS_SET0("model",S.model);LS_SET0("modelv",1);}
+function agentData(ag){
+ if(ag==="studypals")return {sp:S.sp,lessons:S.lessons,quizzes:S.quizzes,ask:S.askLog,quizPref:LS.get("quizPref",null)};
+ if(ag==="chats"){var c={};Object.keys(S.convs).forEach(function(k){var x=S.convs[k];if(x&&Array.isArray(x.messages)&&x.messages.length)c[k]={id:x.id,messages:x.messages.slice(-40)};});return {convs:c};}
+ return {model:S.model};
+}
+function queueSync(ag){if(!SYNC_READY||!signedIn())return;clearTimeout(SYNC_T[ag]);SYNC_T[ag]=setTimeout(function(){pushState(ag);},1200);}
+function pushState(ag){
+ if(!SYNC_READY||!signedIn())return Promise.resolve();
+ var data=agentData(ag);
+ if(ag==="chats"){var keys=Object.keys(data.convs);while(JSON.stringify(data).length>350000&&keys.length){var k=keys.shift();data.convs[k].messages=data.convs[k].messages.slice(-10);if(JSON.stringify(data).length>350000)delete data.convs[k];}}
+ if(ag==="studypals"){while(JSON.stringify(data).length>350000&&(data.lessons.length>1||data.quizzes.length>1)){if(data.lessons.length>1)data.lessons=data.lessons.slice(0,-1);if(data.quizzes.length>1)data.quizzes=data.quizzes.slice(0,-1);}}
+ return api("state.save",{agent:ag,data:data}).then(function(){S.syncAt=Date.now();},function(){});
+}
+function lastAt(list){var t=0;(list||[]).forEach(function(m){var x=Number(m&&m.at)||(m&&m.at?new Date(m.at).getTime():0);if(x>t)t=x;});return t;}
+function mergeById(a,b,max){var seen={},out=[];(a||[]).concat(b||[]).forEach(function(x){if(!x||typeof x!=="object")return;var k=String(x.id||x.at);if(seen[k]!=null){var i=seen[k];var y=out[i];if(x.submitted&&!y.submitted)out[i]=x;return;}seen[k]=out.length;out.push(x);});out.sort(function(p,q){return (Number(q.at)||0)-(Number(p.at)||0);});return out.slice(0,max);}
+function mergeAsk(a,b){var seen={},out=[];(a||[]).concat(b||[]).forEach(function(x){if(!x)return;var k=x.at+"|"+x.role+"|"+String(x.content||"").slice(0,40);if(seen[k])return;seen[k]=1;out.push(x);});out.sort(function(p,q){return (Number(p.at)||0)-(Number(q.at)||0);});return out.slice(-30);}
+function mergeConvs(a,b){var out={};[a||{},b||{}].forEach(function(src){Object.keys(src).forEach(function(k){var x=src[k];if(!x||!Array.isArray(x.messages))return;var y=out[k];if(!y||lastAt(x.messages)>lastAt(y.messages)||(lastAt(x.messages)===lastAt(y.messages)&&x.messages.length>y.messages.length))out[k]=x;});});return out;}
+function resetAgentData(){SYNC_READY=false;S.syncedFor=null;S.sp={grade:"8",subject:"Math",topic:""};S.lessons=[];S.quizzes=[];S.askLog=[];S.convs={};S.lessonView=null;S.quizView=null;S.pdraft=null;["sp","lessons","quizzes","ask","convs","quizPref","pdraft","syncOwner"].forEach(function(k){LS.del(k);});}
+function syncLoad(){
+ var me=actor().id;var owner=LS.get("syncOwner",null);
+ if(owner&&owner!==me){resetAgentData();S.syncedFor=me;}
+ SYNC_READY=false;
+ return api("state.get").then(function(d){
+  var st=(d&&d.state)||{};var sp=st.studypals||{},ch=st.chats||{},pr=st.prefs||{};
+  if(sp.sp&&typeof sp.sp==="object")S.sp=Object.assign({},S.sp,sp.sp,{topic:S.sp.topic||sp.sp.topic||""});
+  S.lessons=mergeById(S.lessons,sp.lessons,8);S.quizzes=mergeById(S.quizzes,sp.quizzes,8);S.askLog=mergeAsk(S.askLog,sp.ask);
+  if(sp.quizPref&&!LS.get("quizPref",null))LS_SET0("quizPref",sp.quizPref);
+  S.convs=mergeConvs(ch.convs,S.convs);
+  var ids=((S.boot||{}).models||[]).map(function(m){return m.id;});
+  if(pr.model&&ids.indexOf(pr.model)>=0&&pr.model!=="gemini")S.model=pr.model;
+  if(S.lessonView)S.lessonView=S.lessons.filter(function(x){return x.id===S.lessonView.id;})[0]||S.lessons[0]||null;else S.lessonView=S.lessons[0]||null;
+  if(S.quizView)S.quizView=S.quizzes.filter(function(x){return x.id===S.quizView.id;})[0]||S.quizzes[0]||null;else S.quizView=S.quizzes[0]||null;
+  LS_SET0("sp",S.sp);LS_SET0("lessons",S.lessons);LS_SET0("quizzes",S.quizzes);LS_SET0("ask",S.askLog);LS_SET0("convs",S.convs);LS_SET0("model",S.model);LS_SET0("syncOwner",me);
+  SYNC_READY=true;
+  var server={studypals:sp,chats:ch,prefs:pr};
+  ["studypals","chats","prefs"].forEach(function(ag){var mine=agentData(ag),theirs=server[ag]||{};var norm=function(x){if(x==null)return null;if(Array.isArray(x)&&!x.length)return null;if(typeof x==="object"&&!Array.isArray(x)&&!Object.keys(x).length)return null;return JSON.stringify(x);};var same=Object.keys(mine).every(function(k){return norm(mine[k])===norm(theirs[k]);});if(!same)pushState(ag);});
+  render();
+ }).catch(function(){S.syncedFor=null;});
+}
+function afterBoot(d){
+ if(d&&d.actor&&d.actor.kind==="member"&&S.token){if(S.syncedFor!==d.actor.id){S.syncedFor=d.actor.id;syncLoad();}}
+ loadVol();
+}
+// ---- LaTeX clean-up for model answers (md() does not render TeX) ---------------------------------------------------
+var TEXSYM={alpha:"α",beta:"β",gamma:"γ",delta:"δ",theta:"θ",pi:"π",phi:"φ",lambda:"λ",mu:"μ",sigma:"σ",omega:"ω",Delta:"Δ",Omega:"Ω",times:"×",cdot:"·",div:"÷",pm:"±",le:"≤",leq:"≤",ge:"≥",geq:"≥",ne:"≠",neq:"≠",approx:"≈",infty:"∞",circ:"°",degree:"°",rightarrow:"→",to:"→",Rightarrow:"⇒",quad:" ",qquad:" ",angle:"∠",triangle:"△",sqrt:"√"};
+function texInline(x){var r=String(x);
+ r=r.replace(/\\left|\\right/g,"").replace(/\\[,;:! ]/g," ");
+ for(var i=0;i<3;i++)r=r.replace(/\\[dt]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,"($1)/($2)");
+ r=r.replace(/\\sqrt\s*\{([^{}]*)\}/g,"√($1)").replace(/\\(?:text|mathrm|mathbf|operatorname)\s*\{([^{}]*)\}/g,"$1");
+ r=r.replace(/\\([A-Za-z]+)/g,function(m,n){return Object.prototype.hasOwnProperty.call(TEXSYM,n)?TEXSYM[n]:n;});
+ r=r.replace(/\^\{?\s*°\s*\}?/g,"°").replace(/\^\{([^{}]*)\}/g,"^($1)").replace(/_\{([^{}]*)\}/g,"_$1");
+ return r.replace(/[{}]/g,"").replace(/[ \t]+/g," ").trim();}
+function texClean(s){
+ if(!/\\[\[\(]|\$\$|\\(d?frac|sin|cos|tan|cdot|times|sqrt|pi|theta|left|text)\b/.test(s))return s;
+ return s.replace(/\\\[([\s\S]*?)\\\]/g,function(m,x){return "\n\n"+texInline(x)+"\n\n";})
+  .replace(/\$\$([\s\S]*?)\$\$/g,function(m,x){return "\n\n"+texInline(x)+"\n\n";})
+  .replace(/\\\(([\s\S]*?)\\\)/g,function(m,x){return texInline(x);});
+}
+
+// ---- safe, friendly messages (never show codes, provider names or technical details to people) ---------------------
+var SAFE_CODES={BLOCKED:1,EMAIL_TAKEN:1,INVALID_CREDENTIALS:1,USE_GOOGLE:1,ACCOUNT_DISABLED:1,INVALID_SESSION:1,INVALID_REQUEST:1,MISSING_CREDENTIALS:1,NOT_FOUND:1,FORBIDDEN:1,SIGNUP_REQUIRED:1,PREMIUM_REQUIRED:1,RATE_LIMITED:1,BILLING_NOT_CONFIGURED:1,TOO_LARGE:1,OTP_REQUIRED:1,OTP_INVALID:1,OTP_SEND_FAILED:1,RESET_FAILED:1};
+var FIXED_MSG={NETWORK:"We could not connect. Check your internet connection and try again.",GOOGLE_TOKEN_INVALID:"Google sign-in did not work. Please try again.",GOOGLE_EMAIL_UNVERIFIED:"Please verify your Google email address, then try again.",GOOGLE_NOT_CONFIGURED:"Google sign-in is not available right now. Please use your email.",UNAUTHENTICATED:"Something went wrong. Please reload the page and try again.",DB_ERROR:"Something went wrong on our side. Please try again in a moment.",SIGNUP_FAILED:"We could not create your account. Please try again."};
+var TECH_RE=/rate.?limit|\b(4\d\d|5\d\d)\b|groq|gemini|mistral|openai|anthropic|\btokens?\b|quota|database|schema|workflow|\bsql\b|n8n|webhook|https?:|api.?key|credential|stack|exception|undefined/i;
+function friendlyMsg(e,fallback){var fb=fallback||"Something went wrong. Please try again in a moment.";if(!e)return fb;var c=String(e.code||"");if(FIXED_MSG[c])return FIXED_MSG[c];var m=String(e.message||"").trim();if(!SAFE_CODES[c]||!m||TECH_RE.test(m))return fb;return m;}
+function cleanReply(t){t=String(t||"");if(!/json|code block|for the app/i.test(t))return t;return t.split("\n").filter(function(l){var x=l.replace(/[#*_>`\-\s]/g,"");return !(/json|code block|for the app/i.test(l)&&x.length<90);}).join("\n").replace(/(\n\s*(-{3,}|\*{3,})\s*)+$/,"").replace(/\n{3,}/g,"\n\n");}
+// ---- actions (window.A) --------------------------------------------------------------------------------------------------
+function fd(form){var o={};new FormData(form).forEach(function(v,k){o[k]=v;});return o;}
+function busyBtn(form,on){var b=form&&form.querySelector("button[type=submit]");if(b)b.disabled=!!on;}
+var A=window.A={
+ go:go,closeModal:closeModal,openUpgrade:openUpgrade,retry:function(){S.err=null;render();boot();},
+ theme:function(){S.theme=S.theme==="dark"?"light":"dark";LS.set("theme",S.theme);document.documentElement.setAttribute("data-t",S.theme);render();},
+ toggleMenu:function(){S.menu=!S.menu;render();},
+ pickModel:function(id){var m=modelById(id);S.menu=false;if(m&&m.tier==="premium"&&!isPremium()){render();openUpgrade(m.label);return;}S.model=id;LS.set("model",id);render();},
+ sp:function(k,v){S.sp[k]=v;LS.set("sp",S.sp);if(k!=="topic")render();},
+ key:function(ev,ta){if(ev.key==="Enter"&&!ev.shiftKey){ev.preventDefault();A.sendFrom(ta);}},
+ sendFrom:function(el){var panel=el.closest(".chat");var ta=panel.querySelector("textarea");var agentId=panel.dataset.agent;var ctx=ctxFor(agentId);var t=ta.value;ta.value="";ta.style.height="auto";send(agentId,t,ctx);},
+ starter:function(btn){var panel=btn.closest(".chat");send(panel.dataset.agent,btn.textContent,ctxFor(panel.dataset.agent));},
+ newConv:function(agentId){var ctx=ctxFor(agentId);delete S.convs[convKey(agentId,ctx)];saveConvs();render();},
+ copyText:function(btn){var t=btn.dataset.text||"";navigator.clipboard&&navigator.clipboard.writeText(t).then(function(){toast("Copied","ok");});},
+ runAction:function(k,mi,ai){var conv=S.convs[k];if(!conv)return;var m=conv.messages[mi];var ac=m&&m.actions&&m.actions[ai];if(!ac)return;var eid=ac.eventId||(S.event&&S.event.event.id);if(!eid){toast("Open an event first.","err");return;}
+  var p=ac.type==="create_tasks"?api("tasks.create",{eventId:eid,tasks:ac.tasks}):api("updates.post",{eventId:eid,kind:ac.kind,title:ac.title,body:ac.body,pinned:!!ac.pinned});
+  p.then(function(){ac.done=true;saveConvs();toast(ac.type==="create_tasks"?"Tasks added":"Update posted","ok");return A.refreshEvent();}).catch(function(e){toast(e.message,"err");});},
+ saveProfile:function(form){if(!signedIn()){A.pdraft(form);openSignIn();return false;}var o=fd(form);busyBtn(form,true);api("profile.save",o).then(function(d){S.boot.profile=d.profile;toast("Profile saved","ok");render();}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ login:function(form){var o=fd(form);busyBtn(form,true);api("login",o).then(onSignedIn).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ signup:function(form){var o=fd(form);busyBtn(form,true);api("signup.request_otp",o).then(function(){S.authSignup={name:o.name,email:o.email,password:o.password};toast("We emailed a 6-digit code to "+o.email,"ok");render();}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ signupVerify:function(form){var o=fd(form);var p=S.authSignup;if(!p){toast("Please start sign-up again.","err");S.authSignup=null;render();return false;}busyBtn(form,true);api("signup",{name:p.name,email:p.email,password:p.password,otp:o.otp}).then(function(d){S.authSignup=null;onSignedIn(d);}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ signupResend:function(){var p=S.authSignup;if(!p)return;api("signup.request_otp",p).then(function(){toast("Code re-sent to "+p.email,"ok");}).catch(function(e){toast(e.message,"err");});},
+ signupCancel:function(){S.authSignup=null;render();},
+ openForgot:function(){S.authForgot={step:"email",email:""};render();},
+ forgotRequest:function(form){var o=fd(form);busyBtn(form,true);api("password.request_reset",{email:o.email}).then(function(){S.authForgot={step:"otp",email:o.email};toast("If that email has an account, we sent a 6-digit code.","ok");render();}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ forgotReset:function(form){var o=fd(form);var f=S.authForgot;if(!f){toast("Please start again.","err");render();return false;}busyBtn(form,true);api("password.reset",{email:f.email,otp:o.otp,password:o.password}).then(function(){S.authForgot=null;toast("Password reset. Please sign in with your new password.","ok");render();}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ forgotResend:function(){var f=S.authForgot;if(!f)return;api("password.request_reset",{email:f.email}).then(function(){toast("Code re-sent to "+f.email,"ok");}).catch(function(e){toast(e.message,"err");});},
+ forgotCancel:function(){S.authForgot=null;render();},
+ signOut:function(){api("logout").catch(function(){}).then(function(){clearSession();resetAgentData();S.guestId=uid("guest-");LS.set("guest",S.guestId);S.account=null;S.admin=null;S.pg=null;S.pgAccess=null;S.materials=null;S.matAt=0;S.authSignup=null;S.authForgot=null;toast("Signed out");boot();});},
+ refreshAccount:function(){S.account=null;render();},refreshAdmin:function(){S.admin=null;render();},
+ checkout:function(){api("billing.checkout").then(function(d){window.location.href=d.url;}).catch(function(e){toast(e.message,"err");});},
+ newEvent:function(){openModal('<div class="row between"><h2>New event</h2><button class="btn icon ghost" onclick="A.closeModal()">'+ic("x")+'</button></div><p class="sub">You become the organiser. Share the event code afterwards so people can join.</p><form onsubmit="return A.createEvent(this)">'+eventForm()+'<button class="btn p" type="submit" style="width:100%">Create event</button></form>');},
+ createEvent:function(form){var o=fd(form);busyBtn(form,true);api("events.create",o).then(function(d){closeModal();toast("Event created - code "+d.event.code,"ok");S.event=null;S.tab="overview";return api("events.list").then(function(l){S.boot.events=l;go("#/events/"+d.event.id);});}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ editEvent:function(){var e=S.event.event;openModal('<div class="row between"><h2>Edit event</h2><button class="btn icon ghost" onclick="A.closeModal()">'+ic("x")+'</button></div><form onsubmit="return A.updateEvent(this)">'+eventForm(e)+'<div class="f"><label>Status</label><select name="status">'+["planning","live","done","cancelled"].map(function(s){return "<option"+(s===e.status?" selected":"")+">"+s+"</option>";}).join("")+'</select></div><button class="btn p" type="submit" style="width:100%">Save</button></form>');},
+ updateEvent:function(form){var o=fd(form);o.eventId=S.event.event.id;busyBtn(form,true);api("events.update",o).then(function(){closeModal();toast("Saved","ok");return A.refreshEvent();}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ joinEvent:function(form){var o=fd(form);busyBtn(form,true);api("events.join",{code:o.code}).then(function(d){toast("Joined "+d.title,"ok");S.event=null;return api("events.list").then(function(l){S.boot.events=l;go("#/events/"+d.eventId);});}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ refreshEvent:function(){if(!S.event)return Promise.resolve();var id=S.event.event.id;return api("events.get",{eventId:id}).then(function(d){S.event=d;render();}).catch(function(e){toast(e.message,"err");});},
+ tab:function(t){S.tab=t;render();},
+ rsvp:function(eid,r){api("rsvp.set",{eventId:eid,rsvp:r}).then(function(){toast("RSVP saved: "+r,"ok");return A.refreshEvent();}).catch(function(e){toast(e.message,"err");});},
+ setRole:function(mid,role){api("members.set_role",{eventId:S.event.event.id,memberId:mid,role:role}).then(function(){toast("Role updated","ok");return A.refreshEvent();}).catch(function(e){toast(e.message,"err");});},
+ addTask:function(form){var o=fd(form);o.eventId=S.event.event.id;if(!o.dueAt)delete o.dueAt;busyBtn(form,true);api("tasks.create",o).then(function(){toast("Task added","ok");return A.refreshEvent();}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ toggleTask:function(id,done){api("tasks.update",{taskId:id,status:done?"done":"todo"}).then(A.refreshEvent).catch(function(e){toast(e.message,"err");});},
+ taskStatus:function(id,st){api("tasks.update",{taskId:id,status:st}).then(A.refreshEvent).catch(function(e){toast(e.message,"err");});},
+ postUpdate:function(form){var o=fd(form);o.eventId=S.event.event.id;o.pinned=!!form.pinned.checked;busyBtn(form,true);api("updates.post",o).then(function(){toast("Update posted","ok");return A.refreshEvent();}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ pinUpdate:function(id,p){api("updates.pin",{updateId:id,pinned:p}).then(A.refreshEvent).catch(function(e){toast(e.message,"err");});},
+ postMessage:function(form){var o=fd(form);if(!o.body.trim())return false;form.body.value="";api("messages.post",{eventId:S.event.event.id,body:o.body}).then(function(){return A.refreshEvent();}).then(function(){var c=document.getElementById("evchat");if(c)c.scrollTop=c.scrollHeight;}).catch(function(e){toast(e.message,"err");});return false;},
+ setPlan:function(uid){var plan=document.getElementById("pl-"+uid).value;var months=document.getElementById("pm-"+uid).value;api("users.set_plan",{userId:uid,plan:plan,months:months===""?null:months}).then(function(){toast("Plan updated","ok");S.admin=null;render();}).catch(function(e){toast(e.message,"err");});},
+ model:function(id,patch){patch.id=id;api("models.update",patch).then(function(){toast("Model updated","ok");S.admin=null;return boot();}).catch(function(e){toast(e.message,"err");});},
+ agentModel:function(ag,m){api("agents.set_model",{agentId:ag,model:m}).then(function(){toast("Default model updated","ok");return boot();}).catch(function(e){toast(e.message,"err");});},
+ imgErr:function(el){var t=(el&&el.dataset&&el.dataset.fb)||"";var d=document.createElement("div");d.className="small muted";d.textContent=t;if(el&&el.parentNode)el.replaceWith(d);},
+ openSignIn:function(){openSignIn();},
+ googleWait:function(){if(gisInit){try{google.accounts.id.prompt();}catch(e){}}else toast("Google sign-in is still loading. Try again in a second.");},
+ googleUnavailable:function(){if(isAdmin()){closeModal();toast("Add the Google OAuth client id in Admin, Settings to switch on Google sign-in.","err");go("#/admin");}else toast("Google sign-in is being set up. Please use email for now.","err");},
+ pdraft:function(form){if(signedIn())return;S.pdraft=fd(form);LS.set("pdraft",S.pdraft);},
+ spTab:function(t){S.spTab=t;LS.set("spTab",t);S.menu=false;render();},
+ genLesson:function(form){
+  var topic=String(fd(form).topic||"").trim();if(!topic||S.busy.lesson)return false;
+  S.sp.topic=topic;LS.set("sp",S.sp);var g=spGrade(),sub=S.sp.subject;
+  S.busy.lesson={topic:topic,label:spLabel()};render();
+  spTask("lesson",topic).then(function(j){
+   var L=j&&j.lesson;if(!L||typeof L!=="object")throw {message:"StudyPals returned an empty lesson. Please try again."};
+   var rec={id:String(j.lessonId||uid("lesson-")),at:Date.now(),grade:g,subject:sub,topic:topic,lesson:L};
+   S.lessons.unshift(rec);S.lessons=S.lessons.slice(0,8);LS.set("lessons",S.lessons);S.lessonView=rec;
+  }).catch(function(e){toast(e.message||"The lesson could not be generated.","err");}).then(function(){S.busy.lesson=null;render();window.scrollTo(0,0);});
+  return false;},
+ openLesson:function(i){S.lessonView=S.lessons[i]||null;render();window.scrollTo(0,0);},
+ clearLessons:function(){S.lessons=[];S.lessonView=null;LS.set("lessons",[]);render();},
+ quizFromLesson:function(){if(S.lessonView){S.sp.topic=S.lessonView.topic;S.sp.grade=String(S.lessonView.grade);S.sp.subject=S.lessonView.subject;LS.set("sp",S.sp);}S.spTab="quiz";LS.set("spTab","quiz");render();window.scrollTo(0,0);},
+ tutorFromLesson:function(){if(S.lessonView){S.sp.topic=S.lessonView.topic;LS.set("sp",S.sp);}S.spTab="tutor";LS.set("spTab","tutor");render();var ta=document.querySelector(".chat textarea");if(ta){ta.value="Can you help me understand "+(S.sp.topic||"this topic")+"? ";ta.focus();}},
+ genQuiz:function(form){
+  var o=fd(form);var topic=String(o.topic||"").trim();if(!topic||S.busy.quiz)return false;
+  var n=Math.max(3,Math.min(10,Number(o.numQuestions)||5)),dif=["easy","medium","hard"].indexOf(o.difficulty)>=0?o.difficulty:"medium";
+  LS.set("quizPref",{n:n,d:dif});S.sp.topic=topic;LS.set("sp",S.sp);var g=spGrade(),sub=S.sp.subject;
+  S.busy.quiz={topic:topic,difficulty:dif,label:spLabel()};render();
+  spTask("quiz",topic,{numQuestions:n,difficulty:dif}).then(function(j){
+   var Q=j&&j.quiz;if(!Q||!Array.isArray(Q.questions))throw {message:"StudyPals returned an empty quiz. Please try again."};
+   var rec={id:String(j.quizId||uid("quiz-")),at:Date.now(),grade:g,subject:sub,topic:topic,difficulty:dif,quiz:Q,answers:{},submitted:false};
+   S.quizzes.unshift(rec);S.quizzes=S.quizzes.slice(0,8);LS.set("quizzes",S.quizzes);S.quizView=rec;
+  }).catch(function(e){toast(e.message||"The quiz could not be generated.","err");}).then(function(){S.busy.quiz=null;render();window.scrollTo(0,0);});
+  return false;},
+ qAns:function(i,v){if(!S.quizView||S.quizView.submitted)return;S.quizView.answers[i]=v;LS.set("quizzes",S.quizzes);},
+ submitQuiz:function(){var r=S.quizView;if(!r)return false;var qs=(r.quiz||{}).questions||[];var empty=qs.filter(function(q,i){return !String(r.answers[i]||"").trim();}).length;
+  if(empty&&!r.warned){r.warned=true;toast(empty+" question"+(empty===1?" is":"s are")+" still empty. Press Submit again to finish anyway.");return false;}
+  r.submitted=true;r.submittedAt=Date.now();LS.set("quizzes",S.quizzes);var t=qTotals(r);toast("You scored "+t.got+" out of "+t.max,"ok");render();window.scrollTo(0,0);return false;},
+ retryQuiz:function(){var r=S.quizView;if(!r)return;r.answers={};r.submitted=false;r.warned=false;LS.set("quizzes",S.quizzes);render();window.scrollTo(0,0);},
+ openQuiz:function(i){S.quizView=S.quizzes[i]||null;render();window.scrollTo(0,0);},
+ clearQuizzes:function(){S.quizzes=[];S.quizView=null;LS.set("quizzes",[]);render();},
+ tutorFromQuiz:function(){var r=S.quizView;var missed=[];if(r){((r.quiz||{}).questions||[]).forEach(function(q,i){if(qObjective(q)&&!qRight(q,r.answers[i]))missed.push(q.prompt||q.question);});S.sp.topic=r.topic;LS.set("sp",S.sp);}
+  S.spTab="tutor";LS.set("spTab","tutor");render();
+  var ta=document.querySelector(".chat textarea");if(ta){ta.value=missed.length?"I got these quiz questions wrong - can you help me understand them?\n- "+missed.slice(0,4).join("\n- "):"Can you help me go deeper on "+(S.sp.topic||"this topic")+"?";ta.focus();}},
+ volForm:function(){if(!signedIn()){toast("Sign in to post a volunteer opportunity.");openSignIn();return;}S.volForm=!S.volForm;render();if(S.volForm){var f=document.getElementById("volform");if(f){f.scrollIntoView({behavior:"smooth",block:"start"});var i=f.querySelector("input");if(i)i.focus();}}},
+ reloadVol:function(){S.volErr=null;loadVol(true);render();},
+ addVol:function(form){var o=fd(form);var link=String(o.link||"").trim();var rec={title:String(o.title||"").trim(),org:o.org,category:o.category,ages:o.ages,date:o.date,location:o.location,hours:o.hours,description:o.description};
+  if(/^[^\s@]+@[^\s@]+$/.test(link))rec.contact=link;else if(/^https?:\/\//i.test(link))rec.link=link;else if(link){toast("Use a link starting with https:// or an email address.","err");return false;}
+  if(!rec.title)return false;busyBtn(form,true);
+  api("vol.add",rec).then(function(){toast("Opportunity posted","ok");S.volForm=false;S.vol=null;loadVol(true);render();window.scrollTo(0,0);}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ delVol:function(id){api("vol.delete",{id:id}).then(function(d){if(d&&d.removed){toast("Opportunity removed","ok");S.vol=(S.vol||[]).filter(function(o){return o.id!==id;});render();}else toast("You can only remove opportunities you posted.","err");loadVol(true);}).catch(function(e){toast(e.message,"err");});},
+ settings:function(form,key,numeric){var o=fd(form);if(numeric)Object.keys(o).forEach(function(k){o[k]=Number(o[k]);});busyBtn(form,true);api("settings.update",{key:key,value:o}).then(function(){toast("Settings saved","ok");S.admin=null;return boot();}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ uploadMaterial:function(form){
+  var fi=form.querySelector('input[type=file]');
+  var file=fi&&fi.files&&fi.files[0];
+  if(!file){toast("Choose a file to upload.","err");return false;}
+  var o=fd(form);
+  var qs="?subject="+encodeURIComponent(o.subject||"")+"&grade="+encodeURIComponent(o.grade||"")+"&teacherName="+encodeURIComponent(actor().name||"")+"&filename="+encodeURIComponent(file.name||"upload");
+  busyBtn(form,true);S.matUploading=true;render();
+  fetch(STUDYPALS_BASE+"/studypals/upload"+qs,{method:"POST",headers:{"Content-Type":file.type||"application/octet-stream"},body:file}).then(function(r){return r.json();}).then(function(j){
+   S.matUploading=false;
+   if(j&&j.status==="ok"){toast(j.message||"Uploaded","ok");form.reset();loadMaterials(true);}
+   else if(j&&j.status==="skipped"){toast(j.message||"Already uploaded","");}
+   else{toast((j&&j.message)||"Upload failed","err");}
+   busyBtn(form,false);render();
+  }).catch(function(){S.matUploading=false;toast("Could not reach the upload service.","err");busyBtn(form,false);render();});
+  return false;},
+ confirmDeleteMaterial:function(id,name){
+  openModal('<div class="row between"><h2>Delete material</h2><button class="btn icon ghost" onclick="A.closeModal()">'+ic("x")+'</button></div><p class="sub">Delete "'+esc(name||"this file")+'"? This removes the file and its indexed content for the AI tutor, lessons and quizzes.</p><div class="row" style="justify-content:flex-end"><button class="btn" onclick="A.closeModal()">Cancel</button><button class="btn p" style="background:var(--err);border-color:var(--err)" onclick="A.doDeleteMaterial(\''+attr(id)+'\')">Delete</button></div>');
+ },
+ doDeleteMaterial:function(id){
+  closeModal();
+  fetch(STUDYPALS_BASE+"/studypals/teacher/library/delete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id})}).then(function(r){return r.json();}).then(function(j){
+   if(j&&j.status==="ok"){toast("Material deleted","ok");loadMaterials(true);}
+   else{toast((j&&j.message)||"Could not delete that material.","err");}
+  }).catch(function(){toast("Could not reach the delete service.","err");});
+ },
+ reloadMaterials:function(){S.matErr=null;loadMaterials(true);},
+ teacherTab:function(t){S.teacherTab=t;render();},
+ pgMaterialUpload:function(form,section){
+  var fi=form.querySelector('input[type=file]');
+  var file=fi&&fi.files&&fi.files[0];
+  if(!file){toast("Choose a file to upload.","err");return false;}
+  var o=fd(form);
+  busyBtn(form,true);
+  var reader=new FileReader();
+  reader.onload=function(){
+   var b64=String(reader.result||"").split(",").pop();
+   api("materials.upload",{title:o.title,subject:o.subject,gradeBand:section,fileName:file.name,mimeType:file.type,dataBase64:b64}).then(function(){toast("Uploaded","ok");form.reset();pgState(section).materials=null;render();}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});
+  };
+  reader.onerror=function(){toast("Could not read that file.","err");busyBtn(form,false);};
+  reader.readAsDataURL(file);
+  return false;
+ },
+ pgMaterialDelete:function(section,id,name){
+  openModal('<div class="row between"><h2>Delete material</h2><button class="btn icon ghost" onclick="A.closeModal()">'+ic("x")+'</button></div><p class="sub">Delete "'+esc(name||"this file")+'"? Students in this section will no longer see it.</p><div class="row" style="justify-content:flex-end"><button class="btn" onclick="A.closeModal()">Cancel</button><button class="btn p" style="background:var(--err);border-color:var(--err)" onclick="A.doPgMaterialDelete(\''+section+'\',\''+attr(id)+'\')">Delete</button></div>');
+ },
+ doPgMaterialDelete:function(section,id){
+  closeModal();
+  api("materials.delete",{id:id}).then(function(){toast("Deleted","ok");pgState(section).materials=null;render();}).catch(function(e){toast(e.message,"err");});
+ },
+ pgMaterialDownload:function(id,name,mime){
+  api("playground.materials_download",{id:id}).then(function(d){
+   var m=d&&d.material;
+   if(!m||!m.data_b64){toast("Could not download that file.","err");return;}
+   try{
+    var bin=atob(m.data_b64);var arr=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+    var blob=new Blob([arr],{type:m.mime_type||mime||"application/octet-stream"});
+    var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download=m.file_name||name||"material";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},4000);
+   }catch(e){toast("Could not download that file.","err");}
+  }).catch(function(e){toast(e.message,"err");});
+ },
+ pgWhitelistAdd:function(form,section){var o=fd(form);busyBtn(form,true);api("playground.whitelist_add",{section:section,email:o.email}).then(function(){toast("Approved","ok");pgState(section).whitelist=null;form.reset();render();}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ pgWhitelistRemove:function(section,id){api("playground.whitelist_remove",{id:id}).then(function(){toast("Removed","ok");pgState(section).whitelist=null;render();}).catch(function(e){toast(e.message,"err");});},
+ pgAnnouncementAdd:function(form,section){var o=fd(form);o.pinned=!!form.pinned.checked;busyBtn(form,true);api("playground.announcement_add",{section:section,title:o.title,body:o.body,pinned:o.pinned}).then(function(){toast("Posted","ok");pgState(section).announcements=null;form.reset();render();}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ pgAnnouncementDelete:function(section,id){api("playground.announcement_delete",{id:id}).then(function(){toast("Removed","ok");pgState(section).announcements=null;render();}).catch(function(e){toast(e.message,"err");});},
+ pgScheduleAdd:function(form,section){var o=fd(form);busyBtn(form,true);api("playground.schedule_add",{section:section,className:o.className,subject:o.subject,startsAt:o.startsAt?new Date(o.startsAt).toISOString():"",durationMin:o.durationMin,joinLink:o.joinLink,notes:o.notes}).then(function(){toast("Added","ok");pgState(section).schedule=null;form.reset();render();}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ pgScheduleDelete:function(section,id){api("playground.schedule_delete",{id:id}).then(function(){toast("Removed","ok");pgState(section).schedule=null;render();}).catch(function(e){toast(e.message,"err");});},
+ pgPendingAdd:function(form,section){var o=fd(form);busyBtn(form,true);api("playground.pending_add",{section:section,title:o.title,description:o.description,dueAt:o.dueAt}).then(function(){toast("Added","ok");pgState(section).pending=null;form.reset();render();}).catch(function(e){toast(e.message,"err");busyBtn(form,false);});return false;},
+ pgPendingToggle:function(section,id,done){api("playground.pending_set_status",{id:id,status:done?"done":"open"}).then(function(){pgState(section).pending=null;render();}).catch(function(e){toast(e.message,"err");});},
+ pgPendingDelete:function(section,id){api("playground.pending_delete",{id:id}).then(function(){toast("Removed","ok");pgState(section).pending=null;render();}).catch(function(e){toast(e.message,"err");});},
+ pgChatPost:function(form,section){var o=fd(form);if(!o.body.trim())return false;form.body.value="";api("playground.chat_post",{section:section,body:o.body}).then(function(){pgState(section).chat=null;render();var c=document.getElementById("pgchat");if(c)c.scrollTop=c.scrollHeight;}).catch(function(e){toast(e.message,"err");});return false;},
+ setUserRole:function(uid){
+  var role=document.getElementById("ur-"+uid).value;
+  var me=((S.boot||{}).actor||{}).id;
+  if(uid===me&&role!=="admin"){
+   openModal('<div class="row between"><h2>Change your own role?</h2><button class="btn icon ghost" onclick="A.closeModal()">'+ic("x")+'</button></div><p class="sub">You are about to change your own role to "'+esc(role)+'". You may lose access to Admin.</p><div class="row" style="justify-content:flex-end"><button class="btn" onclick="A.closeModal()">Cancel</button><button class="btn p" onclick="A.doSetUserRole(\''+attr(uid)+'\',\''+role+'\')">Continue</button></div>');
+   return;
+  }
+  A.doSetUserRole(uid,role);
+ },
+ doSetUserRole:function(uid,role){closeModal();api("users.update",{userId:uid,role:role}).then(function(){toast("Role updated","ok");S.admin=null;return boot();}).catch(function(e){toast(e.message,"err");});}
+
+};
+function ctxFor(agentId){if(agentId==="agent-studypals"||agentId==="agent-askai")return {grade:S.sp.grade,subject:S.sp.subject,topic:S.sp.topic};if(agentId==="agent-events"&&S.event&&S.route.view==="events"&&S.route.id)return {eventId:S.event.event.id};return {};}
+var agentById0=agentById;agentById=function(id){return id==="agent-askai"?ASKAI:agentById0(id);};
+window.addEventListener("hashchange",function(){S.menu=false;if(S.route.view!=="events")S.event=null;render();});
+document.addEventListener("click",function(e){if(S.menu&&!e.target.closest(".mp")){S.menu=false;render();}});
+render();boot();
+})();
+</script>
+</body>
+</html>
