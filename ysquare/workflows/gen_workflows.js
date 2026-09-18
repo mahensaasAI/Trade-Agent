@@ -193,7 +193,7 @@ for (const [name, code] of Object.entries(out)) {
 // -------------------------------------------------------------------------------------------- DEPLOY UI PAGE
 // Manual helper for environments that cannot run deploy_ui.js: fetches dist/ysquare.html from the public GitHub repo
 // (branch configurable in the Page Source node) and upserts it into ys_ui_pages.
-const PAGE_URL = process.env.YSQUARE_PAGE_URL || "https://raw.githubusercontent.com/mahensaasAI/Trade-Agent/claude/exciting-cray-0j5jt1/ysquare/dist/ysquare.html";
+const PAGE_URL = process.env.YSQUARE_PAGE_URL || "https://raw.githubusercontent.com/mahensaasAI/Trade-Agent/claude/exciting-cray-0j5jt1/ysquare/dist/live/ysquare.html";
 const pageSourceCode = `var SOURCE = ${J(PAGE_URL)};\nreturn [{ json: { url: SOURCE } }];`;
 const pageCheckCode = `var html = $input.first().json.data;\nif (typeof html !== 'string') html = String(html || '');\nif (html.length < 100 || html.indexOf('<html') < 0) throw new Error('The fetched page does not look like the Y Square app (' + html.length + ' chars). Check the URL in Page Source.');\nreturn [{ json: { page: 'ysquare', bytes: html.length, params: ['ysquare', html, 'Y Square - Deploy UI Page'] } }];`;
 const deployPage = IMPORT + `

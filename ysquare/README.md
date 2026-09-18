@@ -38,7 +38,7 @@ Callers send either `X-Guest-Id: guest-...` (free version) or `Authorization: Be
 | Y Square Agents | Chat: live context, daily limits, free/premium tiers, Model Router, StudyPals proxy |
 | Y Square - DB Migration | Creates the `ys_*` tables and seeds models, settings, knowledge and a sample event (idempotent) |
 | Y Square - DB Functions | `ys_effective_plan`, `ys_bootstrap`, `ys_event_detail`, `ys_admin_overview` (idempotent) |
-| Y Square - Deploy UI Page | Manual alternative to `deploy_ui.js`: fetches `dist/ysquare.html` from GitHub and upserts it |
+| Y Square - Deploy UI Page | Manual alternative to `deploy_ui.js`: fetches `dist/live/ysquare.html` (the live page snapshot) from GitHub and upserts it |
 | Y Square - Upload UI Page (chunked) | Manual helper: uploads the page in MD5-verified chunks via workflow executions (never publish it) |
 | Y Square Billing | Records payment events and switches plans (Stripe Payment Link / Checkout) |
 
@@ -70,7 +70,8 @@ ysquare/
 cd ysquare
 npm run check                 # parse-check the Code node bodies and the app
 npm run gen                   # rebuild dist/ysquare.html and dist/workflows/*.sdk.js
-YSQUARE_DEPLOY_KEY=... npm run deploy:ui     # publish the page (or run "Y Square - Deploy UI Page" in n8n)
+YSQUARE_DEPLOY_KEY=... npm run deploy:ui     # publish the repo build (dist/ysquare.html) through the deploy endpoint
+# or run "Y Square - Deploy UI Page" in n8n, which publishes dist/live/ysquare.html (see below)
 ```
 
 After changing a Code node body or the SQL, regenerate and update the matching workflow in n8n (validate the SDK code,
@@ -97,3 +98,11 @@ Member: `logout`, `account.get`, `billing.checkout`. Admin: `admin.overview`, `u
 
 Chat context: `{eventId}` for Event Planner, `{grade, subject, topic, studentId}` for StudyPals. Replies may carry a
 `plan` card (Athlete Edge) or `actions` (`create_tasks`, `post_update`) that the UI applies through the API.
+
+## Live page snapshot
+
+`dist/live/ysquare.html` is the page currently served at `/webhook/Y2Workplace`. It carries features that were added to the
+live page directly (Volunteer opportunities, AI Playground, Teacher Tools, OTP sign-up) and are not in `ui/` yet, so the
+repo build in `dist/ysquare.html` is behind it. Until those sources are merged into `ui/`, publish only the snapshot: edit
+`dist/live/ysquare.html`, commit, push, and run the "Y Square - Deploy UI Page" workflow. Running `npm run deploy:ui` would
+replace the live page with the older repo build.
