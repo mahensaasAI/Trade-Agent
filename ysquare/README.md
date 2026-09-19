@@ -141,6 +141,10 @@ not typed into the database by hand: `volunteer/dallas.json` is the catalogue, a
 | IT | Tech Titans | `techtitans.org/volunteer` |
 | Red Cross / relief | American Red Cross, North Texas | `redcross.org/local/texas/north-texas/volunteer.html` |
 
+The board is aimed at students aged 12 to 21 who are building a profile, so every listing shows "Ages 12 to 21";
+where an organisation sets its own minimum age, the catalogue carries a `note` that is appended to the description
+rather than a guessed number.
+
 Every Monday (and on demand from the workflow's "Refresh Now" trigger) `Resolve Links` requests each candidate URL
 in the catalogue, keeps the first one that still answers, and refreshes the listing's description from that page's
 own meta description. Sites that only block datacentre traffic (403, 429 and friends) count as live. If every

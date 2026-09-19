@@ -249,8 +249,13 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}table.t th,table.t td
 @media (max-width:760px){.shell{flex-direction:column}.sb{width:100%;height:auto;position:static;border-right:0;border-bottom:1px solid var(--line)}.sb-brand{padding:12px 16px}.nav{display:flex;overflow:auto;padding:6px 8px;gap:4px}.nav .sec{display:none}.nav a{white-space:nowrap;padding:7px 10px}.sb-foot{display:none}.content{padding:14px}.top{padding:10px 14px}.grid2{grid-template-columns:1fr}.msg{max-width:96%}.hero .lead{padding:22px}.hero .lead h2{font-size:24px}}
 
 /* ---- SynthIQ: sources and filters on top, chat below (every screen) ---------------------------------------------- */
-.sqview{display:flex;flex-direction:column;gap:14px;height:calc(100vh - 110px);min-height:520px}
-.sqview .chat{flex:1 1 auto;height:auto;min-height:300px}
+.sqview,.apview{display:flex;flex-direction:column;gap:14px;height:calc(100vh - 110px);min-height:520px}
+.sqview .chat,.apview .chat{flex:1 1 auto;height:auto;min-height:300px}
+.apbar{flex:none}
+.apview.apopen{height:auto;min-height:calc(100vh - 110px)}
+.apchips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:1 1 auto;min-width:0}
+.apedit{flex:none}
+.apform{padding-top:0}
 .sqbar{flex:none}
 .sqrow{display:flex;align-items:center;gap:12px;padding:11px 14px}
 .sqrow2{border-top:1px solid var(--line);flex-wrap:wrap}
@@ -293,9 +298,18 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}table.t th,table.t td
  .btn{min-height:44px}.btn.xs{min-height:34px}.btn.s{min-height:40px}
  .sqc,.tabs button{min-height:42px}
  .chat{height:calc(100vh - 176px - var(--kb,0px));height:calc(100dvh - 176px - var(--kb,0px));min-height:0}
- .sqview{min-height:0;gap:10px}
- .sqview{height:calc(100vh - 156px - var(--kb,0px));height:calc(100dvh - 156px - var(--kb,0px))}
- .sqview .chat{flex:1 1 auto;height:auto;min-height:210px}
+ .sqview,.apview{min-height:0;gap:10px}
+ .sqview,.apview{height:calc(100vh - 156px - var(--kb,0px));height:calc(100dvh - 156px - var(--kb,0px))}
+ .sqview .chat,.apview .chat{flex:1 1 auto;height:auto;min-height:210px}
+.apview.apopen{height:auto;min-height:0}
+.apchips{flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.apchips::-webkit-scrollbar{display:none}
+.apchips .badge{flex:none;scroll-snap-align:start}
+.apform .grid2{grid-template-columns:1fr}
+.apfull{display:none}
+.apbar .sqlab .badge{display:none}
+.apbar .sqnote{display:flex}
+.apchips{padding-right:4px}
  .msgs{overscroll-behavior:contain;min-height:0}
  .chat{overflow:hidden}
  .chat .empty{padding:12px 14px}
@@ -488,18 +502,26 @@ function vHome(){
  return '<div class="hero"><div class="lead"><span class="badge" style="background:rgba(255,255,255,.18);color:#fff;width:max-content">'+esc(org.platform||"Y Square Workplace")+'</span><h2>'+esc(org.tagline||"Three agents for young athletes, students and community events")+'</h2><p>Athlete Edge tells young athletes what to eat for their sport. StudyPals tutors and builds lessons and quizzes from real class materials. Event Planner puts logistics, information and communication in one place instead of WhatsApp threads. Start free, no sign-up.</p><div class="row"><button class="btn" onclick="A.go(\'#/athlete\')">'+ic("bolt")+'Try Athlete Edge</button><button class="btn o" onclick="A.go(\'#/events\')">'+ic("cal")+'Plan an event</button></div></div><div class="tiers"><div class="tier"><b>'+ic("check")+' Free - no sign-up</b><ul><li>All three agents</li><li>Models: Open Weight Models</li><li>Your events, RSVPs and athlete profile stay on this device until you sign up</li></ul></div><div class="tier prem"><b>'+ic("star")+' Premium '+(bill.priceLabel?'<span class="badge ac">'+esc(bill.priceLabel)+'</span>':"")+'</b><ul><li>'+esc(prem||"Claude and ChatGPT")+' on every agent</li>'+((bill.premiumBenefits||[]).slice(1).map(function(x){return "<li>"+esc(x)+"</li>";}).join(""))+'<li>Quick sign-up with Google or email, then subscribe</li></ul><div style="margin-top:10px">'+(isPremium()?'<span class="badge ok">You are Premium</span>':'<button class="btn p s" onclick="A.openUpgrade()">'+(signedIn()?"Go Premium":"Sign up and go Premium")+'</button>')+'</div></div></div></div><div class="agents">'+cards+'</div>'+volBanner();
 }
 // ---- agent workspaces (Athlete Edge, StudyPals) ---------------------------------------------------------------------
+function apOpen(){return !!S.apOpen;}
 function vAgent(agentId){
  var a=agentById(agentId);if(!a)return '<div class="empty">Agent not available.</div>';
- var side=athletePanel();
- return '<div class="ws"><div class="side">'+side+'</div>'+chatPanel(a,agentId==="agent-studypals"?{grade:S.sp.grade,subject:S.sp.subject,topic:S.sp.topic}:{})+'</div>';
+ return '<div class="apview'+(apOpen()?" apopen":"")+'">'+athleteBar()+chatPanel(a,agentId==="agent-studypals"?{grade:S.sp.grade,subject:S.sp.subject,topic:S.sp.topic}:{})+'</div>';
 }
-function athletePanel(){
+function athleteBar(){
  var p=(S.boot||{}).profile||{};var me=signedIn();var d=me?{}:(S.pdraft||{});
  function v(snake,camel){var x=(!me&&d[camel]!=null)?d[camel]:p[snake];return x==null?"":x;}
  function sel(name,opts,cur,labels){return '<select name="'+name+'"><option value="">Choose</option>'+opts.map(function(o,i){return '<option value="'+attr(o)+'"'+(o===cur?" selected":"")+'>'+esc(labels?labels[i]:o)+'</option>';}).join("")+'</select>';}
  var badge=me?(p.owner_id?'<span class="badge ok">saved</span>':'<span class="badge warn">not saved</span>'):'<span class="badge">sign in to save</span>';
  var foot=me?'<button class="btn p" type="submit" style="width:100%">Save profile</button>':'<div class="gate"><span class="muted small">Sign in to save your athlete profile. What you type here is saved to your account right after you sign in.</span><button type="button" class="btn p" style="width:100%" onclick="A.openSignIn()">'+ic("user")+'Sign in to save profile</button></div>';
- return '<div class="card"><div class="hd">'+ic("bolt")+'<h3>Athlete profile</h3><div class="sp"></div>'+badge+'</div><div class="bd"><form onsubmit="return A.saveProfile(this)" oninput="A.pdraft(this)" onchange="A.pdraft(this)"><div class="grid2"><div class="f"><label>Athlete name</label><input name="athleteName" value="'+attr(v("athlete_name","athleteName"))+'" placeholder="First name"></div><div class="f"><label>Age group</label>'+sel("ageGroup",AGE_GROUPS,v("age_group","ageGroup"))+'</div></div><div class="grid2"><div class="f"><label>Sport</label><input name="sport" value="'+attr(v("sport","sport"))+'" placeholder="Soccer, swimming, cricket..."></div><div class="f"><label>Position / event</label><input name="position" value="'+attr(v("position","position"))+'" placeholder="Goalkeeper, 400m..."></div></div><div class="grid2"><div class="f"><label>Training days / week</label><input name="trainingDays" type="number" min="0" max="14" value="'+attr(v("training_days","trainingDays"))+'"></div><div class="f"><label>Usual session time</label>'+sel("sessionTime",SESSION_TIMES,v("session_time","sessionTime"),["Morning","Afternoon","Evening"])+'</div></div><div class="f"><label>Goals</label><input name="goals" value="'+attr(v("goals","goals"))+'" placeholder="More energy in the second half, recover faster..."></div><div class="f"><label>Diet, allergies and food rules</label><input name="dietaryNotes" value="'+attr(v("dietary_notes","dietaryNotes"))+'" placeholder="Vegetarian, nut allergy, halal, lactose..."><div class="help">Athlete Edge never suggests foods that break these.</div></div><div class="f"><label>Favourite foods</label><input name="favouriteFoods" value="'+attr(v("favourite_foods","favouriteFoods"))+'" placeholder="Rice and dal, pasta, bananas..."></div>'+foot+'</form></div></div><div class="card"><div class="bd small muted">Athlete Edge gives food-first guidance for healthy young athletes. It is not medical advice and never recommends supplements or diets for children. For health concerns talk to a parent, doctor or registered dietitian.</div></div>';
+ var filled=[["user",v("athlete_name","athleteName")],["cal",v("age_group","ageGroup")],["bolt",v("sport","sport")],["pin",v("position","position")],["clock",v("training_days","trainingDays")?v("training_days","trainingDays")+" days / week":""],["sun",v("session_time","sessionTime")],["star",v("goals","goals")],["heart",v("dietary_notes","dietaryNotes")]].filter(function(c){return String(c[1]).trim()!=="";});
+ var open=apOpen();
+ var chips=filled.length?filled.map(function(c){return '<span class="badge">'+ic(c[0])+' '+esc(String(c[1]))+'</span>';}).join(""):'<span class="small muted apfull">Add your sport, age group and goals so Athlete Edge can tailor every answer.</span>';
+ return '<div class="card sqbar apbar">'+
+  '<div class="sqrow"><div class="sqlab">'+ic("bolt")+'<b>Athlete profile</b>'+badge+'</div>'+
+  '<div class="apchips">'+chips+'</div>'+
+  '<button class="btn xs '+(open||filled.length?"ghost":"p")+' apedit" type="button" onclick="A.apToggle()">'+ic(open?"check":(filled.length?"cog":"plus"))+(open?"Done":(filled.length?"Edit":"Add profile"))+'</button></div>'+
+  (open?'<div class="bd apform"><form onsubmit="return A.saveProfile(this)" oninput="A.pdraft(this)" onchange="A.pdraft(this)"><div class="grid2"><div class="f"><label>Athlete name</label><input name="athleteName" value="'+attr(v("athlete_name","athleteName"))+'" placeholder="First name"></div><div class="f"><label>Age group</label>'+sel("ageGroup",AGE_GROUPS,v("age_group","ageGroup"))+'</div></div><div class="grid2"><div class="f"><label>Sport</label><input name="sport" value="'+attr(v("sport","sport"))+'" placeholder="Soccer, swimming, cricket..."></div><div class="f"><label>Position / event</label><input name="position" value="'+attr(v("position","position"))+'" placeholder="Goalkeeper, 400m..."></div></div><div class="grid2"><div class="f"><label>Training days / week</label><input name="trainingDays" type="number" min="0" max="14" value="'+attr(v("training_days","trainingDays"))+'"></div><div class="f"><label>Usual session time</label>'+sel("sessionTime",SESSION_TIMES,v("session_time","sessionTime"),["Morning","Afternoon","Evening"])+'</div></div><div class="f"><label>Goals</label><input name="goals" value="'+attr(v("goals","goals"))+'" placeholder="More energy in the second half, recover faster..."></div><div class="f"><label>Diet, allergies and food rules</label><input name="dietaryNotes" value="'+attr(v("dietary_notes","dietaryNotes"))+'" placeholder="Vegetarian, nut allergy, halal, lactose..."><div class="help">Athlete Edge never suggests foods that break these.</div></div><div class="f"><label>Favourite foods</label><input name="favouriteFoods" value="'+attr(v("favourite_foods","favouriteFoods"))+'" placeholder="Rice and dal, pasta, bananas..."></div>'+foot+'</form></div>':"")+
+  '<div class="sqnote small muted">'+ic("help")+' Athlete Edge gives food-first guidance for healthy young athletes. It is not medical advice and never recommends supplements or diets for children. For health concerns talk to a parent, doctor or registered dietitian.</div></div>';
 }
 function chatPanel(a,ctx){
  var conv=getConv(a.id,ctx);var k=convKey(a.id,ctx);
@@ -978,6 +1000,7 @@ var A=window.A={
  googleWait:function(){if(gisInit){try{google.accounts.id.prompt();}catch(e){}}else toast("Google sign-in is still loading. Try again in a second.");},
  googleUnavailable:function(){if(isAdmin()){closeModal();toast("Add the Google OAuth client id in Admin, Settings to switch on Google sign-in.","err");go("#/admin");}else toast("Google sign-in is being set up. Please use email for now.","err");},
  pdraft:function(form){if(signedIn())return;S.pdraft=fd(form);LS.set("pdraft",S.pdraft);},
+ apToggle:function(){S.apOpen=!S.apOpen;render();},
  spTab:function(t){S.spTab=t;LS.set("spTab",t);S.menu=false;render();},
  genLesson:function(form){
   var topic=String(fd(form).topic||"").trim();if(!topic||S.busy.lesson)return false;
@@ -1150,7 +1173,7 @@ A.drawer=function(on){try{document.body.classList.toggle("dopen",!!on);}catch(e)
   if(document.body.classList.contains("dopen")){if(dx<0)A.drawer(false);return;}
   if(edge&&dx>0){A.drawer(true);return;}
   // leave anything that scrolls sideways alone (source chips, tabs, tables, model picker)
-  if(e.target&&e.target.closest&&e.target.closest(".sqsrc,.tabs,table,.srcs,.mp,.composer,input,textarea,select"))return;
+  if(e.target&&e.target.closest&&e.target.closest(".sqsrc,.apchips,.apform,.tabs,table,.srcs,.mp,.composer,input,textarea,select"))return;
   var v=S.route.view;var i=TAB.indexOf(v==="home"?"":v);
   if(i<0)return;
   var j=dx<0?i+1:i-1;

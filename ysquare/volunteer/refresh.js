@@ -62,6 +62,7 @@ entries.forEach(function (en, i) {
   for (var k = 0; k < probes.length; k++) { if (probes[k].live) { hit = probes[k]; break; } }
   var live = !!hit;
   var desc = (hit && hit.desc) ? hit.desc : en.blurb;
+  if (en.note) desc = (desc + " " + en.note).trim();   // the board is for students 12 to 21; say where an organisation sets its own minimum
   rows.push({
     id: PREFIX + en.key,
     title: en.title,
