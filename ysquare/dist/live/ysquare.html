@@ -112,6 +112,16 @@ a{color:var(--ac);text-decoration:none}
 .bub .tw{overflow-x:auto;margin:6px 0 10px;border:1px solid var(--line2);border-radius:10px}.bub table{border-collapse:collapse;font-size:13px;width:100%}.bub th,.bub td{border-bottom:1px solid var(--line2);padding:7px 10px;text-align:left;vertical-align:top}.bub tr:last-child td{border-bottom:0}.bub th{background:var(--acs);color:var(--ac);font-weight:600;white-space:nowrap}.bub tbody tr:nth-child(even) td{background:rgba(127,127,127,.06)}.bub td:first-child{font-weight:600;min-width:84px}
 .bub blockquote{border-left:3px solid var(--ac);background:var(--acs);padding:8px 12px;border-radius:0 8px 8px 0;margin:4px 0 10px}.bub h3{color:var(--ac);font-size:14.5px;margin:12px 0 4px}.bub h3:first-child{margin-top:2px}.bub p>b:only-child{font-size:15px}
 .sphint{margin:0 0 10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.sphint .ic{width:14px;height:14px}
+.cite{display:inline-block;font-size:11px;font-weight:700;line-height:1.6;padding:0 5px;margin:0 1px;border-radius:5px;background:var(--acs);color:var(--ac);border:1px solid var(--acl);text-decoration:none;vertical-align:1px}
+.cite:hover{background:var(--ac);color:#fff;border-color:var(--ac)}
+.refs{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
+.refs>b{display:flex;align-items:center;gap:5px;font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--tx2);margin-bottom:6px;font-weight:700}
+.refs>b svg{width:13px;height:13px}
+.ref{display:flex;gap:9px;align-items:baseline;padding:3px 0;font-size:12.5px;line-height:1.45}
+.ref .rn{flex:none;font-weight:700;color:var(--ac);font-size:11px;min-width:22px}
+.ref a{color:var(--tx);text-decoration:none;border-bottom:1px solid var(--line2)}
+.ref a:hover{color:var(--ac);border-color:var(--acl)}
+.ref .rmeta{display:block;color:var(--tx2);font-size:11.5px;margin-top:1px}
 .srcs{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.srcs span,.srcs a{font-size:11px;border:1px solid var(--line2);border-radius:6px;padding:1px 6px;color:var(--tx2)}
 .srcs a{color:var(--ac);text-decoration:none;font-weight:600}.srcs a:hover{border-color:var(--acl);background:var(--acs)}
 .sqsrc{display:flex;flex-wrap:wrap;gap:7px}
@@ -412,6 +422,19 @@ function chatPanel(a,ctx){
  var conv=getConv(a.id,ctx);var k=convKey(a.id,ctx);
  return '<div class="card chat" data-agent="'+attr(a.id)+'"><div class="hd"><div class="ai" style="background:'+attr(a.color)+'">'+ic(a.icon)+'</div><div><h3>'+esc(a.name)+'</h3><div class="muted small">'+esc(a.title)+'</div></div><div class="sp"></div>'+(a.external?'<span class="badge info">powered by StudyPals</span>':'')+'<button class="btn xs ghost" title="New conversation" onclick="A.newConv(\''+attr(a.id)+'\')">'+ic("refresh")+' New</button></div><div class="msgs" id="msgs-'+attr(k)+'">'+msgsHtml(a,conv,k)+'</div>'+(conv.messages.length?'':'<div class="starters">'+(a.starters||[]).map(function(s){return '<button onclick="A.starter(this)">'+esc(s)+'</button>';}).join("")+'</div>')+'<div class="composer"><div class="box"><textarea rows="1" placeholder="'+attr(a.placeholder||("Ask "+a.name+"..."))+'" onkeydown="A.key(event,this)" oninput="this.style.height=\'auto\';this.style.height=Math.min(160,this.scrollHeight)+\'px\'"></textarea><button class="btn p icon" title="Send" onclick="A.sendFrom(this)">'+ic("send")+'</button></div><div class="tools">'+(a.supportsModels?modelPicker():'<span>'+esc(a.footnote||"Answers come from your class materials")+'</span>')+'<span>'+(actor().kind==="guest"?'Free version - <a href="#" onclick="A.openSignIn();return false">sign in</a> to keep your history':'Signed in as '+esc(actor().name))+'</span></div></div></div>';
 }
+function citeMap(sources){var m={};(sources||[]).forEach(function(s){if(s&&s.url&&s.marker)m[s.marker]=s;});return m;}
+function linkCites(html,sources){
+ var map=citeMap(sources);if(!Object.keys(map).length)return html;
+ return html.replace(/\[(P\d{1,2})\]/g,function(all,mk){var s=map[mk];if(!s)return all;
+  return '<a class="cite" href="'+attr(s.url)+'" target="_blank" rel="noopener noreferrer" title="'+attr((s.title||"")+(s.category?" - "+s.category:""))+'">'+esc(mk)+'</a>';});
+}
+function srcsHtml(sources){
+ var linked=(sources||[]).filter(function(s){return s&&s.url;});
+ if(!linked.length)return '<div class="srcs">'+(sources||[]).map(function(s){return '<span title="'+attr(s.category||"")+'">'+esc(s.marker)+' '+esc(s.title)+'</span>';}).join("")+'</div>';
+ return '<div class="refs"><b>'+ic("link")+'Sources ('+linked.length+')</b>'+linked.map(function(s){
+  return '<div class="ref"><span class="rn">'+esc(s.marker)+'</span><span><a href="'+attr(s.url)+'" target="_blank" rel="noopener noreferrer">'+esc(s.title||s.id||s.url)+'</a>'+(s.category?'<span class="rmeta">'+esc(s.category)+'</span>':"")+'</span></div>';
+ }).join("")+'</div>';
+}
 function msgsHtml(a,conv,k){
  if(!conv.messages.length)return '<div class="empty"><div class="ai" style="width:48px;height:48px;border-radius:14px;background:'+attr(a.color)+';display:grid;place-items:center;color:#fff;margin:0 auto 10px">'+ic(a.icon,"ic22")+'</div><b>'+esc(a.name)+'</b><div class="small">'+esc(a.description)+'</div></div>';
  var h=conv.messages.map(function(m){
@@ -419,9 +442,9 @@ function msgsHtml(a,conv,k){
   var extra="";
   if(m.plan&&m.plan.items)extra+='<div class="plan"><b>'+esc(m.plan.title||"Your plan")+'</b>'+(m.plan.items||[]).map(function(it){return '<div class="it"><em>'+esc(it.when||"")+'</em><div>'+esc(it.what||"")+(it.why?'<small>'+esc(it.why)+'</small>':"")+'</div></div>';}).join("")+(m.plan.hydration?'<div class="it"><em>Hydration</em><div>'+esc(m.plan.hydration)+'</div></div>':"")+(m.plan.pack&&m.plan.pack.length?'<div class="it"><em>Pack</em><div>'+esc(m.plan.pack.join(", "))+'</div></div>':"")+'</div>';
   (m.actions||[]).forEach(function(ac,i){extra+=actionCard(ac,k,conv.messages.indexOf(m),i);});
-  if(m.sources&&m.sources.length)extra+='<div class="srcs">'+m.sources.map(function(s){var lb=esc(s.marker)+' '+esc(s.title);return s.url?'<a href="'+attr(s.url)+'" target="_blank" rel="noopener noreferrer" title="'+attr(s.category||"")+'">'+lb+'</a>':'<span title="'+attr(s.category||"")+'">'+lb+'</span>';}).join("")+'</div>';
+  if(m.sources&&m.sources.length)extra+=srcsHtml(m.sources);
   if(m.imageUrl)extra+='<img class="expl-img" src="'+attr(m.imageUrl)+'" alt="'+attr(m.imageAlt||"Explanation picture")+'" loading="lazy" onerror="this.remove()">';
-  return '<div class="msg"><div><div class="bub">'+md(cleanReply(m.content))+extra+'</div><div class="meta">'+(m.model?'<span class="badge">'+esc(m.model)+'</span>':"")+hhmm(m.at)+'</div></div></div>';
+  return '<div class="msg"><div><div class="bub">'+linkCites(md(cleanReply(m.content)),m.sources)+extra+'</div><div class="meta">'+(m.model?'<span class="badge">'+esc(m.model)+'</span>':"")+hhmm(m.at)+'</div></div></div>';
  }).join("");
  if(S.busy[k])h+='<div class="msg"><div><div class="bub"><span class="typing"><i></i><i></i><i></i></span></div></div></div>';
  return h;
