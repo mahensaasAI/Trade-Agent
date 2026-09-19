@@ -22,7 +22,7 @@ INSERT INTO ys_agent_settings (agent_id,default_model,enabled,updated_by) VALUES
 ON CONFLICT (agent_id) DO NOTHING;
 
 INSERT INTO ys_settings (key,value) VALUES
- ('organization','{"name":"Y Square","platform":"Y Square Workplace","tagline":"Three agents for young athletes, students and community events","timezone":"America/Chicago","currency":"USD"}'::jsonb),
+ ('organization','{"name":"Y Square","platform":"Y Square Workplace","tagline":"Turn your ideas into action","timezone":"America/Chicago","currency":"USD"}'::jsonb),
  ('auth','{"googleClientId":"","sessionHours":24}'::jsonb),
  ('billing','{"provider":"stripe_payment_link","checkoutUrl":"","priceLabel":"$9 / month","premiumBenefits":["Claude and ChatGPT on every agent","Longer conversations and history","Priority support"]}'::jsonb),
  ('studypals','{"baseUrl":"https://n8n-neonai.duckdns.org/webhook/studypals/","tutorPath":"tutor/ask","openUrl":"https://n8n-neonai.duckdns.org/studypals/"}'::jsonb),
