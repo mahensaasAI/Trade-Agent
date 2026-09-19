@@ -43,6 +43,7 @@ Callers send either `X-Guest-Id: guest-...` (free version) or `Authorization: Be
 | Y Square - DB Functions | `ys_effective_plan`, `ys_bootstrap`, `ys_event_detail`, `ys_admin_overview` (idempotent) |
 | Y Square - Deploy UI Page | Manual alternative to `deploy_ui.js`: fetches `dist/live/ysquare.html` (the live page snapshot) from GitHub and upserts it |
 | Y Square - Upload UI Page (chunked) | Manual helper: uploads the page in MD5-verified chunks via workflow executions (never publish it) |
+| Y Square - Volunteer Links (Dallas) | Weekly link keeper for the volunteer board: re-checks the curated Dallas listings, falls back to the next candidate URL, refreshes each blurb from the page itself and upserts them into `ys_volunteer` |
 | Y Square Billing | Records payment events and switches plans (Stripe Payment Link / Checkout) |
 
 The SDK code that created each workflow is in `dist/workflows/*.sdk.js`, generated from the sources below.
@@ -124,6 +125,33 @@ data is sent to any of these services - only the question text. The panel choice
 
 Answers cite as `[P1]`, `[P2]`; `Format Reply` keeps only the citations the answer actually used and returns them
 with their URLs, which the page renders as links under the message.
+
+## Volunteer listings (Dallas)
+
+The volunteer board carries six curated listings for the Dallas area alongside whatever members post. They are
+not typed into the database by hand: `volunteer/dallas.json` is the catalogue, and the
+"Y Square - Volunteer Links (Dallas)" workflow keeps them true.
+
+| Slot | Organisation | Link |
+| --- | --- | --- |
+| Community | Karya Siddhi Hanuman Temple (listed as "Hanuman Temple") | `dallashanuman.org/volunteer` |
+| Medical | Parkland Health | `parklandhealth.org/volunteer` |
+| Business | United Way of Metropolitan Dallas | `unitedwaydallas.org/volunteer/` |
+| Law | Dallas Volunteer Attorney Program | `dallasvolunteerattorneyprogram.org` |
+| IT | Tech Titans | `techtitans.org/volunteer` |
+| Red Cross / relief | American Red Cross, North Texas | `redcross.org/local/texas/north-texas/volunteer.html` |
+
+Every Monday (and on demand from the workflow's "Refresh Now" trigger) `Resolve Links` requests each candidate URL
+in the catalogue, keeps the first one that still answers, and refreshes the listing's description from that page's
+own meta description. Sites that only block datacentre traffic (403, 429 and friends) count as live. If every
+candidate for a listing is dead the row is soft-removed with `removed_at`, so the board drops it instead of sending
+students to a 404.
+
+Rows are written as `vol-dallas-<key>` with `created_by = 'system'` and `status = 'approved'`, so they sit next to
+community submissions rather than in the admin approval queue. `vol.list` needs a session, so the same list is also
+mirrored into `ys_settings.organization.volunteerOpportunities`, which is the fallback the page reads when nobody is
+signed in. To change what is listed, edit `volunteer/dallas.json`, run `npm run gen:volunteer`, update the workflow
+from `dist/workflows/volunteer_links.sdk.js` and run it once. Other cities get their own catalogue file the same way.
 
 ## Live page snapshot
 

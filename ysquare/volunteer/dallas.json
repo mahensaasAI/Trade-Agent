@@ -1,0 +1,95 @@
+{
+  "prefix": "vol-dallas-",
+  "city": "Dallas",
+  "entries": [
+    {
+      "key": "temple",
+      "title": "Hanuman Temple",
+      "org": "Karya Siddhi Hanuman Temple",
+      "category": "Community",
+      "location": "Frisco, TX (DFW)",
+      "ages": "All ages, under 16 with a parent",
+      "dateText": "Ongoing",
+      "hours": "Flexible, mostly weekends",
+      "blurb": "Seva at the temple: kitchen and annadanam, event setup, parking and crowd help, cleanup, and help at festivals. Sign up on the temple volunteer page.",
+      "urls": ["https://www.dallashanuman.org/volunteer"]
+    },
+    {
+      "key": "medical",
+      "title": "Hospital volunteering (medical)",
+      "org": "Parkland Health",
+      "category": "Medical",
+      "location": "Dallas, TX",
+      "ages": "16+ (student programs available)",
+      "dateText": "Ongoing",
+      "hours": "Shift based, see the site",
+      "blurb": "Volunteer inside Dallas County's public hospital: patient areas, information desks, clinics and student programs. Good exposure for anyone heading into healthcare.",
+      "urls": [
+        "https://www.parklandhealth.org/volunteer",
+        "https://www.parklandhealth.org/get-involved/volunteer",
+        "https://www.bswhealth.com/volunteer"
+      ]
+    },
+    {
+      "key": "business",
+      "title": "Business and community projects",
+      "org": "United Way of Metropolitan Dallas",
+      "category": "Business",
+      "location": "Dallas, TX",
+      "ages": "16+",
+      "dateText": "Ongoing",
+      "hours": "One-off projects and ongoing roles",
+      "blurb": "Team and individual projects across Dallas: financial coaching, fundraising, school and workforce programs. A practical way to see how a large nonprofit is run.",
+      "urls": [
+        "https://unitedwaydallas.org/volunteer/",
+        "https://www.unitedwaydallas.org/volunteer/"
+      ]
+    },
+    {
+      "key": "law",
+      "title": "Legal aid clinics",
+      "org": "Dallas Volunteer Attorney Program",
+      "category": "Law",
+      "location": "Dallas, TX",
+      "ages": "Law students, paralegals and attorneys",
+      "dateText": "Ongoing",
+      "hours": "Clinic shifts",
+      "blurb": "Free civil legal aid clinics for low income Dallas residents. Students and non-attorneys help at intake and with case support; attorneys take cases.",
+      "urls": [
+        "https://dallasvolunteerattorneyprogram.org/",
+        "https://www.lanwt.org/volunteer/"
+      ]
+    },
+    {
+      "key": "it",
+      "title": "Tech mentoring and STEM events",
+      "org": "Tech Titans",
+      "category": "IT",
+      "location": "Richardson and DFW, TX",
+      "ages": "High school and up",
+      "dateText": "Ongoing",
+      "hours": "Event based",
+      "blurb": "North Texas technology association: judge and mentor at student STEM events, help run programs, and meet people working in tech across DFW.",
+      "urls": [
+        "https://www.techtitans.org/volunteer",
+        "https://perscholas.org/volunteer/",
+        "https://genesysworks.org/get-involved/"
+      ]
+    },
+    {
+      "key": "relief",
+      "title": "Disaster relief and blood drives",
+      "org": "American Red Cross, North Texas",
+      "category": "Red Cross",
+      "location": "North Texas",
+      "ages": "16+ (some roles 18+)",
+      "dateText": "Ongoing",
+      "hours": "Flexible, on-call for disasters",
+      "blurb": "Disaster response teams, blood drive support, home fire safety visits and service to the armed forces across the North Texas region.",
+      "urls": [
+        "https://www.redcross.org/local/texas/north-texas/volunteer.html",
+        "https://www.redcross.org/volunteer/become-a-volunteer.html"
+      ]
+    }
+  ]
+}
