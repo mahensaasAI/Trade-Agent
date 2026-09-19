@@ -17,7 +17,8 @@ ON CONFLICT (id) DO UPDATE SET label=EXCLUDED.label, model_id=EXCLUDED.model_id,
 INSERT INTO ys_agent_settings (agent_id,default_model,enabled,updated_by) VALUES
  ('agent-athlete','gemini',true,'seed'),
  ('agent-studypals','studypals',true,'seed'),
- ('agent-events','gemini',true,'seed')
+ ('agent-events','gemini',true,'seed'),
+ ('agent-synthiq','groq',true,'seed')
 ON CONFLICT (agent_id) DO NOTHING;
 
 INSERT INTO ys_settings (key,value) VALUES

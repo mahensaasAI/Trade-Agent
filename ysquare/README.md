@@ -7,6 +7,7 @@ JSON services API, an agents chat with a Model Router, and a shared Postgres. It
 | --- | --- | --- |
 | **Athlete Edge** | The go-to for young athletes: what to eat and drink before, during and after training, games and tournaments, matched to the athlete profile (sport, age group, schedule, allergies and diet). Grounded on a sports-nutrition knowledge base with citations, safety rules (food first, no supplements or diets for minors) and a meal-plan card. | Y Square Agents (Model Router) |
 | **StudyPals** | The existing StudyPals tutor. Chat is proxied to `https://n8n-neonai.duckdns.org/webhook/studypals/tutor/ask` with the student id, grade, subject and topic; the full StudyPals app is linked from the panel. | Existing StudyPals workflows |
+| **SynthIQ** | Research companion for medical and health-science students. Searches only the sources the student switches on - PubMed/MEDLINE, PubMed Central, Cochrane reviews, ClinicalTrials.gov, medRxiv/bioRxiv preprints and Crossref - then answers from the records it retrieved and marks every claim with the paper it came from. Citations render as links to PubMed, the DOI or the trial registry. | Y Square SynthIQ (own workflow) |
 | **Event Planner** | Replaces WhatsApp threads with one place per event: checklist with owners and due dates, RSVPs and headcount, pinned information and announcements, and an event chat. The AI planner drafts checklists and announcements from a brief and adds them with one click. | Y Square Services + Agents |
 
 **Models.** Free (no sign-up): Gemini Flash, Mistral, Groq. Premium: Claude and ChatGPT. Guests are identified by a
@@ -24,6 +25,7 @@ reply says so and the user can pick another free model.
 | App | `https://n8n-neonai.duckdns.org/webhook/Y2Workplace` |
 | Services API | `POST https://n8n-neonai.duckdns.org/webhook/Y2Workplace/svc/api` `{action, payload}` |
 | Agents chat | `POST https://n8n-neonai.duckdns.org/webhook/Y2Workplace/svc/chat` `{agentId, message, model, conversationId, context}` |
+| SynthIQ chat | `POST https://n8n-neonai.duckdns.org/webhook/Y2Workplace/svc/synthiq` `{message, model, conversationId, context:{sources,years,types,openAccess,perSource}}` |
 | Deploy page | `POST https://n8n-neonai.duckdns.org/webhook/Y2Workplace/deploy-ui` (header `X-Deploy-Key`) |
 | Billing webhook | `POST https://n8n-neonai.duckdns.org/webhook/Y2Workplace/billing/stripe?key=...` |
 
@@ -36,6 +38,7 @@ Callers send either `X-Guest-Id: guest-...` (free version) or `Authorization: Be
 | Y Square UI | Serves the page from `ys_ui_pages`; key-protected deploy endpoint |
 | Y Square Services | API: guests, sign-up, login, Google sign-in, events, tasks, updates, RSVPs, admin |
 | Y Square Agents | Chat: live context, daily limits, free/premium tiers, Model Router, StudyPals proxy |
+| Y Square SynthIQ | SynthIQ chat: literature retrieval from the selected sources, daily limits, free/premium tiers, Model Router, cited answers. Deliberately separate from Y Square Agents so retrieval problems cannot affect the other three agents |
 | Y Square - DB Migration | Creates the `ys_*` tables and seeds models, settings, knowledge and a sample event (idempotent) |
 | Y Square - DB Functions | `ys_effective_plan`, `ys_bootstrap`, `ys_event_detail`, `ys_admin_overview` (idempotent) |
 | Y Square - Deploy UI Page | Manual alternative to `deploy_ui.js`: fetches `dist/live/ysquare.html` (the live page snapshot) from GitHub and upserts it |
@@ -98,6 +101,29 @@ Member: `logout`, `account.get`, `billing.checkout`. Admin: `admin.overview`, `u
 
 Chat context: `{eventId}` for Event Planner, `{grade, subject, topic, studentId}` for StudyPals. Replies may carry a
 `plan` card (Athlete Edge) or `actions` (`create_tasks`, `post_update`) that the UI applies through the API.
+
+## SynthIQ sources
+
+SynthIQ never answers from the model's memory: `Fetch Papers` retrieves records first and the prompt is built
+around them, so an empty search produces "nothing found", not an invented answer. Each source the student
+switches on is one API call, run in parallel, de-duplicated by DOI / PMID / registry id and capped at 14 records.
+
+| Source key | Shown as | Retrieved from |
+| --- | --- | --- |
+| `pubmed` | PubMed / MEDLINE | Europe PMC REST, `SRC:MED` (the MEDLINE records, linked back to pubmed.ncbi.nlm.nih.gov) |
+| `pmc` | PubMed Central | Europe PMC REST, `SRC:PMC` (open-access full text) |
+| `cochrane` | Cochrane Reviews | Europe PMC REST, filtered to the Cochrane Database of Systematic Reviews |
+| `trials` | ClinicalTrials.gov | ClinicalTrials.gov API v2 (`/api/v2/studies`) |
+| `preprints` | Preprints (medRxiv, bioRxiv) | Europe PMC REST, `SRC:PPR` |
+| `crossref` | Crossref journals | Crossref REST (`/works`), for literature beyond biomedicine |
+
+Filters passed in `context`: `years` (`any`, `5`, `10`), `types` (`any` or `evidence` = reviews, meta-analyses and
+trials), `openAccess` (free full text only) and `perSource` (3, 5 or 8). No API keys are needed and no personal
+data is sent to any of these services - only the question text. The panel choices are stored in the browser
+(`ys.sq` in localStorage) and re-sanitised server-side against the fixed source list.
+
+Answers cite as `[P1]`, `[P2]`; `Format Reply` keeps only the citations the answer actually used and returns them
+with their URLs, which the page renders as links under the message.
 
 ## Live page snapshot
 
