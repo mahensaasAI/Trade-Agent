@@ -2,7 +2,7 @@
 "use strict";
 // ---- configuration --------------------------------------------------------------------------------------------
 var FALLBACK_BASE="https://n8n-neonai.duckdns.org/webhook/Y2Workplace";
-function detectBase(){var p=location.pathname;var m=p.match(/^(.*?\/(?:webhook\/)?Y2Workplace)(?:\/|$)/i);if(m)return location.origin+m[1];return FALLBACK_BASE;}
+function detectBase(){var p=location.pathname;var m=p.match(/^(.*?\/(?:webhook\/)?Y2Workplace)(?:\/|$)/i);if(m)return location.origin+m[1];if(/^https?:$/i.test(location.protocol))return location.origin;return FALLBACK_BASE;}
 var BASE=detectBase();
 var AGE_GROUPS=["8-11","12-14","15-17","18-22"];
 var SESSION_TIMES=["morning","afternoon","evening"];
