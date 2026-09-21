@@ -10,6 +10,7 @@
     "gen:synthiq": "node workflows/gen_synthiq.js",
     "deploy:ui": "node workflows/gen_ui.js && node workflows/deploy_ui.js",
     "check": "node workflows/check.js",
-    "gen:volunteer": "node workflows/gen_volunteer.js"
+    "gen:volunteer": "node workflows/gen_volunteer.js",
+    "gen:brand": "node workflows/gen_brand.js"
   }
 }
