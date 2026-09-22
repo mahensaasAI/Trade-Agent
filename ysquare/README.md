@@ -48,6 +48,7 @@ Callers send either `X-Guest-Id: guest-...` (free version) or `Authorization: Be
 | Y Square - Deploy UI Page | Manual alternative to `deploy_ui.js`: fetches `dist/live/ysquare.html` (the live page snapshot) from GitHub and upserts it into the row named by `TARGET` in the Page Source node (`ysquare-next` by default) |
 | Y Square - Promote UI to Production | Copies `ysquare-next` onto `ysquare`, backing the current production page up to `ysquare-prev` first |
 | Y Square - Roll Back UI | Restores `ysquare-prev` onto `ysquare`, undoing the last promotion |
+| Y Square - Cutover Check | Read-only: resolves ysquareai.com, reports what each hostname serves, checks the n8n editor is 404 on production, and lists the `ys_ui_pages` rows |
 | Y Square - Upload UI Page (chunked) | Manual helper: uploads the page in MD5-verified chunks via workflow executions (never publish it) |
 | Y Square - Volunteer Links (Dallas) | Weekly link keeper for the volunteer board: re-checks the curated Dallas listings, falls back to the next candidate URL, refreshes each blurb from the page itself and upserts them into `ys_volunteer` |
 | Y Square Billing | Records payment events and switches plans (Stripe Payment Link / Checkout) |
