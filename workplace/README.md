@@ -3,20 +3,39 @@
 The internal AI workspace for OraDayForce, served at `/webhook/workplace`. Separate app from Y Square
 Workplace: its own schema (`wp_*`), its own agents and its own sign-in.
 
-## How it is served today
+## How it is served
 
-Unlike Y Square, whose page lives in a `ys_ui_pages` row, the WorkPlace page is a **105 KB string inlined in
-the `Serve WorkPlace App` node** of the `WorkPlace UI` workflow (`y55BOvCAIXsbDsEv`). There is no staging row,
-no md5 check and no rollback: editing the page means rewriting that node.
+The page lives in the `wp_ui_pages` table and `dist/live/workplace.html` is its source of truth. Two URLs, one
+workflow:
 
-`dist/live/workplace.html` in this folder is a byte-exact copy of what that node currently serves
-(md5 `4c5b0678ddc7710024b2509a0f70c937`, 105,338 bytes), captured 2026-09-22 so the page has a diff base.
+| URL | Row | |
+| --- | --- | --- |
+| `/webhook/workplace` | `workplace` | production |
+| `/webhook/workplace-next` | `workplace-next` | staging, falls back to production when no staging row exists |
+
+To ship a change: edit `dist/live/workplace.html`, commit and push, run **WorkPlace - Deploy UI Page** (it
+defaults to the staging row), compare the md5 it returns with `md5sum dist/live/workplace.html`, look at
+`/webhook/workplace-next`, then run **WorkPlace - Promote UI to Production**. That saves the outgoing page to
+`workplace-prev`, so **WorkPlace - Roll Back UI** undoes it.
+
+The deploy helper resolves the branch head commit and fetches that immutable URL rather than the branch path,
+because `raw.githubusercontent.com/.../<branch>/...` serves a cached copy for minutes after a push - long
+enough to silently deploy the previous version, which is exactly what happened the first time. `updated_by`
+on each row records the short SHA that produced it.
+
+It was not always this way: until 2026-09-22 the page was a 105 KB string inlined in the `Serve WorkPlace App`
+node, with no staging row, no md5 check and no way back.
 
 ## Workflows
 
 | Workflow | Id | Role |
 | --- | --- | --- |
-| WorkPlace UI | `y55BOvCAIXsbDsEv` | serves the SPA at `/webhook/workplace` (page inlined in the node) |
+| WorkPlace UI | `y55BOvCAIXsbDsEv` | serves the SPA from `wp_ui_pages` at `/webhook/workplace` and `/webhook/workplace-next` |
+| WorkPlace - Deploy UI Page | `bd9Ld2XaAEgzqK72` | publishes `dist/live/workplace.html` into the row named by `TARGET` |
+| WorkPlace - Promote UI to Production | `ajSLmUcbaQOh6vQD` | staging to production, backing up to `workplace-prev` |
+| WorkPlace - Roll Back UI | `eyJKF2o9BW6Z55Rz` | restores `workplace-prev` |
+| WorkPlace - Page Check | `yF1rqiYtiBAeJKvB` | read-only: both URLs md5-match the rows they should serve |
+| WorkPlace - DB Plans and Admin | `NOqAoFOcakzclZ9W` | idempotent: org plans, the admin flag and `wp_models` |
 | WorkPlace Services | `V5SDJzqlQTdFf7dD` | authenticated API: bootstrap, chat, knowledge search, ingestion |
 | WorkPlace — DB Migration | `h1RHiUgggb5TUzQ1` | idempotent schema + seed (not active) |
 | WorkPlace | `LpSwabUQbgzZ2PM1` | the original single-workflow MVP (not active) |
@@ -32,18 +51,44 @@ One organization (`org-oradayforce`) and one user: Raju, `raju@oradayforce.com`.
 Eight agents, unchanged: Solution Architect, Proposal Builder, Oracle Fusion SQL, Data Engineering, MLOps,
 Integration, Governance, Knowledge.
 
+## Plans, permissions and models
+
+Added 2026-09-22 by **WorkPlace - DB Plans and Admin** (idempotent):
+
+- **`wp_organizations.plan`** - `free` or `premium`, with `plan_expires_at`. The plan sits on the organization
+  rather than the person, because a company buys it, not an individual.
+- **`wp_users.is_admin`** - a separate boolean. `wp_users.role` was left alone: it holds a displayed job title
+  ("Practice Director"), not an access level, and overwriting it would have wiped that.
+- **`wp_models`** - the same five models as Y Square. Free: Gemini Flash, Groq, Mistral. Premium: Claude,
+  ChatGPT.
+
+`raju@oradayforce.com` is `is_admin = true`. OraDayForce is on **premium**, because WorkPlace has always run on
+Claude and leaving it on free would have taken away what the product does today.
+
+The free tier is for signed-in users only. There is no guest mode: the knowledge base holds client documents,
+so nothing renders before sign-in.
+
 ## Where it differs from Y Square today
 
 | | WorkPlace | Y Square |
 | --- | --- | --- |
-| Page storage | inlined in the workflow node | `ys_ui_pages` row, with staging and rollback |
-| Accent colour | `#4f46e5` | `#4f46e5` (already the same) |
+| Page storage | `wp_ui_pages` row, with staging and rollback | `ys_ui_pages` row, with staging and rollback |
+| Accent colour | `#1d4e7f` navy, indigo `#4f46e5` on primary buttons only | `#4f46e5` indigo throughout |
 | Themes | light + dark | light + dark |
 | Breakpoints | 1080, 860 | 1000, 760, 640 plus iPhone work (dvh, safe-area, swipe) |
 | Mobile nav | sidebar only | sidebar on desktop, bottom tab bar + drawer on phones |
-| Plans | none - no free/premium/guest/upgrade anywhere in the page | free and premium, guest mode, upgrade flow |
-| Permissions | `wp_users.role` holds a job title ("Practice Director"), not a permission | `ys_users.role` is member / teacher / admin |
-| Models | Claude allowlist only | free: Gemini Flash, Groq, Mistral; premium: ChatGPT, Claude |
+| Plans | free and premium on the organization; no guest mode | free and premium per user, plus guest mode |
+| Permissions | `wp_users.is_admin`, with `role` kept as a job title | `ys_users.role` is member / teacher / admin |
+| Models | same five as Y Square, in `wp_models` | free: Gemini Flash, Groq, Mistral; premium: ChatGPT, Claude |
 
-The two rows that matter for the current request: **WorkPlace has no plan or permission concept at all**, and
-its `role` column is a displayed job title rather than an access level.
+## Still to do
+
+The palette is done and staged. Remaining, in order:
+
+1. **Navigation and mobile.** WorkPlace has two breakpoints (1080, 860) and a sidebar only. It needs Y Square's
+   treatment: a bottom tab bar and drawer on phones, `100dvh` with safe-area insets, and swipe between views.
+2. **Plan UI.** A plan badge, a model picker that shows the free models and marks the premium ones locked, and
+   an upgrade path for admins. Nothing in the page reads `plan` yet.
+3. **Admin view.** Raju is `is_admin` in the database, but the page has no admin section to show him.
+4. **Model routing in WorkPlace Services.** The chat still calls Claude directly; it needs a router over
+   `wp_models` that enforces the tier, so free users reach Gemini, Groq and Mistral rather than a locked model.
