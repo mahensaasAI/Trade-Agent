@@ -293,8 +293,11 @@ var MODELS=[
  {id:"claude-sonnet-5",name:"Claude Sonnet 5",desc:"Latest generation, everyday work"}
 ];
 function models(){return (S.data&&S.data.models&&S.data.models.length)?S.data.models:MODELS;}
-function orgPlan(){return ((S.data&&S.data.organization&&S.data.organization.plan)||'free').toLowerCase();}
-function isPremium(){return orgPlan()==='premium';}
+// An absent plan means the backend does not report one yet. Treat that as unrestricted and say nothing,
+// rather than showing FREE and locking models the organisation is actually entitled to.
+function planKnown(){return !!(S.data&&S.data.organization&&S.data.organization.plan);}
+function orgPlan(){return planKnown()?String(S.data.organization.plan).toLowerCase():'unknown';}
+function isPremium(){return !planKnown()||orgPlan()==='premium';}
 function isAdmin(){return !!(S.data&&S.data.user&&S.data.user.isAdmin);}
 function tierOf(m){return (m&&m.tier==='premium')?'premium':'free';}
 function modelAllowed(m){return tierOf(m)==='free'||isPremium();}
@@ -475,7 +478,7 @@ function sidebar(){
  items.map(function(it){return '<a class="nv'+(on===it[0]?" on":"")+'" href="'+it[3]+'" title="'+attr(it[2])+'">'+ic(it[1],"ic18")+'<span class="nv-t">'+it[2]+'</span>'+(it[4]?'<span class="cnt">'+it[4]+'</span>':'')+'</a>';}).join("")+
  '<div class="sb-lbl">PINNED</div>'+
  d.projects.slice(0,3).map(function(p){return '<a class="nv" href="#/projects/'+p.id+'"><span class="stat-dot" style="background:'+p.color+'"></span><span class="nv-t" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.client)+'</span></a>';}).join("")+
- '</nav><div class="sb-bot">'+'<div class="sb-plan"><span class="planchip'+(isPremium()?' pro':'')+'">'+ic(isPremium()?'shield':'lock')+(isPremium()?'PREMIUM':'FREE PLAN')+'</span>'+(isAdmin()?'<span class="meta">Admin</span>':'')+'</div>'+
+ '</nav><div class="sb-bot">'+(planKnown()||isAdmin()?'<div class="sb-plan">'+(planKnown()?'<span class="planchip'+(isPremium()?' pro':'')+'">'+ic(isPremium()?'shield':'lock')+(isPremium()?'PREMIUM':'FREE PLAN')+'</span>':'<span></span>')+(isAdmin()?'<span class="meta">Admin</span>':'')+'</div>':'')+
  '<button class="u-row" data-a="nav" data-v="#/settings"><div class="av">'+esc(d.user.initials)+'</div><div class="u-meta"><b>'+esc(d.user.name)+'</b><small>'+esc(d.user.role)+'</small></div></button>'+
  '<button class="u-row" data-a="signout" style="color:var(--tx3)">'+ic("out","ic18")+'<span class="u-meta"><b style="font-size:12.5px;font-weight:560">Sign out</b></span></button>'+
  '</div></aside>';
@@ -734,8 +737,10 @@ function modelPicker(){
    (can?(m.id===cur.id?'<span class="ck">'+ic("chk")+'</span>':''):'<span class="ck">'+ic("lock")+'</span>')+'</button>';
  }
  var all=models(),free=all.filter(function(m){return tierOf(m)==='free';}),prem=all.filter(function(m){return tierOf(m)==='premium';});
+ var tiered=prem.length>0;
  var menu='<div class="mdl-m" role="listbox" aria-label="Model">';
- if(free.length)menu+='<div class="mdl-h">OPEN WEIGHT MODELS</div>'+free.map(opt).join("");
+ // Without a premium tier there is nothing to contrast against, so do not label the list "open weight".
+ if(free.length)menu+='<div class="mdl-h">'+(tiered?'OPEN WEIGHT MODELS':'MODEL')+'</div>'+free.map(opt).join("");
  if(prem.length)menu+='<div class="mdl-h">PREMIUM'+(locked?' &middot; NOT IN YOUR PLAN':'')+'</div>'+prem.map(opt).join("");
  if(locked&&prem.length)menu+='<div class="mdl-f">'+ic("lock")+'Premium models need a plan upgrade.'+(isAdmin()?' <a href="#/settings">Manage plan</a>':' Ask an administrator.')+'</div>';
  menu+='</div>';
@@ -765,12 +770,12 @@ function vSettings(){
  return '<div class="wrap"><h1>Settings</h1><p class="sub" style="margin-bottom:16px">Workspace, agent and integration configuration.</p><div class="split"><div style="display:grid;gap:14px">'+
  '<div class="card"><div class="card-h">'+ic("users")+'<h2>Your account</h2></div><div class="card-b"><div class="row" style="gap:12px;margin-bottom:14px"><span class="av" style="width:44px;height:44px;font-size:16px">'+esc(u.initials)+'</span><div><b style="font-size:15px">'+esc(u.name)+'</b><br><span class="meta">'+esc(u.email)+' · '+esc(u.role)+'</span></div></div>'+
  '<div class="row"><button class="btn" data-a="signout">'+ic("out")+'Sign out</button><span class="meta">Session expires 12 hours after sign-in.</span></div></div></div>'+
- '<div class="card"><div class="card-h">'+ic("shield")+'<h2>Plan</h2><span class="planchip'+(isPremium()?' pro':'')+'" style="margin-left:auto">'+(isPremium()?'PREMIUM':'FREE')+'</span></div><div class="card-b">'+
+ (planKnown()?'<div class="card"><div class="card-h">'+ic("shield")+'<h2>Plan</h2><span class="planchip'+(isPremium()?' pro':'')+'" style="margin-left:auto">'+(isPremium()?'PREMIUM':'FREE')+'</span></div><div class="card-b">'+
  '<div class="row" style="gap:10px;margin-bottom:12px"><span class="meta">'+esc(S.data.organization.name)+' is on the <b>'+(isPremium()?'premium':'free')+'</b> plan. The plan applies to everyone in the organisation.</span></div>'+
  '<table class="t" style="width:100%"><tr><th style="text-align:left">Model</th><th style="text-align:left">Tier</th><th style="text-align:left">Available</th></tr>'+
  models().map(function(m){var can=modelAllowed(m);return '<tr><td>'+esc(m.name)+'</td><td><span class="bg '+(tierOf(m)==='premium'?'b-ac':'b-mu')+'">'+tierOf(m)+'</span></td><td>'+(can?ic("chk")+'Yes':ic("lock")+'Needs premium')+'</td></tr>';}).join("")+'</table>'+
  (isPremium()?'':'<div class="meta" style="margin-top:10px">'+(isAdmin()?'As an administrator you can move the organisation to premium to unlock Claude and ChatGPT.':'Ask an administrator to upgrade to unlock Claude and ChatGPT.')+'</div>')+
- '</div></div>'+
+ '</div></div>':'')+
  (isAdmin()?'<div class="card"><div class="card-h">'+ic("users")+'<h2>Administration</h2><span class="bg b-ac" style="margin-left:auto">ADMIN</span></div><div class="card-b">'+
   '<div class="meta" style="margin-bottom:10px">You have administrator access to this workspace.</div>'+
   '<table class="t" style="width:100%"><tr><th style="text-align:left">Member</th><th style="text-align:left">Title</th><th style="text-align:left">Access</th></tr>'+
