@@ -12,6 +12,8 @@
 :root{--bg:#eef1f6;--panel:#fff;--panel2:#f6f8fb;--line:#dce2ea;--line2:#c3ccd8;--tx:#0c1a2b;--tx2:#47566a;--tx3:#78879a;--ac:#1d4e7f;--ac2:#17405f;--acs:#e8eff6;--acl:#cfdeeb;--pri:#4f46e5;--pri2:#4338ca;--pris:#eef0ff;--ok:#0f7a52;--oks:#e6f3ed;--warn:#9a5b06;--warns:#fbf1e3;--err:#b3312a;--errs:#fbeceb;--mut:#64748b;--muts:#eef1f5;--sh:0 1px 2px rgba(12,26,43,.06);--sh2:0 8px 24px rgba(12,26,43,.10);--r:8px}
 [data-t="dark"]{--bg:#0a121c;--panel:#111c28;--panel2:#16232f;--line:#1f3040;--line2:#2d4152;--tx:#e6edf5;--tx2:#93a4b8;--tx3:#6a7c90;--ac:#5b9bd5;--ac2:#7ab0e0;--acs:#132433;--acl:#204058;--pri:#7c74ff;--pri2:#948dff;--pris:#1b1d33;--ok:#35c48d;--oks:#0c261c;--warn:#e0a52a;--warns:#251c0d;--err:#f36a6a;--errs:#2a1416;--mut:#7b8a9c;--muts:#17222e;--sh:0 1px 2px rgba(0,0,0,.5);--sh2:0 10px 28px rgba(0,0,0,.6)}
 html,body{height:100%}
+@supports(height:100dvh){.shell{min-height:100dvh}.sb{height:100dvh}}
+.tabbar{display:none}
 body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 button,input,select,textarea{font:inherit;color:inherit}
 a{color:var(--ac);text-decoration:none}
@@ -234,11 +236,31 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
  body[data-drawer="1"] .sb{transform:none}
  .mob-only{display:inline-flex}.desk-only{display:none!important}
  .srch{width:auto;flex:1}
- .g4,.g3,.g2{grid-template-columns:1fr}
+ .g3,.g2{grid-template-columns:1fr}
+ .g4{grid-template-columns:repeat(2,1fr);gap:10px}
+ .kpi{padding:12px}
+ .kpi .val{font-size:23px;margin-top:6px}
+ .kpi .top{font-size:9.5px;letter-spacing:.4px;gap:6px}
+ .kpi .top .ico{width:22px;height:22px}
+ .kpi .fo{margin-top:5px;font-size:10.5px}
+ .grid{gap:10px}
  .wrap{padding:14px}h1{font-size:21px}
  .chat{grid-template-columns:1fr}.cl{display:none}
  body[data-cl="1"] .cl{display:flex;position:absolute;inset:56px 0 0 0;z-index:40;width:100%}
  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:85}
+ .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:80;background:var(--panel);border-top:1px solid var(--line);padding:5px 4px calc(5px + env(safe-area-inset-bottom));box-shadow:0 -1px 3px rgba(12,26,43,.07)}
+ .tb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px 2px;border:0;background:none;color:var(--tx3);font-size:10.5px;font-weight:600;cursor:pointer;border-radius:8px;text-decoration:none;min-height:44px}
+ .tb.on{color:var(--ac)}
+ .tb .ic{width:20px;height:20px}
+ .tb span{line-height:1}
+ .main{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+ .sb{padding-bottom:env(safe-area-inset-bottom)}
+}
+@media(max-width:640px){
+ .wrap{padding:11px}h1{font-size:19px}
+ .tb{font-size:10px}
+ .kpi b,.card h3{letter-spacing:-.2px}
+
 }
 </style>
 </head>
@@ -413,6 +435,12 @@ function vLogin(){
  '<li>'+ic("shield","ic18")+'<span>Every answer cites the document, page and section it came from</span></li>'+
  '<li>'+ic("link","ic18")+'<span>Retrieval and execution orchestrated through n8n</span></li></ul>'+
  '</div></div>'+toastsHtml();
+}
+function tabbar(){
+ var on={dash:"dash",projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"more",settings:"more"}[S.route.v]||"dash";
+ function t(k,href,icon,label){return '<a class="tb'+(on===k?" on":"")+'" href="'+href+'">'+ic(icon,"ic18")+'<span>'+label+'</span></a>';}
+ return '<nav class="tabbar">'+t("dash","#/dashboard","home","Home")+t("projects","#/projects","folder","Projects")+t("agents","#/agents","bot","Agents")+t("knowledge","#/knowledge","db","Knowledge")+
+  '<button type="button" class="tb'+(on==="more"?" on":"")+'" data-a="drawer">'+ic("menu","ic18")+'<span>More</span></button></nav>';
 }
 function sidebar(){
  var r=S.route,d=S.data;
@@ -771,7 +799,7 @@ function view(){
  if(v==="projects")c=vProjects();else if(v==="proj")c=vProject();else if(v==="knowledge")c=vKnowledge();
  else if(v==="agents")c=vAgents();else if(v==="agent")c=vAgent();else if(v==="chat")c=vChat();
  else if(v==="activity")c=vActivity();else if(v==="settings")c=vSettings();else c=vDash();
- return '<div class="shell">'+sidebar()+'<div class="main">'+header()+c+'</div></div>'+
+ return '<div class="shell">'+sidebar()+'<div class="main">'+header()+c+'</div></div>'+tabbar()+
  (document.body.getAttribute("data-drawer")==="1"?'<div class="scrim" data-a="drawer"></div>':"")+modalHtml()+toastsHtml();
 }
 var lastN=0;
@@ -998,6 +1026,37 @@ function createProject(){
 }
 S.route=parseHash();
 if(S.token){S.auth=true;boot();}else{render();}
+})();
+
+/* Phone swipe between the tab-bar views. Reads the DOM rather than app state, because the
+   application's own variables live inside its closure and are not reachable from here. */
+(function(){
+ var TABS=["#/dashboard","#/projects","#/agents","#/knowledge"];
+ var SKIP="input,textarea,select,table,pre,code,.cl,.composer,.tabs,.srch,.sb,.modal,.scrim,[data-keepscroll]";
+ var x0=null,y0=null,t0=0;
+ function onPhone(){var t=document.querySelector(".tabbar");return !!t&&getComputedStyle(t).display!=="none";}
+ function idx(){
+  var h=(location.hash||"#/dashboard").split("/")[1]||"dashboard";
+  return {dashboard:0,projects:1,agents:2,knowledge:3}[h];
+ }
+ function skip(el){try{return !!(el&&el.closest&&el.closest(SKIP));}catch(e){return true;}}
+ document.addEventListener("touchstart",function(e){
+  x0=null;
+  if(e.touches.length!==1||!onPhone())return;
+  if(document.body.getAttribute("data-drawer")==="1")return;
+  if(skip(e.target))return;
+  x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now();
+ },{passive:true});
+ document.addEventListener("touchend",function(e){
+  if(x0===null)return;
+  var t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;x0=null;
+  if(!t||Date.now()-t0>600)return;
+  if(Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*0.6)return;
+  var i=idx();if(i===undefined)return;
+  var n=i+(dx<0?1:-1);
+  if(n<0||n>=TABS.length)return;
+  location.hash=TABS[n];
+ },{passive:true});
 })();
 </script>
 </body>
