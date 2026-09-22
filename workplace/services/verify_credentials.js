@@ -9,6 +9,11 @@ if(!email||!hash)return [{json:{success:false,requestId:rid,error:{code:"MISSING
 var row=$input.first().json||{};
 var ok=row&&row.id&&String(row.password_hash||"").toLowerCase()===hash;
 if(!ok)return [{json:{success:false,requestId:rid,error:{code:"INVALID_CREDENTIALS",message:"That email and password combination was not recognised."}}}];
+// The password is checked before the account state, so a wrong password always looks the same
+// whether or not the address is known. Only someone who already has the password learns the state.
+var st=String(row.status||"active").toLowerCase();
+if(st==="pending")return [{json:{success:false,requestId:rid,error:{code:"PENDING_APPROVAL",message:"Your account is still waiting for an administrator to approve it. You will be able to sign in as soon as it is."}}}];
+if(st!=="active")return [{json:{success:false,requestId:rid,error:{code:"ACCOUNT_NOT_ACTIVE",message:"This account is not active."+(row.reason?" Reason given: "+row.reason:" Contact an administrator.")}}}];
 var token="",abc="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 for(var n=0;n<48;n++){token+=abc.charAt(Math.floor(Math.random()*abc.length));}
 var ttl=12*3600*1000,store=sessions();

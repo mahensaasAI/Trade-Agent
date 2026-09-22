@@ -9,8 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#eef1f6;--panel:#fff;--panel2:#f6f8fb;--line:#dce2ea;--line2:#c3ccd8;--tx:#0c1a2b;--tx2:#47566a;--tx3:#78879a;--ac:#1d4e7f;--ac2:#17405f;--acs:#e8eff6;--acl:#cfdeeb;--pri:#4f46e5;--pri2:#4338ca;--pris:#eef0ff;--ok:#0f7a52;--oks:#e6f3ed;--warn:#9a5b06;--warns:#fbf1e3;--err:#b3312a;--errs:#fbeceb;--mut:#64748b;--muts:#eef1f5;--sh:0 1px 2px rgba(12,26,43,.06);--sh2:0 8px 24px rgba(12,26,43,.10);--r:8px}
-[data-t="dark"]{--bg:#0a121c;--panel:#111c28;--panel2:#16232f;--line:#1f3040;--line2:#2d4152;--tx:#e6edf5;--tx2:#93a4b8;--tx3:#6a7c90;--ac:#5b9bd5;--ac2:#7ab0e0;--acs:#132433;--acl:#204058;--pri:#7c74ff;--pri2:#948dff;--pris:#1b1d33;--ok:#35c48d;--oks:#0c261c;--warn:#e0a52a;--warns:#251c0d;--err:#f36a6a;--errs:#2a1416;--mut:#7b8a9c;--muts:#17222e;--sh:0 1px 2px rgba(0,0,0,.5);--sh2:0 10px 28px rgba(0,0,0,.6)}
+:root{--bg:#f5f6f8;--panel:#fff;--panel2:#fafbfc;--line:#e5e7eb;--line2:#d5d9e0;--tx:#0f1218;--tx2:#5a6170;--tx3:#8b91a0;--ac:#4f46e5;--ac2:#6366f1;--acs:#eef2ff;--acl:#c7d2fe;--pri:#4f46e5;--pri2:#4338ca;--pris:#eef2ff;--hot:#f97316;--hot2:#fb923c;--hots:#fff4ea;--hotl:#fed7aa;--ok:#0d8a5f;--oks:#e6f5ee;--warn:#b45309;--warns:#fdf2e2;--err:#c0392b;--errs:#fdeceb;--info:#2563eb;--infos:#e8efff;--mut:#6b7280;--muts:#f0f1f4;--sh:0 1px 2px rgba(16,20,30,.05),0 1px 3px rgba(16,20,30,.05);--sh2:0 10px 30px rgba(16,20,30,.13);--r:12px}
+[data-t="dark"]{--bg:#0c0e13;--panel:#151821;--panel2:#1a1e28;--line:#252a35;--line2:#343a48;--tx:#e9ebf1;--tx2:#9aa1b1;--tx3:#6d7484;--ac:#818cf8;--ac2:#a5b4fc;--acs:#1e1b4b;--acl:#3730a3;--pri:#818cf8;--pri2:#a5b4fc;--pris:#1e1b4b;--hot:#fb923c;--hot2:#fdba74;--hots:#2a1a0f;--hotl:#7c2d12;--ok:#3fd699;--oks:#0f2a20;--warn:#f0b429;--warns:#2a2211;--err:#ff7070;--errs:#2d1618;--info:#7ea2ff;--infos:#1a2340;--mut:#8b91a0;--muts:#1c202a;--sh:0 1px 2px rgba(0,0,0,.45);--sh2:0 12px 34px rgba(0,0,0,.55)}
 html,body{height:100%}
 @supports(height:100dvh){.shell{min-height:100dvh}.sb{height:100dvh}}
 .tabbar{display:none}
@@ -32,7 +32,7 @@ a{color:var(--ac);text-decoration:none}
 /* LOGIN */
 .login{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
 .login-l{display:flex;align-items:center;justify-content:center;padding:32px}
-.login-r{background:linear-gradient(160deg,#0c1a2b,#1d4e7f 70%,#24608f);color:#fff;padding:48px;display:flex;flex-direction:column;justify-content:center;gap:18px}
+.login-r{background:var(--ac);color:#fff;padding:48px;display:flex;flex-direction:column;justify-content:center;gap:18px}
 .login-r h2{font-size:26px;font-weight:680;letter-spacing:-.7px;line-height:1.25}
 .login-r p{opacity:.86;font-size:14px;max-width:420px}
 .login-r ul{list-style:none;display:grid;gap:11px;margin-top:8px}
@@ -40,7 +40,7 @@ a{color:var(--ac);text-decoration:none}
 .login-box{width:min(400px,100%)}
 .login-box h1{font-size:24px;font-weight:680;letter-spacing:-.6px;margin-bottom:5px}
 .brandrow{display:flex;align-items:center;gap:11px;margin-bottom:26px}
-.logo{width:36px;height:36px;flex:none;border-radius:7px;background:var(--ac);display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px}
+.logo{width:36px;height:36px;flex:none;border-radius:10px;background:var(--ac);display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px}
 /* SHELL */
 .shell{display:flex;min-height:100vh;width:100%}
 .sb{width:250px;flex:none;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;transition:width .16s}
@@ -270,6 +270,95 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
  .kpi b,.card h3{letter-spacing:-.2px}
 
 }
+
+.btn-lg{height:42px;padding:0 20px;font-size:14.5px;border-radius:10px}
+/* The plan and roster tables were marked up with class="t" but never styled. */
+.t{width:100%;border-collapse:collapse;font-size:13px}
+.t th{text-align:left;font-weight:620;color:var(--tx3);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;padding:0 10px 8px 0;border-bottom:1px solid var(--line)}
+.t td{padding:9px 10px 9px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--tx2)}
+.t tr:last-child td{border-bottom:0}
+.t td b{color:var(--tx)}
+.t td .ic{vertical-align:-3px;margin-right:5px}
+/* ---- Public site: what someone sees before they have an account ---- */
+.pub{min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
+.pub-nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--panel) 88%,transparent);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+.pub-in{max-width:1120px;margin:0 auto;padding:0 24px;width:100%}
+.pub-nav .pub-in{display:flex;align-items:center;gap:14px;height:64px}
+.pub-brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:inherit;margin-right:auto}
+.pub-brand .logo{color:#fff;font-size:15px;font-weight:700;letter-spacing:0}
+.pub-brand .pb-t{display:block;min-width:0}
+.pub-brand .pb-t b{font-weight:660;letter-spacing:-.3px;font-size:16px;display:block;line-height:1.15}
+.pub-brand .pb-t em{font-style:normal;color:var(--tx3);font-weight:500;font-size:11.5px;letter-spacing:.02em}
+.pub-hero{padding:74px 0 56px}
+.pub-hero .pub-in{max-width:840px;text-align:center}
+.pub-eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--ac);background:var(--acs);border:1px solid var(--acl);padding:6px 13px;border-radius:999px;margin-bottom:22px}
+.pub-hero h1{font-size:clamp(30px,5.2vw,50px);line-height:1.08;letter-spacing:-1.3px;font-weight:700;margin:0 0 18px}
+.pub-hero h1 em{font-style:normal;color:var(--ac)}
+.pub-hero p{font-size:17px;line-height:1.6;color:var(--tx2);margin:0 auto 30px;max-width:620px}
+.pub-cta{display:flex;gap:11px;justify-content:center;flex-wrap:wrap}
+.pub-sec{padding:56px 0;border-top:1px solid var(--line)}
+.pub-sec h2{font-size:23px;letter-spacing:-.5px;margin:0 0 8px;font-weight:660}
+.pub-sec .lede{color:var(--tx2);margin:0 0 28px;font-size:14.5px;line-height:1.6;max-width:640px}
+.pub-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.pub-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--sh)}
+.pub-card .pi{width:38px;height:38px;border-radius:10px;background:var(--acs);color:var(--ac);display:grid;place-items:center;margin-bottom:13px}
+.pub-card h3{font-size:14.5px;margin:0 0 6px;font-weight:640;letter-spacing:-.2px}
+.pub-card p{font-size:13px;line-height:1.6;color:var(--tx2);margin:0}
+.pub-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;counter-reset:st}
+.pub-step{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px;position:relative;box-shadow:var(--sh)}
+.pub-step:before{counter-increment:st;content:counter(st);display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:var(--ac);color:#fff;font-size:13px;font-weight:700;margin-bottom:12px}
+.pub-step h3{font-size:14.5px;margin:0 0 6px;font-weight:640}
+.pub-step p{font-size:13px;line-height:1.6;color:var(--tx2);margin:0}
+.pub-agents{display:flex;flex-wrap:wrap;gap:8px}
+.pub-chip{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px;color:var(--tx2);font-weight:520}
+.pub-chip .ic{color:var(--ac)}
+.pub-foot{margin-top:auto;border-top:1px solid var(--line);padding:26px 0;color:var(--tx3);font-size:12.5px}
+.pub-foot .pub-in{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+/* the sign-in / request-access panel, shared by both forms */
+.pub-form{max-width:520px;margin:0 auto;padding:44px 24px 64px}
+.pub-form .card{box-shadow:var(--sh2)}
+.pub-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--tx2);text-decoration:none;margin-bottom:16px}
+.pub-back:hover{color:var(--ac)}
+.pub-form h1{font-size:25px;letter-spacing:-.6px;margin:0 0 6px;font-weight:680}
+.pub-form .sub{color:var(--tx2);font-size:14px;margin:0 0 22px;line-height:1.55}
+.pub-alt{text-align:center;margin-top:18px;font-size:13.5px;color:var(--tx2)}
+.pub-alt a{color:var(--ac);font-weight:560;text-decoration:none}
+.pub-alt a:hover{text-decoration:underline}
+.pub-ok{text-align:center;padding:8px 0 4px}
+.pub-ok .tick{width:54px;height:54px;border-radius:50%;background:var(--oks);color:var(--ok);display:grid;place-items:center;margin:0 auto 16px}
+.pub-ok .tick .ic{width:26px;height:26px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* Access requests table */
+.aq-row{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-top:1px solid var(--line)}
+.aq-row:first-child{border-top:0}
+.aq-av{width:34px;height:34px;flex:none;border-radius:9px;background:var(--acs);color:var(--ac);display:grid;place-items:center;font-size:12px;font-weight:680}
+.aq-m{min-width:0;flex:1}
+.aq-m b{font-size:13.5px;font-weight:620}
+.aq-act{display:flex;gap:7px;flex:none;align-items:center}
+.aq-note{margin-top:5px;font-size:12.5px;color:var(--tx2);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 10px;line-height:1.5}
+.aq-rej{margin-top:9px;display:flex;gap:7px;align-items:center}
+@media(max-width:900px){
+ .pub-grid{grid-template-columns:repeat(2,1fr)}
+ .pub-steps{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+ .pub-in{padding:0 16px}
+ .pub-hero{padding:48px 0 38px}
+ .pub-sec{padding:40px 0}
+ .pub-grid{grid-template-columns:1fr}
+ .pub-cta .btn{width:100%;justify-content:center}
+ .pub-nav .pub-in{height:58px;gap:8px}
+ .pub-nav .btn{padding:7px 12px}
+ .pub-form{padding:26px 16px 48px}
+ .row2{grid-template-columns:1fr}
+ .aq-row{flex-wrap:wrap}
+ .aq-act{width:100%;padding-left:46px}
+}
+@media(max-width:430px){
+ .pub-brand .pb-t em{display:none}
+ .nav-signin{display:none}
+}
+@supports(height:100dvh){.pub{min-height:100dvh}}
 </style>
 </head>
 <body data-sb="full">
@@ -351,8 +440,11 @@ brain:'<path d="M9 3a3 3 0 0 0-3 3 3 3 0 0 0-2 5.5A3 3 0 0 0 6 17a3 3 0 0 0 3 3 
 out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>',
 lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>'
 };
+P.home='<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/>';
 function ic(n,c){return '<svg class="ic '+(c||'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(P[n]||'')+'</svg>';}
 var S={auth:false,token:null,data:null,loading:false,err:null,loginErr:null,loginBusy:false,
+ pub:{busy:false,err:null,done:null},
+ admin:{loaded:false,busy:false,err:null,users:[],counts:{},rejecting:null},
  route:{v:"dash"},pop:null,modal:null,toasts:[],tid:0,gq:"",
  proj:{q:"",status:"all",client:"all",sort:"recent",view:"grid"},
  kb:{sel:{},q:"",res:null,busy:false},
@@ -427,6 +519,9 @@ function api(path,body){
 }
 function signOut(msg){
  S.auth=false;S.token=null;S.data=null;S.chat.convs={};
+ S.admin={loaded:false,busy:false,err:null,users:[],counts:{},rejecting:null};
+ S.pub={busy:false,err:null,done:null};
+ if(pubRoute()==="home")location.hash="#/signin";
  try{sessionStorage.removeItem("wp.token");}catch(e){}
  S.loginErr=msg||null;render();
 }
@@ -442,24 +537,181 @@ function parseHash(){
  return {v:"dash"};
 }
 function go(h){location.hash=h;}
+function when(iso){
+ if(!iso)return "";
+ var d=new Date(iso);if(isNaN(d))return "";
+ var mins=Math.round((Date.now()-d.getTime())/60000);
+ if(mins<1)return "just now";
+ if(mins<60)return mins+"m ago";
+ if(mins<1440)return Math.round(mins/60)+"h ago";
+ return d.toLocaleDateString(undefined,{day:"numeric",month:"short"});
+}
+function adminCard(){
+ var A=S.admin;
+ var head='<div class="card"><div class="card-h">'+ic("users")+'<h2>Access requests</h2>'+
+  (A.loaded&&A.counts.pending?'<span class="bg b-ac" style="margin-left:auto">'+A.counts.pending+' PENDING</span>':'<span class="bg b-mu" style="margin-left:auto">ADMIN</span>')+
+  '</div><div class="card-b">';
+ var tail='</div></div>';
+ if(!A.loaded){
+  return head+'<div class="meta" style="margin-bottom:12px">Anyone who requests access appears here. Nobody can sign in until you approve them.</div>'+
+   '<button class="btn btn-p" data-a="adminload"'+(A.busy?" disabled":"")+'>'+(A.busy?ic("sync","spin")+'Loading…':ic("sync")+'Load requests')+'</button>'+tail;
+ }
+ if(A.err)return head+'<div class="alert">'+ic("alert")+'<span>'+esc(A.err)+'</span></div>'+
+   '<button class="btn btn-g" data-a="adminload">'+ic("sync")+'Try again</button>'+tail;
+
+ var pend=A.users.filter(function(u){return u.status==="pending";});
+ var rest=A.users.filter(function(u){return u.status!=="pending";});
+ var body='';
+ if(!pend.length){
+  body+='<div class="meta" style="margin-bottom:14px">'+ic("chk")+' No requests waiting. New ones show up here.</div>';
+ }else{
+  body+=pend.map(function(u){
+   var rej=(A.rejecting===u.id);
+   return '<div class="aq-row"><div class="aq-av">'+esc(u.initials||"?")+'</div>'+
+    '<div class="aq-m"><b>'+esc(u.name)+'</b> <span class="meta">'+esc(u.role||"")+'</span>'+
+     '<div class="meta">'+esc(u.email)+' &middot; asked '+esc(when(u.requestedAt))+'</div>'+
+     (u.note?'<div class="aq-note">'+esc(u.note)+'</div>':'')+
+     (rej?'<div class="aq-rej"><input class="inp" id="aq_r" placeholder="Reason (optional, shown to them)">'+
+       '<button class="btn btn-s" data-a="rejectgo" data-v="'+attr(u.id)+'"'+(A.busy?" disabled":"")+'>Confirm</button>'+
+       '<button class="btn btn-s" data-a="rejectno">Cancel</button></div>':'')+
+    '</div>'+
+    (rej?'':'<div class="aq-act">'+
+      '<button class="btn btn-p btn-s" data-a="approve" data-v="'+attr(u.id)+'"'+(A.busy?" disabled":"")+'>'+ic("chk")+'Approve</button>'+
+      '<button class="btn btn-s" data-a="reject" data-v="'+attr(u.id)+'"'+(A.busy?" disabled":"")+'>Decline</button>'+
+     '</div>')+
+    '</div>';
+  }).join("");
+ }
+ body+='<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">'+
+  '<div class="sb-lbl" style="padding:0 0 9px">EVERYONE ELSE</div>'+
+  '<table class="t"><tr><th>Member</th><th>Title</th><th>Access</th></tr>'+
+  rest.map(function(u){
+   var b=(u.status==="active")?(u.isAdmin?'<span class="bg b-ac">Administrator</span>':'<span class="bg b-mu">Member</span>')
+        :'<span class="bg b-mu">Declined</span>';
+   return '<tr><td><b>'+esc(u.name)+'</b><div class="meta">'+esc(u.email)+'</div>'+
+    (u.status==="rejected"&&u.reason?'<div class="meta">Reason: '+esc(u.reason)+'</div>':'')+'</td>'+
+    '<td>'+esc(u.role||"")+'</td><td>'+b+
+    (u.approvedBy?'<div class="meta">by '+esc(u.approvedBy)+'</div>':'')+'</td></tr>';
+  }).join("")+'</table></div>'+
+  '<button class="btn btn-g btn-s" style="margin-top:14px" data-a="adminload"'+(A.busy?" disabled":"")+'>'+
+   (A.busy?ic("sync","spin")+'Refreshing…':ic("sync")+'Refresh')+'</button>';
+ return head+body+tail;
+}
+function pubRoute(){
+ var h=String(location.hash||"").replace(/^#\/?/,"").split("/")[0].toLowerCase();
+ return (h==="signin"||h==="signup")?h:"home";
+}
+function pubNav(active){
+ return '<header class="pub-nav"><div class="pub-in">'+
+  '<a class="pub-brand" href="#/" title="Home"><span class="logo">W</span><span class="pb-t"><b>WorkPlace</b><em>OraDayForce</em></span></a>'+
+  '<button class="btn btn-g" data-a="theme" title="Switch theme">'+ic(document.documentElement.getAttribute("data-t")==="dark"?"sun":"moon")+'</button>'+
+  (active==="signin"?'':'<a class="btn btn-g nav-signin" href="#/signin">'+ic("lock")+'Sign in</a>')+
+  (active==="signup"?'':'<a class="btn btn-p" href="#/signup">'+ic("plus")+'Request access</a>')+
+  '</div></header>';
+}
+function pubFoot(){
+ return '<footer class="pub-foot"><div class="pub-in">'+
+  '<span>WorkPlace &middot; OraDayForce</span><span style="margin-left:auto">Accounts are approved by an administrator.</span>'+
+  '</div></footer>';
+}
+function vLanding(){
+ var feat=[
+  ["db","Project knowledge bases","Every engagement gets its own indexed corpus in pgvector, scoped so an agent only ever reads what that project is allowed to see."],
+  ["bot","Eight specialised agents","Architecture, data, MLOps, integration, governance, proposals and a read-only Oracle Fusion SQL agent — each with its own brief."],
+  ["shield","Answers that cite","Every grounded claim carries the document, page and section it came from, so a reviewer can check it in one click."],
+  ["link","Five models, one picker","Gemini, Groq and Mistral on the free tier; Claude and ChatGPT on premium. Switch mid-conversation without losing context."]
+ ];
+ var agents=[["brain","Solution Architect"],["clip","Proposal Builder"],["db","Oracle Fusion SQL"],["grid","Data Engineering"],
+  ["sync","MLOps"],["link","Integration"],["shield","Governance"],["srch","Knowledge"]];
+ var steps=[
+  ["Request access","Tell us who you are and which engagement you are joining. It takes a minute and no account is created yet."],
+  ["An administrator reviews it","Your request lands in the admin queue inside WorkPlace. Nobody gets in until a named person approves them."],
+  ["Sign in","Once you are approved, the password you chose works straight away. Sessions last 12 hours."]
+ ];
+ return '<div class="pub">'+pubNav("home")+
+  '<section class="pub-hero"><div class="pub-in">'+
+   '<div class="pub-eyebrow">'+ic("spark")+'Internal AI platform</div>'+
+   '<h1>Your engagements, your knowledge, and agents that <em>actually cite it</em>.</h1>'+
+   '<p>WorkPlace is where OraDayForce delivery teams keep project knowledge and put it to work — grounded answers, specialised agents and retrieval you can audit, in one workspace.</p>'+
+   '<div class="pub-cta"><a class="btn btn-p btn-lg" href="#/signup">'+ic("plus")+'Request access</a>'+
+   '<a class="btn btn-g btn-lg" href="#/signin">'+ic("lock")+'Sign in</a></div>'+
+  '</div></section>'+
+  '<section class="pub-sec"><div class="pub-in"><h2>What it does</h2>'+
+   '<p class="lede">Retrieval, model calls and downstream actions are orchestrated outside the application, so how an agent answers can change without a redeployment.</p>'+
+   '<div class="pub-grid">'+feat.map(function(f){
+     return '<div class="pub-card"><div class="pi">'+ic(f[0],"ic18")+'</div><h3>'+esc(f[1])+'</h3><p>'+esc(f[2])+'</p></div>';
+    }).join("")+'</div>'+
+  '</div></section>'+
+  '<section class="pub-sec"><div class="pub-in"><h2>The agents</h2>'+
+   '<p class="lede">Each one has a narrow brief and reads only the projects it is assigned to.</p>'+
+   '<div class="pub-agents">'+agents.map(function(a){
+     return '<span class="pub-chip">'+ic(a[0])+esc(a[1])+'</span>';
+    }).join("")+'</div>'+
+  '</div></section>'+
+  '<section class="pub-sec"><div class="pub-in"><h2>Getting an account</h2>'+
+   '<p class="lede">WorkPlace holds client material, so access is granted by a person rather than by signing up.</p>'+
+   '<div class="pub-steps">'+steps.map(function(t){
+     return '<div class="pub-step"><h3>'+esc(t[0])+'</h3><p>'+esc(t[1])+'</p></div>';
+    }).join("")+'</div>'+
+   '<div class="pub-cta" style="justify-content:flex-start;margin-top:26px"><a class="btn btn-p" href="#/signup">'+ic("plus")+'Request access</a></div>'+
+  '</div></section>'+
+  pubFoot()+'</div>'+toastsHtml();
+}
 function vLogin(){
- return '<div class="login"><div class="login-l"><div class="login-box">'+
- '<div class="brandrow"><div class="logo">W</div><div><div style="font-weight:660;font-size:16px;letter-spacing:-.3px">WorkPlace</div><div class="meta">OraDayForce</div></div></div>'+
- '<h1>Sign in</h1><p class="sub" style="margin-bottom:22px">Access your AI delivery workspace.</p>'+
- (S.loginErr?'<div class="alert">'+ic("alert")+'<span>'+esc(S.loginErr)+'</span></div>':'')+
- '<div class="fld"><label class="fl" for="li_e">Work email</label><input class="inp" id="li_e" type="email" autocomplete="username" placeholder="you@oradayforce.com"></div>'+
- '<div class="fld"><label class="fl" for="li_p">Password</label><input class="inp" id="li_p" type="password" autocomplete="current-password" placeholder="••••••••"></div>'+
- '<button class="btn btn-p btn-w" data-a="login"'+(S.loginBusy?" disabled":"")+'>'+(S.loginBusy?ic("sync","spin")+'Signing in…':ic("lock")+'Sign in')+'</button>'+
- '<p class="meta" style="margin-top:16px">Sessions last 12 hours. Credentials are verified server-side; no password is stored in your browser.</p>'+
- '</div></div>'+
- '<div class="login-r"><div class="logo" style="width:44px;height:44px;background:rgba(255,255,255,.16);font-size:17px">W</div>'+
- '<h2>Your engagements, your knowledge,<br>and agents that actually cite it.</h2>'+
- '<p>WorkPlace is the internal AI platform for OraDayForce delivery teams — project knowledge bases, specialised agents and grounded answers in one workspace.</p>'+
- '<ul><li>'+ic("db","ic18")+'<span>Project-scoped knowledge bases indexed into pgvector</span></li>'+
- '<li>'+ic("bot","ic18")+'<span>Six specialised agents across architecture, data, MLOps, integration and governance</span></li>'+
- '<li>'+ic("shield","ic18")+'<span>Every answer cites the document, page and section it came from</span></li>'+
- '<li>'+ic("link","ic18")+'<span>Retrieval and execution orchestrated through n8n</span></li></ul>'+
- '</div></div>'+toastsHtml();
+ return '<div class="pub">'+pubNav("signin")+
+  '<div class="pub-form">'+
+  '<a class="pub-back" href="#/">'+ic("back")+'Back to home</a>'+
+  '<h1>Sign in</h1><p class="sub">Access your AI delivery workspace.</p>'+
+  '<div class="card"><div class="card-b">'+
+  (S.loginErr?'<div class="alert">'+ic("alert")+'<span>'+esc(S.loginErr)+'</span></div>':'')+
+  '<div class="fld"><label class="fl" for="li_e">Work email</label><input class="inp" id="li_e" type="email" autocomplete="username" placeholder="you@oradayforce.com"></div>'+
+  '<div class="fld"><label class="fl" for="li_p">Password</label><input class="inp" id="li_p" type="password" autocomplete="current-password" placeholder="••••••••"></div>'+
+  '<button class="btn btn-p btn-w" data-a="login"'+(S.loginBusy?" disabled":"")+'>'+(S.loginBusy?ic("sync","spin")+'Signing in…':ic("lock")+'Sign in')+'</button>'+
+  '<p class="meta" style="margin-top:14px">Sessions last 12 hours. Credentials are verified server-side; no password is stored in your browser.</p>'+
+  '</div></div>'+
+  '<div class="pub-alt">No account yet? <a href="#/signup">Request access</a></div>'+
+  '</div>'+pubFoot()+'</div>'+toastsHtml();
+}
+function vSignup(){
+ var d=S.pub.done;
+ var body;
+ if(d){
+  body='<div class="card"><div class="card-b"><div class="pub-ok">'+
+   '<div class="tick">'+ic("chk")+'</div>'+
+   '<h3 style="margin:0 0 8px;font-size:17px">Request sent</h3>'+
+   '<p class="meta" style="line-height:1.6">'+esc(d.message||"Your request has gone to the administrator.")+'</p>'+
+   '<p class="meta" style="margin-top:10px">We recorded <b>'+esc(d.email)+'</b>. You will be able to sign in with the password you chose as soon as it is approved.</p>'+
+   '<a class="btn btn-g btn-w" href="#/signin" style="margin-top:18px">'+ic("lock")+'Go to sign in</a>'+
+   '</div></div></div>';
+ }else{
+  body='<div class="card"><div class="card-b">'+
+   (S.pub.err?'<div class="alert">'+ic("alert")+'<span>'+esc(S.pub.err)+'</span></div>':'')+
+   '<div class="fld"><label class="fl" for="su_n">Full name</label><input class="inp" id="su_n" autocomplete="name" placeholder="Jordan Ellis"></div>'+
+   '<div class="fld"><label class="fl" for="su_e">Work email</label><input class="inp" id="su_e" type="email" autocomplete="email" placeholder="you@oradayforce.com"></div>'+
+   '<div class="fld"><label class="fl" for="su_r">Job title</label><input class="inp" id="su_r" placeholder="Delivery Consultant"></div>'+
+   '<div class="row2">'+
+    '<div class="fld"><label class="fl" for="su_p">Password</label><input class="inp" id="su_p" type="password" autocomplete="new-password" placeholder="At least 10 characters"></div>'+
+    '<div class="fld"><label class="fl" for="su_p2">Confirm password</label><input class="inp" id="su_p2" type="password" autocomplete="new-password" placeholder="Repeat it"></div>'+
+   '</div>'+
+   '<div class="fld"><label class="fl" for="su_note">Why do you need access? <span class="meta">(optional, helps the administrator decide)</span></label>'+
+    '<textarea class="inp" id="su_note" rows="3" placeholder="Joining the Northwind engagement as a delivery consultant."></textarea></div>'+
+   '<button class="btn btn-p btn-w" data-a="signup"'+(S.pub.busy?" disabled":"")+'>'+(S.pub.busy?ic("sync","spin")+'Sending…':ic("send")+'Send request')+'</button>'+
+   '<p class="meta" style="margin-top:14px">This does not create an account. An administrator reviews every request, and you will only be able to sign in once yours is approved.</p>'+
+   '</div></div>'+
+   '<div class="pub-alt">Already approved? <a href="#/signin">Sign in</a></div>';
+ }
+ return '<div class="pub">'+pubNav("signup")+
+  '<div class="pub-form">'+
+  '<a class="pub-back" href="#/">'+ic("back")+'Back to home</a>'+
+  '<h1>'+(d?'Thanks, '+esc(String(d.name||"").split(" ")[0]):'Request access')+'</h1>'+
+  '<p class="sub">'+(d?'Nothing else to do for now.':'Tell us who you are. An administrator approves every account.')+'</p>'+
+  body+'</div>'+pubFoot()+'</div>'+toastsHtml();
+}
+function vPublic(){
+ var r=pubRoute();
+ if(r==="signin")return vLogin();
+ if(r==="signup")return vSignup();
+ return vLanding();
 }
 function tabbar(){
  var on={dash:"dash",projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"more",settings:"more"}[S.route.v]||"dash";
@@ -473,7 +725,7 @@ function sidebar(){
   ["knowledge","db","Knowledge Bases","#/knowledge",String(d.documents.length)],["agents","bot","Agents","#/agents",String(d.agents.length)],
   ["activity","act","Activity","#/activity",""],["settings","cog","Settings","#/settings",""]];
  var on={dash:"dash",projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"activity",settings:"settings"}[r.v];
- return '<aside class="sb"><div class="sb-top"><div class="logo">W</div><div class="brand">WorkPlace<span>'+esc(d.organization.name)+'</span></div></div>'+
+ return '<aside class="sb"><a class="sb-top" href="#/dashboard" style="text-decoration:none;color:inherit" title="Home"><div class="logo">W</div><div class="brand">WorkPlace<span>'+esc(d.organization.name)+'</span></div></a>'+
  '<nav class="sb-nav"><div class="sb-lbl nv-t">WORKSPACE</div>'+
  items.map(function(it){return '<a class="nv'+(on===it[0]?" on":"")+'" href="'+it[3]+'" title="'+attr(it[2])+'">'+ic(it[1],"ic18")+'<span class="nv-t">'+it[2]+'</span>'+(it[4]?'<span class="cnt">'+it[4]+'</span>':'')+'</a>';}).join("")+
  '<div class="sb-lbl">PINNED</div>'+
@@ -776,11 +1028,7 @@ function vSettings(){
  models().map(function(m){var can=modelAllowed(m);return '<tr><td>'+esc(m.name)+'</td><td><span class="bg '+(tierOf(m)==='premium'?'b-ac':'b-mu')+'">'+tierOf(m)+'</span></td><td>'+(can?ic("chk")+'Yes':ic("lock")+'Needs premium')+'</td></tr>';}).join("")+'</table>'+
  (isPremium()?'':'<div class="meta" style="margin-top:10px">'+(isAdmin()?'As an administrator you can move the organisation to premium to unlock Claude and ChatGPT.':'Ask an administrator to upgrade to unlock Claude and ChatGPT.')+'</div>')+
  '</div></div>':'')+
- (isAdmin()?'<div class="card"><div class="card-h">'+ic("users")+'<h2>Administration</h2><span class="bg b-ac" style="margin-left:auto">ADMIN</span></div><div class="card-b">'+
-  '<div class="meta" style="margin-bottom:10px">You have administrator access to this workspace.</div>'+
-  '<table class="t" style="width:100%"><tr><th style="text-align:left">Member</th><th style="text-align:left">Title</th><th style="text-align:left">Access</th></tr>'+
-  '<tr><td><b>'+esc(S.data.user.name)+'</b><div class="meta">'+esc(S.data.user.email)+'</div></td><td>'+esc(S.data.user.role)+'</td><td><span class="bg b-ac">Administrator</span></td></tr>'+
-  '</table></div></div>':'')+
+ (isAdmin()?adminCard():'')+
  '<div class="card"><div class="card-h">'+ic("cog")+'<h2>General</h2></div><div class="card-b">'+
  '<div class="fld"><label class="fl" for="s_org">Organisation</label><input class="inp" id="s_org" value="'+attr(S.data.organization.name)+'" disabled></div>'+
  '<div class="fld"><label class="fl" for="s_tz">Default timezone</label><select class="inp" id="s_tz">'+["America/Chicago","America/New_York","America/Los_Angeles","Europe/London","Asia/Kolkata","Asia/Singapore"].map(function(t){return '<option'+(st.tz===t?" selected":"")+'>'+t+'</option>';}).join("")+'</select></div></div></div>'+
@@ -841,7 +1089,7 @@ function skeleton(){
  '<div class="grid g2">'+"12".split("").map(function(){return '<div class="sk" style="height:190px"></div>';}).join("")+'</div></div></div></div>';
 }
 function view(){
- if(!S.auth)return vLogin();
+ if(!S.auth)return vPublic();
  if(S.loading||!S.data)return skeleton();
  if(S.err)return '<div class="shell"><div class="main"><div class="wrap"><div class="card"><div class="emp"><div class="ico">'+ic("alert","ic18")+'</div><h3>Workspace unavailable</h3><p>'+esc(S.err)+'</p><button class="btn btn-p" data-a="reload">'+ic("sync")+'Retry</button></div></div></div></div></div>';
  var v=S.route.v,c;
@@ -952,6 +1200,51 @@ function doLogin(){
   S.auth=true;boot();
  }).catch(function(x){S.loginBusy=false;S.loginErr="Could not reach the sign-in service. "+x.message;render();});
 }
+function doSignup(){
+ var g=function(id){var el=document.getElementById(id);return el?String(el.value||""):"";};
+ var name=g("su_n").trim(),email=g("su_e").trim(),role=g("su_r").trim();
+ var p1=g("su_p"),p2=g("su_p2"),note=g("su_note").trim();
+ if(!name||!email||!p1){S.pub.err="Name, work email and password are all required.";render();return;}
+ if(p1!==p2){S.pub.err="The two passwords do not match.";render();return;}
+ if(p1.length<10){S.pub.err="Choose a password of at least 10 characters.";render();return;}
+ S.pub.busy=true;S.pub.err=null;render();
+ fetch(API+"/signup",{method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({name:name,email:email,role:role,password:p1,note:note})})
+ .then(function(r){return r.json();})
+ .then(function(j){
+  S.pub.busy=false;
+  if(!j||!j.success){S.pub.err=(j&&j.error&&j.error.message)||"The request could not be sent.";render();return;}
+  S.pub.done={name:(j.data||{}).name||name,email:(j.data||{}).email||email,message:(j.data||{}).message||""};
+  S.pub.err=null;render();
+ }).catch(function(x){S.pub.busy=false;S.pub.err="Could not reach the sign-up service. "+x.message;render();});
+}
+function adminApi(body){
+ return api("/admin",body).then(function(r){
+  var d=r.data||{};
+  S.admin.users=d.users||[];S.admin.counts=d.counts||{};
+  S.admin.loaded=true;S.admin.err=null;S.admin.rejecting=null;
+  return r;
+ });
+}
+function loadRoster(){
+ if(S.admin.busy)return;
+ S.admin.busy=true;S.admin.err=null;render();
+ adminApi({action:"list"}).then(function(){S.admin.busy=false;render();})
+ .catch(function(e){S.admin.busy=false;S.admin.loaded=true;S.admin.err=e.message;render();});
+}
+function adminAct(action,id,reason){
+ if(S.admin.busy)return;
+ var u=S.admin.users.filter(function(x){return x.id===id;})[0]||{};
+ S.admin.busy=true;S.admin.err=null;render();
+ adminApi({action:action,userId:id,reason:reason||""}).then(function(r){
+  S.admin.busy=false;
+  var c=(r.data||{}).changed||{};
+  toast(action==="approve"?"Access approved":"Request declined",
+   (c.name||u.name||"The request")+(action==="approve"?" can sign in now.":" was declined."),
+   action==="approve"?"ok":"er");
+  render();
+ }).catch(function(e){S.admin.busy=false;S.admin.err=e.message;render();});
+}
 function boot(){
  S.loading=true;S.err=null;render();
  api("/bootstrap",{}).then(function(r){
@@ -970,6 +1263,12 @@ document.addEventListener("click",function(ev){
  if(a!=="pop"&&S.pop)S.pop=null;
  if(a!=="modelmenu"&&a!=="selmodel"&&a!=="planinfo"&&S.chat.modelOpen)S.chat.modelOpen=false;
  if(a==="modelmenu"){S.chat.modelOpen=!S.chat.modelOpen;render();return;}
+ if(a==="signup"){doSignup();return;}
+ if(a==="adminload"){loadRoster();return;}
+ if(a==="approve"){adminAct("approve",v);return;}
+ if(a==="reject"){S.admin.rejecting=v;render();return;}
+ if(a==="rejectno"){S.admin.rejecting=null;render();return;}
+ if(a==="rejectgo"){var rf=document.getElementById("aq_r");adminAct("reject",v,rf?rf.value:"");return;}
  if(a==="selmodel"){S.chat.model=v;S.chat.modelOpen=false;try{localStorage.setItem("wp.model",v);}catch(e){}toast("Model changed",modelOf(v).name+" will answer from your next message","ok");render();return;}
  if(a==="planinfo"){var lm=null,ms=models(),z;for(z=0;z<ms.length;z++)if(ms[z].id===v)lm=ms[z];
   toast("Not in your plan",(lm?lm.name:"That model")+" needs the premium plan. "+(isAdmin()?"You can change the plan in Settings.":"Ask an administrator to upgrade."),"warn");render();return;}
@@ -1051,7 +1350,11 @@ document.addEventListener("change",function(ev){
  else if(a==="psort"){S.proj.sort=el.value;render();}
 },false);
 document.addEventListener("keydown",function(e){
- if(!S.auth){if(e.key==="Enter"&&(e.target.id==="li_e"||e.target.id==="li_p")){e.preventDefault();doLogin();}return;}
+ if(!S.auth){
+  var id=e.target&&e.target.id;
+  if(e.key==="Enter"&&(id==="li_e"||id==="li_p")){e.preventDefault();doLogin();}
+  else if(e.key==="Enter"&&/^su_(n|e|r|p|p2)$/.test(String(id))){e.preventDefault();doSignup();}
+  return;}
  if(e.key==="/"&&["INPUT","TEXTAREA","SELECT"].indexOf(document.activeElement.tagName)<0){e.preventDefault();var g=document.getElementById("gsearch");if(g)g.focus();return;}
  if(e.key==="Escape"){if(S.modal){S.modal=null;render();}else if(S.chat.modelOpen){S.chat.modelOpen=false;render();}else if(S.pop){S.pop=null;render();}return;}
  if(e.target&&e.target.id==="cinput"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}
@@ -1061,7 +1364,9 @@ document.addEventListener("dragover",function(e){var d=e.target.closest?e.target
 document.addEventListener("dragleave",function(e){var d=e.target.closest?e.target.closest("#dz"):null;if(d)d.classList.remove("hot");},false);
 document.addEventListener("drop",function(e){var d=e.target.closest?e.target.closest("#dz"):null;
  if(d){e.preventDefault();d.classList.remove("hot");if(e.dataTransfer&&e.dataTransfer.files.length)addFiles(e.dataTransfer.files);}},false);
-window.addEventListener("hashchange",function(){S.route=parseHash();S.pop=null;document.body.setAttribute("data-drawer","0");window.scrollTo(0,0);render();});
+window.addEventListener("hashchange",function(){S.route=parseHash();S.pop=null;
+ if(!S.auth){S.pub.err=null;if(pubRoute()!=="signup")S.pub.done=null;S.loginErr=null;}
+document.body.setAttribute("data-drawer","0");window.scrollTo(0,0);render();});
 function createProject(){
  var client=document.getElementById("np_client").value.trim(),name=document.getElementById("np_name").value.trim();
  if(!client||!name){toast("Missing details","Client and engagement name are required","er");return;}

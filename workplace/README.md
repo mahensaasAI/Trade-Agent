@@ -36,6 +36,8 @@ node, with no staging row, no md5 check and no way back.
 | WorkPlace - Roll Back UI | `eyJKF2o9BW6Z55Rz` | restores `workplace-prev` |
 | WorkPlace - Page Check | `yF1rqiYtiBAeJKvB` | read-only: both URLs md5-match the rows they should serve |
 | WorkPlace - Chat Routing Check | `Lo7ykeKXcKmLAdKp` | asks all five models one question and reports which answered |
+| WorkPlace - Access Request Check | `xn7TfkNXuxycnJ7x` | signs a test applicant up, approves them, checks the gates, cleans up |
+| WorkPlace - DB Signup Approvals | `Wmgq0CX1CtlLdj4E` | idempotent: the `status` / `requested_at` / `approved_by` columns |
 | WorkPlace - DB Plans and Admin | `NOqAoFOcakzclZ9W` | idempotent: org plans, the admin flag and `wp_models` |
 | WorkPlace Services | `V5SDJzqlQTdFf7dD` | authenticated API: login, bootstrap, chat routed across five models, knowledge search, ingestion |
 | WorkPlace — DB Migration | `h1RHiUgggb5TUzQ1` | idempotent schema + seed (not active) |
@@ -171,6 +173,34 @@ credentials are attached and the requests reach the providers. Claude needs a ne
 `Anthropic account` credential; Mistral and OpenAI need quota. Until then the picker still offers them and a
 failed call returns a readable "could not answer" message naming the model, rather than an empty response.
 
+## Getting in
+
+The page is public until you sign in. `/webhook/workplace` serves a landing page describing what
+WorkPlace does, with **Sign in** and **Request access**; the brand in the header always links home.
+Signing in swaps the whole view for the workspace shell, and the sidebar brand then links to the
+dashboard.
+
+Nobody signs themselves up. **Request access** posts to `/svc/signup`, which writes a `pending` row
+into `wp_users` and nothing else - no session, no usable account. Sign-in checks the password first
+and the account state second, so a wrong password looks identical whether or not the address is
+known; only someone who already has the password learns that an account is waiting.
+
+An administrator sees **Settings -> Access requests**: every waiting request with the note the
+applicant wrote, and Approve / Decline. Declining takes an optional reason, which is shown to that
+person the next time they try to sign in. The endpoint re-reads the whole roster after every action
+and the page renders from that, so the list is never the page's guess about what changed. An
+administrator cannot decline their own account.
+
+| Column on `wp_users` | Holds |
+| --- | --- |
+| `status` | `pending`, `active` or `rejected`. Everyone who existed before this shipped is `active`. |
+| `requested_at` | when they asked |
+| `approved_by` / `approved_at` | who let them in or turned them down, and when |
+| `note` | what the applicant wrote when requesting |
+| `reason` | what the administrator wrote when declining |
+
+A unique index on `lower(email)` stops the same address being requested twice.
+
 ## Still to do
 
 1. **Persistent sessions.** Move the session store out of workflow static data into a table, so a workflow
@@ -180,3 +210,6 @@ failed call returns a readable "could not answer" message naming the model, rath
 3. **`Format Agent Reply` cosmetics.** Its success `mode` is still the literal `"claude"` from when Claude was
    the only provider. The page only tests it against `"demo"` and `"error"`, so it renders correctly either
    way, but the name is now misleading.
+4. **Nobody is told they were approved.** Approval takes effect immediately, but the applicant only finds
+   out by trying to sign in again. An email on approval would need a mail credential this instance
+   does not have.
