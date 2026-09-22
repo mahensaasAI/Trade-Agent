@@ -11,10 +11,11 @@ set -euo pipefail
 DOMAIN="${DOMAIN:-ysquareai.com}"
 CONF_SRC="${CONF_SRC:-$(dirname "$0")/nginx/${DOMAIN}.conf}"
 CONF_DST="/etc/nginx/sites-available/${DOMAIN}"
-APPLY=false; CERT=false
+APPLY=false; CERT=false; FORCE=false
 for a in "$@"; do
   [ "$a" = "--apply" ] && APPLY=true
   [ "$a" = "--cert" ] && CERT=true
+  [ "$a" = "--force-cert" ] && { CERT=true; FORCE=true; }
 done
 
 say()  { printf '\n\033[1m%s\033[0m\n' "$*"; }
@@ -73,6 +74,17 @@ if $APPLY; then
   say "Smoke test over plain HTTP"
   printf '  app   : '; curl -s -o /dev/null -w '%{http_code}\n' -H "Host: $DOMAIN" http://127.0.0.1/ || true
   printf '  editor: '; curl -s -o /dev/null -w '%{http_code} (want 404)\n' -H "Host: $DOMAIN" http://127.0.0.1/rest/login || true
+  printf '  page md5: '; curl -s -H "Host: $DOMAIN" http://127.0.0.1/ | md5sum | cut -d' ' -f1
+  echo "            compare with: SELECT md5(html) FROM ys_ui_pages WHERE page = 'ysquare';"
+fi
+
+if $CERT && [ "$RESOLVED" != "$MYIP" ] && ! $FORCE; then
+  say "Not requesting a certificate"
+  warn "$DOMAIN does not resolve to this machine yet, so the Let's Encrypt challenge would fail."
+  warn "Let's Encrypt rate-limits failed validations (5 per hostname per hour), so this stops instead of trying."
+  warn "Run 01-ip-and-dns.sh, wait for 'dig +short $DOMAIN' to return $MYIP, then re-run with --apply --cert."
+  warn "To request it anyway, add --force-cert."
+  exit 1
 fi
 
 if $CERT; then
