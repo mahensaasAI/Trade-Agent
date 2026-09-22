@@ -197,18 +197,41 @@ In a browser, open `https://ysquareai.com/`, then check the network tab: request
 `ysquareai.com/svc/api`, not to the duckdns host. If they go to duckdns, the browser is holding an
 older copy of the page - hard-reload it.
 
-## Known loose end
+## StudyPals stays inside the domain
 
-`ys_settings.studypals.openUrl` is `https://n8n-neonai.duckdns.org/studypals/`, the static StudyPals
-app, which is not part of this repo. The "open the full StudyPals app" link therefore sends
-production users to the non-prod hostname. Either leave it (StudyPals is a separate product on the
-same VM) or give StudyPals its own production hostname and update the setting:
+StudyPals runs on this same n8n and this same CloudSQL database, under `/webhook/studypals/`, and Y Square is its only
+front end - there is no second site for a student to be sent to. Two things keep it that way, and both are already done:
+
+- **Browser calls** (teacher library, uploads, downloads, deletes) go to `<site origin>/studypals/...`, which the
+  `location /studypals/` block above maps to `/webhook/studypals/...`. On production that is `ysquareai.com/studypals/`,
+  so the visitor never sees another hostname.
+- **The tutor proxy** is a server-side call from the Agents workflow. It now uses `http://127.0.0.1:5678/webhook/studypals/`,
+  so n8n calls itself over loopback instead of going out to a public hostname and back in. Verified: a POST to that URL
+  returns a real tutor answer with HTTP 200.
+
+Both come from `ys_settings.studypals`, which no longer contains any hostname other than loopback:
 
 ```sql
-UPDATE ys_settings
-   SET value = value || '{"openUrl":"https://studypals.ysquareai.com/"}'::jsonb, updated_at = now()
- WHERE key = 'studypals';
+SELECT value FROM ys_settings WHERE key = 'studypals';
+-- {"baseUrl": "http://127.0.0.1:5678/webhook/studypals/", "tutorPath": "tutor/ask"}
+
+-- nothing anywhere in settings should name the non-prod host
+SELECT key FROM ys_settings WHERE value::text ILIKE '%duckdns%';   -- expect zero rows
 ```
 
-Note that this is the *static app* URL. The tutor API base is a different setting (`baseUrl`) and
-must keep pointing at a host that serves `/webhook/studypals/`.
+The old `openUrl` setting, which linked out to a standalone StudyPals app, has been removed. If StudyPals ever does move
+to its own machine, change `baseUrl` in **Admin > Settings** rather than editing the page - but while it shares this VM,
+loopback is the right answer, because a public hostname would make production depend on that name resolving.
+
+## Smoke-testing StudyPals after the cutover
+
+```bash
+# the teacher library answers on the production hostname
+curl -sI https://ysquareai.com/studypals/teacher/library | head -1      # expect 200
+
+# and the tutor path exists (405/404-for-GET proves it is routed, not missing)
+curl -s https://ysquareai.com/studypals/tutor/ask | head -c 160
+```
+
+In the browser, open StudyPals on `https://ysquareai.com/`, ask the tutor a question, and confirm in the network tab
+that every request stays on `ysquareai.com`.

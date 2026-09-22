@@ -25,12 +25,14 @@ INSERT INTO ys_settings (key,value) VALUES
  ('organization','{"name":"Y Square","platform":"Y Square Workplace","tagline":"Turn your ideas into action","timezone":"America/Chicago","currency":"USD"}'::jsonb),
  ('auth','{"googleClientId":"","sessionHours":24}'::jsonb),
  ('billing','{"provider":"stripe_payment_link","checkoutUrl":"","priceLabel":"$9 / month","premiumBenefits":["Claude and ChatGPT on every agent","Longer conversations and history","Priority support"]}'::jsonb),
- ('studypals','{"baseUrl":"https://n8n-neonai.duckdns.org/webhook/studypals/","tutorPath":"tutor/ask","openUrl":"https://n8n-neonai.duckdns.org/studypals/"}'::jsonb),
+ ('studypals','{"baseUrl":"http://127.0.0.1:5678/webhook/studypals/","tutorPath":"tutor/ask"}'::jsonb),
  ('limits','{"guestDailyMessages":30,"freeDailyMessages":150,"premiumDailyMessages":1000,"maxMessageChars":6000}'::jsonb)
 ON CONFLICT (key) DO NOTHING;
--- The StudyPals tutor webhook lives under /webhook/studypals/ (the /studypals/ path serves the static app); move an old default.
-UPDATE ys_settings SET value = value || '{"baseUrl":"https://n8n-neonai.duckdns.org/webhook/studypals/"}'::jsonb, updated_at = now()
- WHERE key='studypals' AND value->>'baseUrl' = 'https://n8n-neonai.duckdns.org/studypals/';
+-- The StudyPals workflows run on this same n8n, so the tutor is reached over loopback rather than back out through a
+-- public hostname. That keeps the call off the internet and makes prod and non-prod behave identically. openUrl used to
+-- link out to a separate StudyPals app; the tutor, lessons, quizzes and materials are all inside Y Square now, so it goes.
+UPDATE ys_settings SET value = (value - 'openUrl') || '{"baseUrl":"http://127.0.0.1:5678/webhook/studypals/"}'::jsonb, updated_at = now()
+ WHERE key='studypals' AND (value ? 'openUrl' OR value->>'baseUrl' LIKE 'https://n8n-neonai.duckdns.org/%');
 
 -- Athlete Edge knowledge base: practical, food-first sports nutrition for young athletes.
 INSERT INTO ys_knowledge (id,agent_id,title,category,content,tags,updated_by) VALUES

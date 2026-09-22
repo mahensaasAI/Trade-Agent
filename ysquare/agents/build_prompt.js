@@ -23,7 +23,7 @@ function ago(v){if(!v)return "n/a";var ms=Date.now()-new Date(v).getTime();if(is
 function until(v){if(!v)return "n/a";var ms=new Date(v).getTime()-Date.now();if(isNaN(ms))return String(v);var d=ms/86400000;if(d<0)return Math.round(-d)+" days ago";if(d<1)return "today";return Math.round(d)+" days";}
 // ---- StudyPals: proxied to the existing StudyPals workflow, no model choice here --------------------------------
 if(pc.agentId==="agent-studypals"){
- var sp=ctx.studypals||{};var base=String(sp.baseUrl||"https://n8n-neonai.duckdns.org/webhook/studypals/");if(base.slice(-1)!=="/")base+="/";
+ var sp=ctx.studypals||{};var base=String(sp.baseUrl||"http://127.0.0.1:5678/webhook/studypals/");if(base.slice(-1)!=="/")base+="/";
  var path=String(sp.tutorPath||"tutor/ask").replace(/^\/+/,"");
  var c=pc.context||{};
  return [{json:{provider:"studypals",modelId:"studypals",modelLabel:"StudyPals Tutor",agentId:pc.agentId,agentName:"StudyPals",conversationId:pc.conversationId,actor:actor,startedAt:pc.startedAt,contextError:contextError,sources:[],

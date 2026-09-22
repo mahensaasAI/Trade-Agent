@@ -6,7 +6,7 @@ JSON services API, an agents chat with a Model Router, and a shared Postgres. It
 | Agent | What it does | Backend |
 | --- | --- | --- |
 | **Athlete Edge** | The go-to for young athletes: what to eat and drink before, during and after training, games and tournaments, matched to the athlete profile (sport, age group, schedule, allergies and diet). Grounded on a sports-nutrition knowledge base with citations, safety rules (food first, no supplements or diets for minors) and a meal-plan card. | Y Square Agents (Model Router) |
-| **StudyPals** | The existing StudyPals tutor. Chat is proxied to `https://n8n-neonai.duckdns.org/webhook/studypals/tutor/ask` with the student id, grade, subject and topic; the full StudyPals app is linked from the panel. | Existing StudyPals workflows |
+| **StudyPals** | Tutor, lesson generator, quizzes and Q&A over the class materials a coach uploaded. It runs entirely inside Y Square - there is no separate StudyPals site to visit. | The StudyPals workflow family on this same n8n (see below) |
 | **SynthIQ** | Research companion for medical and health-science students. Searches only the sources the student switches on - PubMed/MEDLINE, PubMed Central, Cochrane reviews, ClinicalTrials.gov, medRxiv/bioRxiv preprints and Crossref - then answers from the records it retrieved and marks every claim with the paper it came from. Citations render as links to PubMed, the DOI or the trial registry. | Y Square SynthIQ (own workflow) |
 | **Event Planner** | Replaces WhatsApp threads with one place per event: checklist with owners and due dates, RSVPs and headcount, pinned information and announcements, and an event chat. The AI planner drafts checklists and announcements from a brief and adds them with one click. | Y Square Services + Agents |
 
@@ -201,6 +201,27 @@ non-prod copy stays out of search results, and add `https://ysquareai.com` to th
 The server block is checked in at [`deploy/nginx/ysquareai.com.conf`](deploy/nginx/ysquareai.com.conf), and
 [`deploy/README.md`](deploy/README.md) is the step-by-step cutover runbook: reserving the IP in GCP, the Route 53
 records, installing the block, certbot, the OAuth origins and the promotion.
+
+## StudyPals
+
+StudyPals is not a separate product with its own URL. Its workflows - tutor, lesson generator, quiz generator, student
+Q&A, teacher upload, library read/download/delete, voice and the scheduled activity rollups - live on this same n8n and
+this same CloudSQL database, all under the `/webhook/studypals/` path. Y Square is the only front end for them, so a
+student never leaves `ysquareai.com`.
+
+There are two ways they get called, and they are deliberately different:
+
+| Caller | URL it uses | Why |
+| --- | --- | --- |
+| The browser (teacher library, uploads, downloads, deletes) | `<site origin>/studypals/...` | derived from the page's own origin, so nginx maps it to `/webhook/studypals/...` on whichever hostname the visitor is on |
+| The Agents workflow (tutor chat) | `http://127.0.0.1:5678/webhook/studypals/tutor/ask` | n8n calling itself; no DNS, no TLS handshake and no trip out to the public internet and back |
+
+The server-side base comes from `ys_settings.studypals.baseUrl` and is editable in Admin > Settings. Keep it on loopback
+unless StudyPals moves to a different host: pointing it at a public hostname makes production depend on that name
+resolving, and hard-codes one environment's hostname into the other's traffic.
+
+There used to be an `openUrl` setting linking out to a standalone StudyPals app. The tutor, lessons, quizzes and
+materials are all inside Y Square now, so that setting is gone and nothing links off-site.
 
 ## Live page snapshot
 
