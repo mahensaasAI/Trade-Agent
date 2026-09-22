@@ -36,6 +36,9 @@ node, with no staging row, no md5 check and no way back.
 | WorkPlace - Roll Back UI | `eyJKF2o9BW6Z55Rz` | restores `workplace-prev` |
 | WorkPlace - Page Check | `yF1rqiYtiBAeJKvB` | read-only: both URLs md5-match the rows they should serve |
 | WorkPlace - DB Plans and Admin | `NOqAoFOcakzclZ9W` | idempotent: org plans, the admin flag and `wp_models` |
+
+A snapshot of `WorkPlace Services` as it ran before the database work, with the md5s of every Code node,
+is kept at [`workflows/snapshots/WorkPlace_Services.pre-db.json`](workflows/snapshots/WorkPlace_Services.pre-db.json).
 | WorkPlace Services | `V5SDJzqlQTdFf7dD` | authenticated API: bootstrap, chat, knowledge search, ingestion |
 | WorkPlace — DB Migration | `h1RHiUgggb5TUzQ1` | idempotent schema + seed (not active) |
 | WorkPlace | `LpSwabUQbgzZ2PM1` | the original single-workflow MVP (not active) |
@@ -81,6 +84,44 @@ so nothing renders before sign-in.
 | Permissions | `wp_users.is_admin`, with `role` kept as a job title | `ys_users.role` is member / teacher / admin |
 | Models | same five as Y Square, in `wp_models` | free: Gemini Flash, Groq, Mistral; premium: ChatGPT, Claude |
 
+## Services and the database
+
+Until 2026-09-22 `WorkPlace Services` held no database nodes at all: login checked a hardcoded `USERS`
+array, and bootstrap returned hardcoded organisation, projects, agents and a Claude-only model list. The
+`wp_*` tables existed but the running app never read them, so the plan and admin flag were invisible to the
+product.
+
+Two branches now read CloudSQL. The sources are in [`services/`](services):
+
+| Node | Source | What it does |
+| --- | --- | --- |
+| Find User | - | `SELECT ... FROM wp_users WHERE lower(email) = lower($1)` |
+| Verify Credentials | [`verify_credentials.js`](services/verify_credentials.js) | compares the hash, mints the session, carries `is_admin` into it |
+| Load Workspace Rows | [`load_workspace_rows.sql`](services/load_workspace_rows.sql) | one query returning the whole payload as jsonb |
+| Load Workspace Data | [`load_workspace_data.js`](services/load_workspace_data.js) | authorises, then shapes the response; withholds premium models from a free organisation |
+
+The password scheme is unchanged - the Crypto node still hashes `password + ":" + lowercased email` with
+SHA-256 - and the stored hash matched the previously hardcoded one exactly, so existing passwords keep
+working.
+
+Sessions still live in this workflow's static data rather than a table. That is deliberate for now: the
+chat, search and ingest endpoints each authorise against that same in-memory store, so moving sessions to
+the database means changing all of them at once. The consequence is that **everyone is signed out whenever
+the workflow restarts**.
+
+Verified end to end against the live endpoints, using a temporary account that was created and then deleted:
+sign-in succeeds and returns the admin flag, a wrong password is rejected, a request with no token is
+rejected, and bootstrap returns the organisation plan, five tiered models, six projects and eight agents
+from the database. `wp_users` was left with only Raju's account.
+
+### What changed on screen
+
+The dashboard numbers are now real rather than illustrative. Documents and conversations read 0 because
+those tables are genuinely empty, where the hardcoded payload claimed 1,248 and 324; project cards show 0
+documents for the same reason, and the Knowledge view is empty until something is ingested. Projects,
+agents, names, descriptions, capabilities and starters are unchanged, because the database seed matches
+what was hardcoded.
+
 ## Still to do
 
 The palette is done and staged. Remaining, in order:
@@ -90,5 +131,10 @@ The palette is done and staged. Remaining, in order:
 2. **Plan UI.** A plan badge, a model picker that shows the free models and marks the premium ones locked, and
    an upgrade path for admins. Nothing in the page reads `plan` yet.
 3. **Admin view.** Raju is `is_admin` in the database, but the page has no admin section to show him.
-4. **Model routing in WorkPlace Services.** The chat still calls Claude directly; it needs a router over
-   `wp_models` that enforces the tier, so free users reach Gemini, Groq and Mistral rather than a locked model.
+4. **Model routing in WorkPlace Services.** The chat still calls Claude directly. `Build Agent Context` has
+   its own hardcoded Claude-only model list, so the free models bootstrap now advertises are not reachable
+   from chat yet. This needs that list replaced with `wp_models`, a Model Router switch, and per-provider
+   model nodes for Gemini, Groq and Mistral alongside Claude and ChatGPT - the pattern Y Square Agents
+   already uses - plus a server-side plan check so a free organisation cannot reach a premium model.
+5. **Persistent sessions.** Move the session store out of workflow static data into a table, so a workflow
+   restart does not sign everyone out. Touches the auth block in all five authenticated Code nodes.
