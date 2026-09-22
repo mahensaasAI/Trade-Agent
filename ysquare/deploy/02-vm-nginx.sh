@@ -26,8 +26,17 @@ run()  { if $APPLY; then "$@"; else printf '  would run: %s\n' "$*"; fi; }
 [ "$(id -u)" = "0" ] || { echo "Run this with sudo."; exit 1; }
 [ -f "$CONF_SRC" ] || { echo "Cannot find $CONF_SRC"; exit 1; }
 
+# This script belongs on the VM that runs nginx and n8n, not on Cloud Shell or a workstation.
+if [ ! -d /etc/nginx/sites-available ]; then
+  echo "There is no /etc/nginx/sites-available here, so nginx is not installed on this machine."
+  echo "Run this ON THE VM that serves the site - 01-ip-and-dns.sh is the one you run from Cloud Shell."
+  echo "(If nginx is installed but uses a different layout, set CONF_DST and install the block by hand.)"
+  exit 1
+fi
+
 say "Pre-flight"
 
+WRONG_HOST=false
 RESOLVED=$(getent hosts "$DOMAIN" | awk '{print $1}' | head -1 || true)
 MYIP=$(curl -s --max-time 10 https://api.ipify.org || true)
 if [ -z "$RESOLVED" ]; then
@@ -35,7 +44,9 @@ if [ -z "$RESOLVED" ]; then
 elif [ "$RESOLVED" = "$MYIP" ]; then
   ok "$DOMAIN resolves to $RESOLVED, which is this machine"
 else
-  warn "$DOMAIN resolves to $RESOLVED but this machine is $MYIP - check the A record before requesting a certificate."
+  warn "$DOMAIN resolves to $RESOLVED but this machine is $MYIP."
+  warn "Either the A record is wrong, or - more likely - this is not the VM. Run this on $RESOLVED."
+  WRONG_HOST=true
 fi
 
 # The server block proxies to n8n. Confirm the upstream in the config is really listening.
@@ -47,6 +58,13 @@ if [ -n "$UPSTREAM" ]; then
     warn "nothing answered on http://${UPSTREAM}/healthz - check the upstream block in $CONF_SRC"
     grep -n 'proxy_pass' /etc/nginx/sites-enabled/* 2>/dev/null | head -5 || true
   fi
+fi
+
+if $WRONG_HOST && $APPLY; then
+  echo
+  echo "Refusing to install: $DOMAIN points at $RESOLVED, not at this machine ($MYIP)."
+  echo "Installing the block here would have no effect on the live site. Run this on $RESOLVED."
+  exit 1
 fi
 
 say "Install the $DOMAIN server block"

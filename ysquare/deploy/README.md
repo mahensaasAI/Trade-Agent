@@ -17,19 +17,25 @@ Values used below:
 The steps below can be run by hand, or with the two scripts in this folder. Both default to a dry run and print
 exactly what they would do; add `--apply` to make changes.
 
+The two scripts run in **different places**. `01` runs anywhere with `gcloud` and `aws` - Cloud Shell is ideal.
+`02` must run **on the VM itself**, because it edits that machine's nginx; it refuses to run anywhere else.
+
 ```bash
+# in Cloud Shell (or any machine with gcloud + aws):
 ./01-ip-and-dns.sh              # dry run: reserve the IP in GCP, add the Route 53 records
 ./01-ip-and-dns.sh --apply      # ...and wait for DNS to resolve
 
-# then, on the VM:
+# then SSH to the VM and run, on the VM:
 sudo ./02-vm-nginx.sh                 # dry run: pre-flight checks, show the install
 sudo ./02-vm-nginx.sh --apply         # install the server block and reload nginx
 sudo ./02-vm-nginx.sh --apply --cert  # ...and run certbot
 ```
 
-`01` finds the VM's region itself and skips the address reservation if it already exists. `02` checks that the domain
-resolves to the machine it is running on and that n8n is answering on the upstream before it changes anything, and
-backs up any existing server block of the same name. Neither script deletes anything.
+`01` finds the VM's region itself and skips the address reservation if it already exists. `02` stops immediately if
+there is no nginx on the machine, or if the domain resolves to a different host, and will not call certbot until the
+name resolves to the machine it is running on - Let's Encrypt rate-limits failed validations at five per hostname per
+hour, so a warning was not enough. It also checks n8n is answering on the upstream and backs up any existing server
+block of the same name. Neither script deletes anything.
 
 Steps 6 and 7 (Google OAuth origins, promoting the page) are console and n8n actions, so they stay manual.
 
