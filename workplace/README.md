@@ -122,6 +122,39 @@ documents for the same reason, and the Knowledge view is empty until something i
 agents, names, descriptions, capabilities and starters are unchanged, because the database seed matches
 what was hardcoded.
 
+## Chat is down: the Anthropic key is invalid
+
+**WorkPlace chat does not work at the moment, and has not for some time.** Every agent answer goes through
+the single `Claude (Anthropic)` node, and that credential's API key is rejected:
+
+```
+401 {"type":"error","error":{"type":"authentication_error","message":"API key is invalid."}}
+```
+
+This is not a consequence of moving Services onto the database. An isolated probe workflow, with nothing but
+an Anthropic model node using the instance's `Anthropic account` credential, fails the same way; and the
+retained execution history holds no successful chat run at all - every recorded execution is a login or a
+bootstrap, none longer than 90 ms.
+
+**Fixing it needs a new Anthropic API key** put into the `Anthropic account` credential in n8n. Nothing in
+this repository can do that.
+
+### What the other providers do
+
+Probed the same way, one call each:
+
+| Provider | Credential | Result |
+| --- | --- | --- |
+| Google Gemini | `Google Gemini(PaLM) Api account` | **answered** |
+| Groq | `Groq account` | authenticated, returned an empty completion |
+| Mistral | `Mistral Cloud account` | authenticated, HTTP 429 rate limited |
+| OpenAI | `OpenAI account` | authenticated, rate limited |
+| Anthropic | `Anthropic account` | **invalid API key** |
+
+So Gemini is the only provider that actually produced an answer, and the one provider WorkPlace depends on
+is the one that is broken. That turns the model routing below from a nice-to-have into the thing that would
+get chat working again without waiting for a new Anthropic key.
+
 ## Still to do
 
 The palette is done and staged. Remaining, in order:
