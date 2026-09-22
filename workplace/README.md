@@ -35,13 +35,14 @@ node, with no staging row, no md5 check and no way back.
 | WorkPlace - Promote UI to Production | `ajSLmUcbaQOh6vQD` | staging to production, backing up to `workplace-prev` |
 | WorkPlace - Roll Back UI | `eyJKF2o9BW6Z55Rz` | restores `workplace-prev` |
 | WorkPlace - Page Check | `yF1rqiYtiBAeJKvB` | read-only: both URLs md5-match the rows they should serve |
+| WorkPlace - Chat Routing Check | `Lo7ykeKXcKmLAdKp` | asks all five models one question and reports which answered |
 | WorkPlace - DB Plans and Admin | `NOqAoFOcakzclZ9W` | idempotent: org plans, the admin flag and `wp_models` |
+| WorkPlace Services | `V5SDJzqlQTdFf7dD` | authenticated API: login, bootstrap, chat routed across five models, knowledge search, ingestion |
+| WorkPlace — DB Migration | `h1RHiUgggb5TUzQ1` | idempotent schema + seed (not active) |
+| WorkPlace | `LpSwabUQbgzZ2PM1` | the original single-workflow MVP (not active) |
 
 A snapshot of `WorkPlace Services` as it ran before the database work, with the md5s of every Code node,
 is kept at [`workflows/snapshots/WorkPlace_Services.pre-db.json`](workflows/snapshots/WorkPlace_Services.pre-db.json).
-| WorkPlace Services | `V5SDJzqlQTdFf7dD` | authenticated API: bootstrap, chat, knowledge search, ingestion |
-| WorkPlace — DB Migration | `h1RHiUgggb5TUzQ1` | idempotent schema + seed (not active) |
-| WorkPlace | `LpSwabUQbgzZ2PM1` | the original single-workflow MVP (not active) |
 
 ## Data
 
@@ -122,52 +123,60 @@ documents for the same reason, and the Knowledge view is empty until something i
 agents, names, descriptions, capabilities and starters are unchanged, because the database seed matches
 what was hardcoded.
 
-## Chat is down: the Anthropic key is invalid
+## Model routing
 
-**WorkPlace chat does not work at the moment, and has not for some time.** Every agent answer goes through
-the single `Claude (Anthropic)` node, and that credential's API key is rejected:
+Chat is no longer hardwired to one provider. The chat branch of **WorkPlace Services** now runs:
 
 ```
-401 {"type":"error","error":{"type":"authentication_error","message":"API key is invalid."}}
+Agent Chat Request -> Load Chat Models -> Build Agent Context -> Model Router -+-> Agent via Gemini Flash -+
+                                                                               +-> Agent via Groq         -+
+                                                                               +-> Agent via Mistral      -+-> Format Agent Reply -> Return Agent Reply
+                                                                               +-> Agent via Claude       -+
+                                                                               +-> Agent via ChatGPT      -+
+                                                                               +-> (rejected sign-in) ----+
 ```
 
-This is not a consequence of moving Services onto the database. An isolated probe workflow, with nothing but
-an Anthropic model node using the instance's `Anthropic account` credential, fails the same way; and the
-retained execution history holds no successful chat run at all - every recorded execution is a login or a
-bootstrap, none longer than 90 ms.
+- **Load Chat Models** (`services/load_chat_models.sql`) reads the organisation plan and the enabled rows of
+  `wp_models` in one query.
+- **Build Agent Context** (`services/build_agent_context.js`) no longer carries a model list of its own. It
+  takes the catalogue from that query, drops premium models when the organisation is on the free plan, honours
+  `body.model` when the plan allows it and otherwise falls back to the best model the plan does allow, then
+  emits `provider` alongside the provider's real model name in `modelId`.
+- **Model Router** switches on `provider`. A rejected sign-in is given `provider: "denied"` and routed straight
+  to `Format Agent Reply`, so an unauthenticated request no longer pays for a model call.
+- The **Oracle Fusion SQL Runner** tool is attached to all five agents, so the SQL agent keeps its tool
+  whichever model is driving it.
 
-**Fixing it needs a new Anthropic API key** put into the `Anthropic account` credential in n8n. Nothing in
-this repository can do that.
+The plan check runs on the server as well as in the page. The picker hides premium models on a free plan, and
+`Build Agent Context` repeats the rule, so a hand-crafted request cannot reach a model the organisation has
+not paid for.
 
-### What the other providers do
+**Adding a model** is a row in `wp_models` plus one branch in the router.
 
-Probed the same way, one call each:
+### What each provider actually does
 
-| Provider | Credential | Result |
+`WorkPlace - Chat Routing Check` (`Lo7ykeKXcKmLAdKp`) creates a temporary account, asks all five models the
+same grounded question, reports which answered and deletes the account again. Last run:
+
+| Model | `wp_models.model_id` | Result |
 | --- | --- | --- |
-| Google Gemini | `Google Gemini(PaLM) Api account` | **answered** |
-| Groq | `Groq account` | authenticated, returned an empty completion |
-| Mistral | `Mistral Cloud account` | authenticated, HTTP 429 rate limited |
-| OpenAI | `OpenAI account` | authenticated, rate limited |
-| Anthropic | `Anthropic account` | **invalid API key** |
+| Gemini Flash | `models/gemini-2.5-flash` | **answered**, with the right citation |
+| Groq | `openai/gpt-oss-120b` | **answered**, with the right citation |
+| Mistral | `mistral-small-latest` | HTTP 429, rate limited |
+| Claude | `claude-sonnet-4-6` | authorization failed - the API key is expired |
+| ChatGPT | `gpt-5-mini` | rate limited |
 
-So Gemini is the only provider that actually produced an answer, and the one provider WorkPlace depends on
-is the one that is broken. That turns the model routing below from a nice-to-have into the thing that would
-get chat working again without waiting for a new Anthropic key.
+So chat works today on Gemini and Groq. The three failures are all account-side, not workflow-side: the
+credentials are attached and the requests reach the providers. Claude needs a new key in the
+`Anthropic account` credential; Mistral and OpenAI need quota. Until then the picker still offers them and a
+failed call returns a readable "could not answer" message naming the model, rather than an empty response.
 
 ## Still to do
 
-The palette is done and staged. Remaining, in order:
-
-1. **Navigation and mobile.** WorkPlace has two breakpoints (1080, 860) and a sidebar only. It needs Y Square's
-   treatment: a bottom tab bar and drawer on phones, `100dvh` with safe-area insets, and swipe between views.
-2. **Plan UI.** A plan badge, a model picker that shows the free models and marks the premium ones locked, and
-   an upgrade path for admins. Nothing in the page reads `plan` yet.
-3. **Admin view.** Raju is `is_admin` in the database, but the page has no admin section to show him.
-4. **Model routing in WorkPlace Services.** The chat still calls Claude directly. `Build Agent Context` has
-   its own hardcoded Claude-only model list, so the free models bootstrap now advertises are not reachable
-   from chat yet. This needs that list replaced with `wp_models`, a Model Router switch, and per-provider
-   model nodes for Gemini, Groq and Mistral alongside Claude and ChatGPT - the pattern Y Square Agents
-   already uses - plus a server-side plan check so a free organisation cannot reach a premium model.
-5. **Persistent sessions.** Move the session store out of workflow static data into a table, so a workflow
+1. **Persistent sessions.** Move the session store out of workflow static data into a table, so a workflow
    restart does not sign everyone out. Touches the auth block in all five authenticated Code nodes.
+2. **Provider keys.** Claude, Mistral and ChatGPT are unusable until their credentials are renewed - see the
+   table above. Nothing in this repository can fix that.
+3. **`Format Agent Reply` cosmetics.** Its success `mode` is still the literal `"claude"` from when Claude was
+   the only provider. The page only tests it against `"demo"` and `"error"`, so it renders correctly either
+   way, but the name is now misleading.
