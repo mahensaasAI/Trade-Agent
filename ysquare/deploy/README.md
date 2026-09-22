@@ -12,6 +12,27 @@ Values used below:
 | n8n upstream | `127.0.0.1:5678` (confirm in step 3) |
 | Route 53 hosted zone | `ysquareai.com`, already delegated |
 
+## Scripts
+
+The steps below can be run by hand, or with the two scripts in this folder. Both default to a dry run and print
+exactly what they would do; add `--apply` to make changes.
+
+```bash
+./01-ip-and-dns.sh              # dry run: reserve the IP in GCP, add the Route 53 records
+./01-ip-and-dns.sh --apply      # ...and wait for DNS to resolve
+
+# then, on the VM:
+sudo ./02-vm-nginx.sh                 # dry run: pre-flight checks, show the install
+sudo ./02-vm-nginx.sh --apply         # install the server block and reload nginx
+sudo ./02-vm-nginx.sh --apply --cert  # ...and run certbot
+```
+
+`01` finds the VM's region itself and skips the address reservation if it already exists. `02` checks that the domain
+resolves to the machine it is running on and that n8n is answering on the upstream before it changes anything, and
+backs up any existing server block of the same name. Neither script deletes anything.
+
+Steps 6 and 7 (Google OAuth origins, promoting the page) are console and n8n actions, so they stay manual.
+
 ## 1. Pin the VM's IP in GCP
 
 The address is ephemeral today, so it can change if the VM stops. Promote it to a static
