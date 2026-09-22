@@ -72,6 +72,8 @@ ysquare/
   workflows/deploy_ui.js        publishes dist/ysquare.html to a ys_ui_pages row (YSQUARE_PAGE, default ysquare-next)
   workflows/check.js            parse-checks every Code node body and the app
   workflows/keys.sha256.json    SHA-256 of the deploy key and billing key (the keys themselves are not in git)
+  deploy/nginx/                 nginx server block for the production hostname
+  deploy/README.md              runbook for putting the app on ysquareai.com
 ```
 
 ## Working on it
@@ -195,6 +197,10 @@ nginx on the production server only needs to expose the app and its API, not the
 
 Everything else on the production hostname should 404. Keep `X-Robots-Tag: noindex` on the duckdns server block so the
 non-prod copy stays out of search results, and add `https://ysquareai.com` to the Google OAuth authorised origins.
+
+The server block is checked in at [`deploy/nginx/ysquareai.com.conf`](deploy/nginx/ysquareai.com.conf), and
+[`deploy/README.md`](deploy/README.md) is the step-by-step cutover runbook: reserving the IP in GCP, the Route 53
+records, installing the block, certbot, the OAuth origins and the promotion.
 
 ## Live page snapshot
 
