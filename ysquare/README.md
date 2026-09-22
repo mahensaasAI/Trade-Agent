@@ -20,9 +20,13 @@ reply says so and the user can pick another free model.
 
 ## URLs
 
+Production is `https://ysquareai.com` and non-prod is the duckdns host below. Both are served by the same GCP VM and the
+same n8n instance; see [Hosting and domains](#hosting-and-domains) for how one is routed to the other.
+
 | Purpose | URL |
 | --- | --- |
-| App | `https://n8n-neonai.duckdns.org/webhook/Y2Workplace` |
+| App (production) | `https://ysquareai.com/` |
+| App (non-prod) | `https://n8n-neonai.duckdns.org/webhook/Y2Workplace` |
 | Services API | `POST https://n8n-neonai.duckdns.org/webhook/Y2Workplace/svc/api` `{action, payload}` |
 | Agents chat | `POST https://n8n-neonai.duckdns.org/webhook/Y2Workplace/svc/chat` `{agentId, message, model, conversationId, context}` |
 | SynthIQ chat | `POST https://n8n-neonai.duckdns.org/webhook/Y2Workplace/svc/synthiq` `{message, model, conversationId, context:{sources,years,types,openAccess,perSource}}` |
@@ -41,7 +45,9 @@ Callers send either `X-Guest-Id: guest-...` (free version) or `Authorization: Be
 | Y Square SynthIQ | SynthIQ chat: literature retrieval from the selected sources, daily limits, free/premium tiers, Model Router, cited answers. Deliberately separate from Y Square Agents so retrieval problems cannot affect the other three agents |
 | Y Square - DB Migration | Creates the `ys_*` tables and seeds models, settings, knowledge and a sample event (idempotent) |
 | Y Square - DB Functions | `ys_effective_plan`, `ys_bootstrap`, `ys_event_detail`, `ys_admin_overview` (idempotent) |
-| Y Square - Deploy UI Page | Manual alternative to `deploy_ui.js`: fetches `dist/live/ysquare.html` (the live page snapshot) from GitHub and upserts it |
+| Y Square - Deploy UI Page | Manual alternative to `deploy_ui.js`: fetches `dist/live/ysquare.html` (the live page snapshot) from GitHub and upserts it into the row named by `TARGET` in the Page Source node (`ysquare-next` by default) |
+| Y Square - Promote UI to Production | Copies `ysquare-next` onto `ysquare`, backing the current production page up to `ysquare-prev` first |
+| Y Square - Roll Back UI | Restores `ysquare-prev` onto `ysquare`, undoing the last promotion |
 | Y Square - Upload UI Page (chunked) | Manual helper: uploads the page in MD5-verified chunks via workflow executions (never publish it) |
 | Y Square - Volunteer Links (Dallas) | Weekly link keeper for the volunteer board: re-checks the curated Dallas listings, falls back to the next candidate URL, refreshes each blurb from the page itself and upserts them into `ys_volunteer` |
 | Y Square Billing | Records payment events and switches plans (Stripe Payment Link / Checkout) |
@@ -63,7 +69,7 @@ ysquare/
   ui/index.html, ui/styles.css, ui/app.js   the single-page app
   workflows/gen_ui.js           assembles dist/ysquare.html
   workflows/gen_workflows.js    emits dist/workflows/*.sdk.js (embeds the sources above)
-  workflows/deploy_ui.js        publishes dist/ysquare.html to the running UI workflow
+  workflows/deploy_ui.js        publishes dist/ysquare.html to a ys_ui_pages row (YSQUARE_PAGE, default ysquare-next)
   workflows/check.js            parse-checks every Code node body and the app
   workflows/keys.sha256.json    SHA-256 of the deploy key and billing key (the keys themselves are not in git)
 ```
@@ -74,8 +80,9 @@ ysquare/
 cd ysquare
 npm run check                 # parse-check the Code node bodies and the app
 npm run gen                   # rebuild dist/ysquare.html and dist/workflows/*.sdk.js
-YSQUARE_DEPLOY_KEY=... npm run deploy:ui     # publish the repo build (dist/ysquare.html) through the deploy endpoint
-# or run "Y Square - Deploy UI Page" in n8n, which publishes dist/live/ysquare.html (see below)
+YSQUARE_DEPLOY_KEY=... npm run deploy:ui     # publish the repo build (dist/ysquare.html) to the ysquare-next row
+# the repo build is behind dist/live/ysquare.html, so this never targets production unless YSQUARE_PAGE=ysquare is set
+# to ship the live page instead, run "Y Square - Deploy UI Page" in n8n (see Live page snapshot below)
 ```
 
 After changing a Code node body or the SQL, regenerate and update the matching workflow in n8n (validate the SDK code,
@@ -157,10 +164,51 @@ mirrored into `ys_settings.organization.volunteerOpportunities`, which is the fa
 signed in. To change what is listed, edit `volunteer/dallas.json`, run `npm run gen:volunteer`, update the workflow
 from `dist/workflows/volunteer_links.sdk.js` and run it once. Other cities get their own catalogue file the same way.
 
+## Hosting and domains
+
+One GCP VM runs everything: nginx terminates TLS, n8n runs behind it, and the database is CloudSQL. The two hostnames
+resolve to that same VM and differ only in which page row they get:
+
+| | Production | Non-prod |
+| --- | --- | --- |
+| Hostname | `ysquareai.com`, `www.ysquareai.com` | `n8n-neonai.duckdns.org` |
+| DNS | Route 53 A record -> the VM's static IP | duckdns A record -> the same IP |
+| App path | `/` | `/webhook/Y2Workplace` |
+| `ys_ui_pages` row | `ysquare` | `ysquare-next`, falling back to `ysquare` |
+
+The **Y Square UI** workflow reads the `Host` header (`X-Forwarded-Host` when nginx sets it) in its Pick Page node. The
+production hostnames select the `ysquare` row; every other host selects `ysquare-next`. The query coalesces to `ysquare`,
+so a missing `ysquare-next` row serves production rather than an error page, and the non-prod host keeps working before
+anything has been staged.
+
+The page finds its own API base at runtime: `detectBase()` keeps everything after `/webhook/Y2Workplace` when that appears
+in the path, and otherwise uses `location.origin`, which is what makes the same HTML work mounted at the site root.
+
+nginx on the production server only needs to expose the app and its API, not the n8n editor:
+
+| Location | Proxied to |
+| --- | --- |
+| `/` | `/webhook/Y2Workplace` |
+| `/svc/` | `/webhook/Y2Workplace/svc/` |
+| `/studypals/` | `/webhook/studypals/` |
+| `/billing/stripe` | `/webhook/Y2Workplace/billing/stripe` |
+
+Everything else on the production hostname should 404. Keep `X-Robots-Tag: noindex` on the duckdns server block so the
+non-prod copy stays out of search results, and add `https://ysquareai.com` to the Google OAuth authorised origins.
+
 ## Live page snapshot
 
-`dist/live/ysquare.html` is the page currently served at `/webhook/Y2Workplace`. It carries features that were added to the
-live page directly (Volunteer opportunities, AI Playground, Teacher Tools, OTP sign-up) and are not in `ui/` yet, so the
-repo build in `dist/ysquare.html` is behind it. Until those sources are merged into `ui/`, publish only the snapshot: edit
-`dist/live/ysquare.html`, commit, push, and run the "Y Square - Deploy UI Page" workflow. Running `npm run deploy:ui` would
-replace the live page with the older repo build.
+`dist/live/ysquare.html` is the page served from `ys_ui_pages`. It carries features that were added to the live page
+directly (Volunteer opportunities and their moderation queue, notifications, AI Playground, Teacher Tools, OTP sign-up)
+and are not in `ui/` yet, so the repo build in `dist/ysquare.html` is behind it. Until those sources are merged into
+`ui/`, publish only the snapshot, and never run `npm run deploy:ui` without setting `YSQUARE_PAGE` - it publishes
+`dist/ysquare.html`, the older repo build.
+
+To ship a change:
+
+1. edit `dist/live/ysquare.html`, commit and push;
+2. run **Y Square - Deploy UI Page** with `TARGET = "ysquare-next"` and check the md5 it returns against the local file
+   (`md5sum dist/live/ysquare.html`);
+3. test on `https://n8n-neonai.duckdns.org/webhook/Y2Workplace`, which now serves that staging row;
+4. run **Y Square - Promote UI to Production** to copy it onto `ysquare`. It saves the outgoing page to `ysquare-prev`
+   first, so **Y Square - Roll Back UI** can undo the promotion.
