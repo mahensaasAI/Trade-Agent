@@ -1,0 +1,595 @@
+{
+ "id": "V5SDJzqlQTdFf7dD",
+ "name": "WorkPlace Services",
+ "active": true,
+ "versionId": "ae440aa4-4b0e-48c9-b77b-aae81de895c5",
+ "capturedAt": "2026-09-22T03:20:00Z",
+ "settings": {
+  "executionOrder": "v1",
+  "availableInMCP": true
+ },
+ "nodes": [
+  {
+   "id": "4cde8073-2b07-48bd-b613-fce741e4bb72",
+   "name": "Login Request",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2.1,
+   "position": [
+    0,
+    0
+   ],
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "workplace/svc/login",
+    "responseMode": "responseNode"
+   },
+   "webhookId": "5cc03f95-4287-420f-9d60-bb954ec45a8c"
+  },
+  {
+   "id": "8a97d8b6-0d66-47d5-b2ec-5f253016369c",
+   "name": "Hash Password",
+   "type": "n8n-nodes-base.crypto",
+   "typeVersion": 1,
+   "position": [
+    224,
+    0
+   ],
+   "parameters": {
+    "action": "hash",
+    "type": "SHA256",
+    "value": "={{ ($json.body.password || \"\") + \":\" + ($json.body.email || \"\").toLowerCase().trim() }}",
+    "dataPropertyName": "passwordHash",
+    "encoding": "hex"
+   }
+  },
+  {
+   "id": "01632f98-af44-4827-8332-6e787b1599b4",
+   "name": "Verify Credentials",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    448,
+    0
+   ],
+   "parameters": {
+    "mode": "runOnceForAllItems",
+    "language": "javaScript",
+    "jsCode": "\nfunction sessions(){var sd=$getWorkflowStaticData('global');if(!sd.sessions)sd.sessions={};return sd.sessions;}\nfunction readToken(j){\n var h=j.headers||{};\n var a=h.authorization||h.Authorization||\"\";\n if(a.indexOf(\"Bearer \")===0)return a.slice(7).trim();\n var b=j.body||{};\n return (b.token||\"\").toString().trim();\n}\nfunction authorize(j){\n var t=readToken(j);\n if(!t)return {ok:false,code:\"UNAUTHENTICATED\",message:\"Sign in to access this workspace.\"};\n var s=sessions()[t];\n if(!s)return {ok:false,code:\"INVALID_SESSION\",message:\"Your session is no longer valid. Please sign in again.\"};\n if(Date.now()>s.exp){delete sessions()[t];return {ok:false,code:\"SESSION_EXPIRED\",message:\"Your session has expired. Please sign in again.\"};}\n return {ok:true,user:{id:s.id,name:s.name,email:s.email,role:s.role,initials:s.initials}};\n}\nfunction deny(a){return [{json:{success:false,requestId:\"req-\"+Date.now().toString(36),error:{code:a.code,message:a.message}}}];}\n\nvar j=$input.first().json,b=j.body||{};\nvar email=String(b.email||\"\").trim().toLowerCase();\nvar hash=String(j.passwordHash||\"\").toLowerCase();\nvar rid=\"req-\"+Date.now().toString(36);\nvar USERS=[\n {id:\"user-001\",email:\"raju@oradayforce.com\",name:\"Raju\",role:\"Practice Director\",initials:\"R\",\n  hash:\"fbfb9be1312318c4bb00317236184b8a45776d905ff69d7f6e53524c996bcc7f\"}\n];\nif(!email||!hash)return [{json:{success:false,requestId:rid,error:{code:\"MISSING_CREDENTIALS\",message:\"Email and password are required.\"}}}];\nvar found=null;\nfor(var i=0;i<USERS.length;i++){if(USERS[i].email===email&&USERS[i].hash===hash){found=USERS[i];break;}}\nif(!found)return [{json:{success:false,requestId:rid,error:{code:\"INVALID_CREDENTIALS\",message:\"That email and password combination was not recognised.\"}}}];\nvar token=\"\",abc=\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\";\nfor(var n=0;n<48;n++){token+=abc.charAt(Math.floor(Math.random()*abc.length));}\nvar ttl=12*3600*1000,store=sessions();\nstore[token]={id:found.id,email:found.email,name:found.name,role:found.role,initials:found.initials,exp:Date.now()+ttl};\nObject.keys(store).forEach(function(k){if(Date.now()>store[k].exp)delete store[k];});\nreturn [{json:{success:true,requestId:rid,data:{token:token,expiresIn:ttl,\n user:{id:found.id,name:found.name,email:found.email,role:found.role,initials:found.initials}}}}];\n"
+   }
+  },
+  {
+   "id": "61a31984-1eb0-4bfb-a67c-05de5ca9c9c3",
+   "name": "Return Session",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.5,
+   "position": [
+    672,
+    0
+   ],
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "={{ $json }}"
+   }
+  },
+  {
+   "id": "111996e6-1c20-4616-a106-1d3a3065fb73",
+   "name": "Bootstrap Request",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2.1,
+   "position": [
+    0,
+    224
+   ],
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "workplace/svc/bootstrap",
+    "responseMode": "responseNode"
+   },
+   "webhookId": "9d4883f6-b2b0-4bf5-9a84-77668eaf73f0"
+  },
+  {
+   "id": "b86ac2b5-de27-4fcd-a03e-62231fc86e08",
+   "name": "Load Workspace Data",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    224,
+    224
+   ],
+   "parameters": {
+    "mode": "runOnceForAllItems",
+    "language": "javaScript",
+    "jsCode": "\nfunction sessions(){var sd=$getWorkflowStaticData('global');if(!sd.sessions)sd.sessions={};return sd.sessions;}\nfunction readToken(j){\n var h=j.headers||{};\n var a=h.authorization||h.Authorization||\"\";\n if(a.indexOf(\"Bearer \")===0)return a.slice(7).trim();\n var b=j.body||{};\n return (b.token||\"\").toString().trim();\n}\nfunction authorize(j){\n var t=readToken(j);\n if(!t)return {ok:false,code:\"UNAUTHENTICATED\",message:\"Sign in to access this workspace.\"};\n var s=sessions()[t];\n if(!s)return {ok:false,code:\"INVALID_SESSION\",message:\"Your session is no longer valid. Please sign in again.\"};\n if(Date.now()>s.exp){delete sessions()[t];return {ok:false,code:\"SESSION_EXPIRED\",message:\"Your session has expired. Please sign in again.\"};}\n return {ok:true,user:{id:s.id,name:s.name,email:s.email,role:s.role,initials:s.initials}};\n}\nfunction deny(a){return [{json:{success:false,requestId:\"req-\"+Date.now().toString(36),error:{code:a.code,message:a.message}}}];}\n\nvar j=$input.first().json;\nvar a=authorize(j);\nif(!a.ok)return deny(a);\nfunction iso(h){return new Date(Date.now()-h*3600000).toISOString();}\nvar MODELS=[\n {id:\"claude-sonnet-4-6\",name:\"Claude Sonnet 4.6\",desc:\"Balanced speed and quality (default)\"},\n {id:\"claude-opus-4-7\",name:\"Claude Opus 4.7\",desc:\"Most capable for complex tasks\"},\n {id:\"claude-haiku-4-5\",name:\"Claude Haiku 4.5\",desc:\"Fastest, for quick answers\"},\n {id:\"claude-opus-5\",name:\"Claude Opus 5\",desc:\"Latest generation, deepest reasoning\"},\n {id:\"claude-sonnet-5\",name:\"Claude Sonnet 5\",desc:\"Latest generation, everyday work\"}\n];\nvar organization={id:\"org-oradayforce\",name:\"OraDayForce\",domain:\"oradayforce.com\"};\nvar projects=[\n {id:\"proj-northwind\",name:\"Conversational Commerce Assistant\",client:\"Northwind Retail Group\",initials:\"NR\",color:\"#4f46e5\",\n  description:\"Retrieval augmented shopping assistant across the product catalogue and support knowledge base, with guardrails, evaluation harness and phased rollout to web and mobile.\",\n  status:\"active\",manager:\"Raju\",partner:\"Raju\",team:9,docCount:42,progress:64,\n  agentIds:[\"agent-architect\",\"agent-data\",\"agent-mlops\",\"agent-knowledge\"],\n  modules:[\"Retrieval Design\",\"Guardrails\",\"Evaluation\",\"Prompt Engineering\",\"Deployment\"],\n  startedAt:iso(2400),goLive:\"Q1 2027\",lastActivity:iso(0.3)},\n {id:\"proj-meridian\",name:\"Clinical Document Intelligence\",client:\"Meridian Health Network\",initials:\"MH\",color:\"#0e7490\",\n  description:\"Layout-aware extraction from scanned clinical documentation with de-identification, confidence-gated human review and a governance wrapper for high risk classification.\",\n  status:\"active\",manager:\"Raju\",partner:\"Raju\",team:7,docCount:31,progress:47,\n  agentIds:[\"agent-data\",\"agent-governance\",\"agent-knowledge\"],\n  modules:[\"OCR & Layout\",\"Extraction\",\"De-identification\",\"Human Review\",\"Governance\"],\n  startedAt:iso(1600),goLive:\"Q3 2027\",lastActivity:iso(2.4)},\n {id:\"proj-cascade\",name:\"Agentic Back-Office Automation\",client:\"Cascade Financial\",initials:\"CF\",color:\"#7c3aed\",\n  description:\"Agent-driven automation of reconciliation and exception handling, orchestrated through n8n with narrow tool scopes and human approval gates on every write action.\",\n  status:\"active\",manager:\"Raju\",partner:\"Raju\",team:6,docCount:26,progress:38,\n  agentIds:[\"agent-architect\",\"agent-integration\",\"agent-mlops\",\"agent-sql\"],\n  modules:[\"Agent Design\",\"Tool Scoping\",\"Approval Gates\",\"Orchestration\",\"Observability\"],\n  startedAt:iso(1100),goLive:\"Q2 2027\",lastActivity:iso(5)},\n {id:\"proj-atlas\",name:\"Predictive Logistics Platform\",client:\"Atlas Freight Systems\",initials:\"AF\",color:\"#0d8a5f\",\n  description:\"Delay prediction and dwell-time forecasting on a unified feature store, replacing the pilot pipeline that suffered training and serving skew.\",\n  status:\"planning\",manager:\"Raju\",partner:\"Raju\",team:5,docCount:18,progress:16,\n  agentIds:[\"agent-data\",\"agent-mlops\"],\n  modules:[\"Feature Store\",\"Model Training\",\"Serving\",\"Monitoring\"],\n  startedAt:iso(700),goLive:\"TBD\",lastActivity:iso(27)},\n {id:\"proj-vertex\",name:\"Computer Vision Quality Inspection\",client:\"Vertex Manufacturing\",initials:\"VM\",color:\"#b45309\",\n  description:\"Vision-based defect detection piloted on two production lines, with a scaling recommendation covering lighting standardisation and edge deployment.\",\n  status:\"completed\",manager:\"Raju\",partner:\"Raju\",team:4,docCount:21,progress:100,\n  agentIds:[\"agent-mlops\",\"agent-knowledge\"],\n  modules:[\"Data Labelling\",\"Model Training\",\"Edge Deployment\",\"Pilot Evaluation\"],\n  startedAt:iso(6000),goLive:\"Delivered\",lastActivity:iso(120)},\n {id:\"proj-firm\",name:\"Bid & Proposal Desk\",client:\"OraDayForce Internal\",initials:\"OD\",color:\"#c0392b\",\n  description:\"Firm-wide bid desk: RFP and RFI responses, proposal playbook, win themes, rate card, qualification criteria and approved past-performance references.\",\n  status:\"active\",manager:\"Raju\",partner:\"Raju\",team:3,docCount:12,progress:70,\n  agentIds:[\"agent-proposal\",\"agent-knowledge\"],\n  modules:[\"Qualification\",\"Response Drafting\",\"Commercial\",\"Past Performance\",\"Review\"],\n  startedAt:iso(3000),goLive:\"Ongoing\",lastActivity:iso(1.2)}\n];\nvar agents=[\n {id:\"agent-architect\",name:\"Solution Architect Agent\",title:\"AI Architecture Specialist\",type:\"Domain Specialist\",icon:\"brain\",color:\"#4f46e5\",status:\"active\",\n  description:\"Answers questions on RAG architecture, retrieval strategy, chunking, reranking, model selection and system design, grounded in engagement design documents.\",\n  purpose:\"Acts as the always-available architecture reviewer so delivery teams can check design decisions against what was actually agreed and documented.\",\n  capabilities:[\"Architecture Review\",\"Retrieval Design\",\"Model Selection\",\"Prompt Strategy\",\"Trade-off Analysis\"],\n  projectIds:[\"proj-northwind\",\"proj-cascade\"],knowledgeSources:118,conversations:94,owner:\"Raju\",lastActive:iso(0.2),\n  starters:[\"How is our retrieval layer designed?\",\"Why did we pick pgvector over a dedicated vector database?\",\"What does reranking buy us?\"]},\n {id:\"agent-proposal\",name:\"Proposal Builder Agent\",title:\"RFP & Bid Response Specialist\",type:\"Domain Specialist\",icon:\"edit\",color:\"#c0392b\",status:\"active\",\n  description:\"Drafts RFP and RFI responses from the firm proposal playbook — win themes, response structure, compliance matrices, commercial models and approved past performance.\",\n  purpose:\"Turns a raw RFP requirement list into a structured, compliant draft response that reuses proven win themes and only cites reference engagements cleared for external use.\",\n  capabilities:[\"RFP Response Drafting\",\"Compliance Matrix\",\"Win Theme Development\",\"Executive Summaries\",\"Commercial Modelling\",\"Bid Qualification\"],\n  projectIds:[\"proj-firm\",\"proj-northwind\",\"proj-meridian\",\"proj-vertex\"],knowledgeSources:64,conversations:47,owner:\"Raju\",lastActive:iso(1.2),\n  starters:[\"Draft an executive summary for an AI assistant RFP.\",\"Should we bid on this? Walk me through qualification.\",\"How do we answer a requirement we only partially comply with?\"]},\n {id:\"agent-sql\",name:\"Oracle Fusion SQL Agent\",title:\"Live Query & Reporting\",type:\"Live Data Agent\",icon:\"list\",color:\"#0e7490\",status:\"active\",\n  description:\"Writes and runs read-only SQL against Oracle Fusion through the BIP SQL Runner, then explains the results. Use for live ledger, supplier, invoice and configuration queries.\",\n  purpose:\"Removes the round trip to a technical consultant for routine data questions by generating the SQL, executing it against the selected Fusion instance and returning readable results.\",\n  capabilities:[\"SQL Generation\",\"Live Fusion Queries\",\"Report Execution\",\"Result Explanation\",\"Schema Guidance\"],\n  projectIds:[\"proj-cascade\"],knowledgeSources:0,conversations:12,owner:\"Raju\",lastActive:iso(0.4),\n  starters:[\"List the primary ledgers with their currency and calendar.\",\"How many suppliers are active by supplier type?\",\"Show me the chart of accounts segments.\"]},\n {id:\"agent-data\",name:\"Data Engineering Agent\",title:\"Pipelines & Vector Stores\",type:\"Technical Specialist\",icon:\"db\",color:\"#0d8a5f\",status:\"active\",\n  description:\"Covers ingestion pipelines, feature stores, embedding strategy, chunking, indexing and data quality across the delivery portfolio.\",\n  purpose:\"Keeps data engineering decisions traceable to the architecture baseline so batch and streaming paths stay consistent between training and serving.\",\n  capabilities:[\"Pipeline Design\",\"Embedding Strategy\",\"Feature Stores\",\"Indexing\",\"Data Quality\"],\n  projectIds:[\"proj-northwind\",\"proj-meridian\",\"proj-atlas\"],knowledgeSources:96,conversations:71,owner:\"Raju\",lastActive:iso(1.1),\n  starters:[\"How does our ingestion pipeline work?\",\"What chunk size and overlap did we settle on?\",\"How did we fix training and serving skew?\"]},\n {id:\"agent-mlops\",name:\"MLOps Agent\",title:\"Deployment, Evaluation & Monitoring\",type:\"Technical Specialist\",icon:\"sync\",color:\"#7c3aed\",status:\"active\",\n  description:\"Handles release process, evaluation harnesses, regression gates, rollback, monitoring and model performance questions.\",\n  purpose:\"Makes the path to production repeatable by grounding every answer in the runbooks and evaluation frameworks agreed with the client.\",\n  capabilities:[\"Release Process\",\"Evaluation Design\",\"Regression Gates\",\"Rollback\",\"Monitoring\",\"Model Cards\"],\n  projectIds:[\"proj-northwind\",\"proj-cascade\",\"proj-atlas\",\"proj-vertex\"],knowledgeSources:87,conversations:66,owner:\"Raju\",lastActive:iso(0.7),\n  starters:[\"Walk me through the release process.\",\"Which metrics gate a deployment?\",\"How fast can we roll back?\"]},\n {id:\"agent-integration\",name:\"Integration Agent\",title:\"APIs & Orchestration\",type:\"Technical Specialist\",icon:\"link\",color:\"#b45309\",status:\"active\",\n  description:\"Specialises in API design, n8n orchestration, tool schemas, correlation identifiers, retries and integration troubleshooting.\",\n  purpose:\"Accelerates technical delivery by explaining the approved orchestration patterns and error handling standards from the integration baseline.\",\n  capabilities:[\"API Design\",\"n8n Orchestration\",\"Tool Schemas\",\"Error Handling\",\"Replay & Recovery\"],\n  projectIds:[\"proj-cascade\"],knowledgeSources:44,conversations:39,owner:\"Raju\",lastActive:iso(4),\n  starters:[\"How is orchestration structured?\",\"What happens when a workflow fails?\",\"How are agent tools scoped?\"]},\n {id:\"agent-governance\",name:\"Governance Agent\",title:\"AI Risk, Safety & Compliance\",type:\"Domain Specialist\",icon:\"shield\",color:\"#6d28d9\",status:\"active\",\n  description:\"Covers risk classification, guardrail design, model cards, data protection, human oversight requirements and audit evidence.\",\n  purpose:\"Gives delivery teams a fast, documented answer on what governance evidence a use case needs before it can reach production.\",\n  capabilities:[\"Risk Classification\",\"Guardrail Design\",\"Data Protection\",\"Human Oversight\",\"Model Cards\"],\n  projectIds:[\"proj-meridian\"],knowledgeSources:38,conversations:31,owner:\"Raju\",lastActive:iso(8),\n  starters:[\"What does a high risk classification require?\",\"How do we handle protected health information?\",\"What guardrails run on input and output?\"]},\n {id:\"agent-knowledge\",name:\"Knowledge Agent\",title:\"Retrieval, Summarisation & Research\",type:\"General Purpose\",icon:\"spark\",color:\"#0369a1\",status:\"active\",\n  description:\"Cross-project retrieval, summarisation and research. Finds the right document, extracts the relevant passage and explains it in context.\",\n  purpose:\"The default entry point when a consultant is not sure which specialist owns a question or needs a fast synthesis across several documents.\",\n  capabilities:[\"Document Retrieval\",\"Summarisation\",\"Research\",\"Knowledge Discovery\",\"Cross-project Synthesis\"],\n  projectIds:[\"proj-northwind\",\"proj-meridian\",\"proj-vertex\",\"proj-firm\"],knowledgeSources:152,conversations:58,owner:\"Raju\",lastActive:iso(0.5),\n  starters:[\"Summarise the pilot findings.\",\"What is in scope for phase one?\",\"Find everything we have on evaluation.\"]}\n];\nvar docDefs=[\n [\"doc-101\",\"RAG_Architecture_Blueprint.pdf\",\"proj-northwind\",\"application/pdf\",4820000,\"indexed\",214,86],\n [\"doc-102\",\"Evaluation_Framework.docx\",\"proj-northwind\",\"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",1180000,\"indexed\",96,34],\n [\"doc-103\",\"Guardrails_And_Safety_Design.pdf\",\"proj-northwind\",\"application/pdf\",3410000,\"indexed\",171,58],\n [\"doc-104\",\"Vector_Store_Selection.md\",\"proj-northwind\",\"text/markdown\",42000,\"indexed\",9,null],\n [\"doc-114\",\"Prompt_Library_v3.csv\",\"proj-northwind\",\"text/csv\",680000,\"processing\",0,null],\n [\"doc-115\",\"Golden_Set_Annotations.csv\",\"proj-northwind\",\"text/csv\",7800000,\"failed\",0,null],\n [\"doc-105\",\"Clinical_Document_Intelligence_Design.pdf\",\"proj-meridian\",\"application/pdf\",5120000,\"indexed\",233,94],\n [\"doc-106\",\"PHI_Handling_And_Compliance.docx\",\"proj-meridian\",\"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",1640000,\"indexed\",118,52],\n [\"doc-112\",\"AI_Governance_Policy.pdf\",\"proj-meridian\",\"application/pdf\",2260000,\"indexed\",104,41],\n [\"doc-107\",\"MLOps_Deployment_Runbook.docx\",\"proj-cascade\",\"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",1920000,\"indexed\",127,61],\n [\"doc-108\",\"Agentic_Workflow_Patterns.pdf\",\"proj-cascade\",\"application/pdf\",2980000,\"indexed\",139,47],\n [\"doc-113\",\"Integration_And_Orchestration_Spec.pdf\",\"proj-cascade\",\"application/pdf\",2410000,\"indexed\",112,73],\n [\"doc-116\",\"Reconciliation_Exception_Catalogue.xlsx\",\"proj-cascade\",\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\",1260000,\"queued\",0,null],\n [\"doc-109\",\"Predictive_Logistics_Model_Card.md\",\"proj-atlas\",\"text/markdown\",88000,\"indexed\",21,null],\n [\"doc-110\",\"Data_Pipeline_Architecture.pdf\",\"proj-atlas\",\"application/pdf\",3120000,\"indexed\",148,66],\n [\"doc-111\",\"Vision_Inspection_Pilot_Findings.docx\",\"proj-vertex\",\"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",1460000,\"indexed\",84,29],\n [\"doc-201\",\"Proposal_Playbook.docx\",\"proj-firm\",\"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",2140000,\"indexed\",132,58],\n [\"doc-202\",\"Rate_Card_And_Commercial_Models.xlsx\",\"proj-firm\",\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\",640000,\"indexed\",38,null],\n [\"doc-203\",\"Past_Performance_Case_Studies.pdf\",\"proj-firm\",\"application/pdf\",4260000,\"indexed\",186,74],\n [\"doc-204\",\"Bid_Qualification_Criteria.docx\",\"proj-firm\",\"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",720000,\"indexed\",29,14],\n [\"doc-205\",\"RFP_Northwind_Assistant_Response_v2.docx\",\"proj-firm\",\"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",1880000,\"uploaded\",0,null]\n];\nvar documents=docDefs.map(function(d,i){\n return {id:d[0],projectId:d[2],name:d[1],mime:d[3],size:d[4],status:d[5],chunks:d[6],pages:d[7],\n  progress:d[5]===\"processing\"?46:null,uploadedBy:\"Raju\",uploadedAt:iso(6+i*9),\n  indexedAt:d[5]===\"indexed\"?iso(4+i*8):null,\n  storagePath:\"gs://workplace-knowledge/organizations/\"+organization.id+\"/projects/\"+d[2]+\"/documents/\"+d[0]+\"/\"+d[1]};\n});\nvar activity=[\n {actor:\"Proposal Builder Agent\",action:\"drafted a response section for\",target:\"Bid & Proposal Desk\",at:iso(0.2),icon:\"edit\",projectId:\"proj-firm\"},\n {actor:\"Solution Architect Agent\",action:\"completed a conversation for\",target:\"Northwind Retail Group\",at:iso(0.4),icon:\"spark\",projectId:\"proj-northwind\"},\n {actor:\"Oracle Fusion SQL Agent\",action:\"ran a live query for\",target:\"Cascade Financial\",at:iso(0.6),icon:\"list\",projectId:\"proj-cascade\"},\n {actor:\"Ingestion pipeline\",action:\"indexed\",target:\"Proposal_Playbook.docx\",at:iso(1.2),icon:\"db\",projectId:\"proj-firm\"},\n {actor:\"Raju\",action:\"uploaded\",target:\"RFP_Northwind_Assistant_Response_v2.docx\",at:iso(1.6),icon:\"up\",projectId:\"proj-firm\"},\n {actor:\"Governance Agent\",action:\"answered a question in\",target:\"Meridian Health Network\",at:iso(2.4),icon:\"spark\",projectId:\"proj-meridian\"},\n {actor:\"Ingestion pipeline\",action:\"failed to process\",target:\"Golden_Set_Annotations.csv\",at:iso(3.4),icon:\"alert\",projectId:\"proj-northwind\"},\n {actor:\"Raju\",action:\"assigned\",target:\"Oracle Fusion SQL Agent\",at:iso(5),icon:\"bot\",projectId:\"proj-cascade\"},\n {actor:\"Knowledge Agent\",action:\"summarised\",target:\"Vision_Inspection_Pilot_Findings.docx\",at:iso(28),icon:\"spark\",projectId:\"proj-vertex\"},\n {actor:\"Raju\",action:\"created project\",target:\"Atlas Freight Systems\",at:iso(48),icon:\"folder\",projectId:\"proj-atlas\"}\n];\nvar kpis={activeProjects:projects.filter(function(p){return p.status===\"active\"||p.status===\"planning\"}).length+6,\n documents:1248,agents:18,conversations:324};\nreturn [{json:{success:true,requestId:\"req-\"+Date.now().toString(36),\n data:{models:MODELS,organization:organization,user:a.user,kpis:kpis,projects:projects,agents:agents,documents:documents,activity:activity}}}];\n"
+   }
+  },
+  {
+   "id": "9073f448-444a-4769-a2aa-90fd3031b33a",
+   "name": "Return Workspace Data",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.5,
+   "position": [
+    448,
+    224
+   ],
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "={{ $json }}"
+   }
+  },
+  {
+   "id": "a7163a63-a249-47b2-ba44-84e13c2e6c5b",
+   "name": "Agent Chat Request",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2.1,
+   "position": [
+    0,
+    560
+   ],
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "workplace/svc/chat",
+    "responseMode": "responseNode"
+   },
+   "webhookId": "85c7b38a-c380-44b2-a464-67468b4a5a81"
+  },
+  {
+   "id": "aa64a9bf-a830-4dbe-8a64-0bc416971df9",
+   "name": "Build Agent Context",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    224,
+    560
+   ],
+   "parameters": {
+    "mode": "runOnceForAllItems",
+    "language": "javaScript",
+    "jsCode": "\nfunction sessions(){var sd=$getWorkflowStaticData('global');if(!sd.sessions)sd.sessions={};return sd.sessions;}\nfunction readToken(j){\n var h=j.headers||{};\n var a=h.authorization||h.Authorization||\"\";\n if(a.indexOf(\"Bearer \")===0)return a.slice(7).trim();\n var b=j.body||{};\n return (b.token||\"\").toString().trim();\n}\nfunction authorize(j){\n var t=readToken(j);\n if(!t)return {ok:false,code:\"UNAUTHENTICATED\",message:\"Sign in to access this workspace.\"};\n var s=sessions()[t];\n if(!s)return {ok:false,code:\"INVALID_SESSION\",message:\"Your session is no longer valid. Please sign in again.\"};\n if(Date.now()>s.exp){delete sessions()[t];return {ok:false,code:\"SESSION_EXPIRED\",message:\"Your session has expired. Please sign in again.\"};}\n return {ok:true,user:{id:s.id,name:s.name,email:s.email,role:s.role,initials:s.initials}};\n}\nfunction deny(a){return [{json:{success:false,requestId:\"req-\"+Date.now().toString(36),error:{code:a.code,message:a.message}}}];}\n\nvar CORPUS=[\n {documentId:\"doc-101\",documentName:\"RAG_Architecture_Blueprint.pdf\",projectId:\"proj-northwind\",page:14,section:\"Retrieval Design\",indexedAt:\"2026-08-14T15:20:00Z\",\n  text:\"The retrieval layer uses hybrid search: BM25 lexical scoring combined with dense vector similarity, fused with reciprocal rank fusion. Chunk size is 800 tokens with 120 tokens of overlap, which tested best against the evaluation set. Every chunk carries product category, locale and document version as metadata so retrieval can be filtered before ranking.\"},\n {documentId:\"doc-101\",documentName:\"RAG_Architecture_Blueprint.pdf\",projectId:\"proj-northwind\",page:19,section:\"Reranking\",indexedAt:\"2026-08-14T15:20:00Z\",\n  text:\"A cross-encoder reranker runs over the top 25 candidates and returns the top 6 to the generation step. Reranking added 11 points of answer accuracy on the golden set at a cost of roughly 180 milliseconds per query. Below 12 candidates the reranker provides no measurable benefit.\"},\n {documentId:\"doc-102\",documentName:\"Evaluation_Framework.docx\",projectId:\"proj-northwind\",page:6,section:\"Metrics\",indexedAt:\"2026-08-13T09:41:00Z\",\n  text:\"Four metrics gate every release: context precision, context recall, answer faithfulness and answer relevance. Faithfulness below 0.85 blocks deployment. The golden set holds 240 question and answer pairs curated with the client subject matter experts and is versioned alongside the prompt templates.\"},\n {documentId:\"doc-103\",documentName:\"Guardrails_And_Safety_Design.pdf\",projectId:\"proj-northwind\",page:8,section:\"Input Guardrails\",indexedAt:\"2026-08-12T11:02:00Z\",\n  text:\"Input guardrails screen for prompt injection, personal data and out-of-scope intent before the request reaches the model. Output guardrails check for unsupported claims, competitor mentions and pricing statements. Any response failing a guardrail is replaced with a deterministic fallback and logged for review.\"},\n {documentId:\"doc-104\",documentName:\"Vector_Store_Selection.md\",projectId:\"proj-northwind\",page:3,section:\"Decision\",indexedAt:\"2026-08-10T18:15:00Z\",\n  text:\"pgvector on Cloud SQL was selected over a dedicated vector database because the corpus sits below ten million chunks, the team already operates PostgreSQL, and transactional metadata can be joined directly to embeddings. An HNSW index is used with m set to 16 and ef_construction set to 64.\"},\n {documentId:\"doc-105\",documentName:\"Clinical_Document_Intelligence_Design.pdf\",projectId:\"proj-meridian\",page:11,section:\"Extraction Pipeline\",indexedAt:\"2026-08-15T13:30:00Z\",\n  text:\"Scanned clinical documents pass through layout-aware OCR before extraction. Structured fields are pulled with a schema-constrained model call and every field carries a confidence score. Anything below 0.9 routes to a human reviewer queue rather than flowing downstream automatically.\"},\n {documentId:\"doc-106\",documentName:\"PHI_Handling_And_Compliance.docx\",projectId:\"proj-meridian\",page:5,section:\"Data Protection\",indexedAt:\"2026-08-15T13:30:00Z\",\n  text:\"Protected health information is redacted before any text leaves the customer boundary. De-identification runs as a separate service and its output is what gets embedded. Raw documents remain in the encrypted bucket with customer-managed keys and a ninety day retention policy.\"},\n {documentId:\"doc-107\",documentName:\"MLOps_Deployment_Runbook.docx\",projectId:\"proj-cascade\",page:9,section:\"Release Process\",indexedAt:\"2026-08-09T10:05:00Z\",\n  text:\"Prompt and model changes ship through the same pipeline as code. Every candidate runs against the evaluation suite in staging, and promotion requires no metric regressing more than two percent. Rollback is a config flag pointing at the previous prompt version and takes under a minute.\"},\n {documentId:\"doc-108\",documentName:\"Agentic_Workflow_Patterns.pdf\",projectId:\"proj-cascade\",page:17,section:\"Tool Use\",indexedAt:\"2026-08-11T14:22:00Z\",\n  text:\"Agents are given narrow tools with explicit schemas rather than broad system access. Any action that writes to a downstream system requires a human approval gate in phase one. Agent runs are capped at eight tool calls, after which the run halts and escalates rather than looping.\"},\n {documentId:\"doc-109\",documentName:\"Predictive_Logistics_Model_Card.md\",projectId:\"proj-atlas\",page:2,section:\"Model Details\",indexedAt:\"2026-08-08T08:50:00Z\",\n  text:\"The delay prediction model is a gradient boosted ensemble trained on thirty months of shipment history. Features cover route, carrier, seasonality, weather and historic dwell time. Known limitation: performance degrades for lanes with fewer than two hundred historic shipments, which are routed to a rules-based fallback.\"},\n {documentId:\"doc-110\",documentName:\"Data_Pipeline_Architecture.pdf\",projectId:\"proj-atlas\",page:12,section:\"Ingestion\",indexedAt:\"2026-08-07T12:00:00Z\",\n  text:\"Batch ingestion runs nightly through the warehouse; streaming events arrive on a message bus for near-real-time features. Both paths write to a single feature store so training and serving read identical definitions, which removed the training and serving skew seen in the pilot.\"},\n {documentId:\"doc-111\",documentName:\"Vision_Inspection_Pilot_Findings.docx\",projectId:\"proj-vertex\",page:7,section:\"Results\",indexedAt:\"2026-08-16T20:30:00Z\",\n  text:\"The pilot reached 96.4 percent defect recall against the labelled validation set with a false positive rate of 3.1 percent. Lighting variation on the second line was the dominant error source. Recommendation is fixed lighting rigs before scaling to the remaining four lines.\"},\n {documentId:\"doc-112\",documentName:\"AI_Governance_Policy.pdf\",projectId:\"proj-meridian\",page:4,section:\"Risk Classification\",indexedAt:\"2026-08-16T09:15:00Z\",\n  text:\"Each use case is classified by risk tier at intake. High risk cases require documented human oversight, a model card, an evaluation report and a named accountable owner before production. Classification is reviewed every six months or whenever the use case materially changes.\"},\n {documentId:\"doc-113\",documentName:\"Integration_And_Orchestration_Spec.pdf\",projectId:\"proj-cascade\",page:10,section:\"Orchestration\",indexedAt:\"2026-08-05T16:12:00Z\",\n  text:\"n8n is the orchestration layer between the product surface and AI services, so retrieval, model calls and downstream actions stay outside the application code. Every workflow returns a correlation identifier, and failures land in a central error table with the payload retained for replay.\"},\n {documentId:\"doc-201\",documentName:\"Proposal_Playbook.docx\",projectId:\"proj-firm\",page:5,section:\"Response Structure\",indexedAt:\"2026-08-16T11:00:00Z\",\n  text:\"Every RFP response follows the same seven sections: executive summary, understanding of requirements, proposed solution, delivery approach and plan, team and governance, commercial model, and assumptions and exclusions. The executive summary is written last and never exceeds one page. Each requirement in the client matrix is answered with a Comply, Partially Comply or Alternative Proposed rating plus a cross reference to the section that evidences it.\"},\n {documentId:\"doc-201\",documentName:\"Proposal_Playbook.docx\",projectId:\"proj-firm\",page:9,section:\"Win Themes\",indexedAt:\"2026-08-16T11:00:00Z\",\n  text:\"Three standing win themes: measurable evaluation before production, orchestration that keeps AI logic outside application code so it can be changed without redeployment, and governance evidence produced as a by-product of delivery rather than retrofitted. Each theme must be tied to a named client outcome, never asserted on its own.\"},\n {documentId:\"doc-202\",documentName:\"Rate_Card_And_Commercial_Models.xlsx\",projectId:\"proj-firm\",page:2,section:\"Commercial Models\",indexedAt:\"2026-08-15T09:30:00Z\",\n  text:\"Three commercial models are offered: time and materials for discovery and open-ended research, fixed price for well-defined delivery phases with a signed scope baseline, and outcome-based pricing where a measurable acceptance metric exists. Fixed price requires a completed discovery and a change control clause. Outcome-based engagements require an agreed baseline measurement before work starts.\"},\n {documentId:\"doc-203\",documentName:\"Past_Performance_Case_Studies.pdf\",projectId:\"proj-firm\",page:12,section:\"Reference Engagements\",indexedAt:\"2026-08-14T16:45:00Z\",\n  text:\"Reference engagements approved for external use: a retail conversational assistant reaching production with a documented evaluation harness, a clinical document extraction platform with confidence-gated human review, and a manufacturing vision pilot achieving 96.4 percent defect recall. Client names may only be used where a written reference agreement is on file; otherwise describe the sector and scale.\"},\n {documentId:\"doc-204\",documentName:\"Bid_Qualification_Criteria.docx\",projectId:\"proj-firm\",page:3,section:\"Go No-Go\",indexedAt:\"2026-08-13T14:10:00Z\",\n  text:\"Qualify out when there is no named executive sponsor, when the evaluation criteria are price-only, when the incumbent wrote the requirements, or when the timeline gives less than ten working days for a full technical response. Qualify in when discovery is funded, when a measurable success metric already exists, and when the client will give access to subject matter experts during the bid.\"}\n];\nfunction score(q,t){\n var qs=String(q||\"\").toLowerCase().replace(/[^a-z0-9 ]/g,\" \").split(/\\s+/).filter(function(w){return w.length>2});\n if(!qs.length)return 0;\n var lt=t.toLowerCase(),hit=0;\n qs.forEach(function(w){if(lt.indexOf(w)>=0)hit++;});\n return hit/qs.length;\n}\nfunction retrieve(q,pid,k){\n var pool=CORPUS.filter(function(c){return !pid||c.projectId===pid});\n if(!pool.length)pool=CORPUS;\n var out=pool.map(function(c){return {c:c,s:score(q,c.text+\" \"+c.documentName+\" \"+c.section)};})\n  .filter(function(r){return r.s>0}).sort(function(a,b){return b.s-a.s}).slice(0,k||5);\n if(!out.length)out=pool.slice(0,Math.min(3,pool.length)).map(function(c){return {c:c,s:0.42}});\n return out.map(function(r){\n  return {documentId:r.c.documentId,documentName:r.c.documentName,projectId:r.c.projectId,page:r.c.page,section:r.c.section,\n   indexedAt:r.c.indexedAt,excerpt:r.c.text,score:Math.min(0.97,0.55+r.s*0.42)};\n });\n}\n\nvar j=$input.first().json;\nvar a=authorize(j);\nif(!a.ok)return [{json:{denied:true,code:a.code,message:a.message}}];\nvar b=j.body||{};\nvar msg=String(b.message||\"\").slice(0,6000);\nvar agentId=b.agentId||\"agent-knowledge\";\nvar projectId=b.projectId||null;\nvar atts=Array.isArray(b.attachments)?b.attachments:[];\nvar MODELS=[\n {id:\"claude-sonnet-4-6\",name:\"Claude Sonnet 4.6\",desc:\"Balanced speed and quality (default)\"},\n {id:\"claude-opus-4-7\",name:\"Claude Opus 4.7\",desc:\"Most capable for complex tasks\"},\n {id:\"claude-haiku-4-5\",name:\"Claude Haiku 4.5\",desc:\"Fastest, for quick answers\"},\n {id:\"claude-opus-5\",name:\"Claude Opus 5\",desc:\"Latest generation, deepest reasoning\"},\n {id:\"claude-sonnet-5\",name:\"Claude Sonnet 5\",desc:\"Latest generation, everyday work\"}\n];\nvar reqModel=String(b.model||\"\").trim().toLowerCase();\nvar modelSel=null;\nfor(var mi=0;mi<MODELS.length;mi++){if(MODELS[mi].id===reqModel)modelSel=MODELS[mi];}\nif(!modelSel)modelSel=MODELS[0];\nvar PERSONAS={\n \"agent-architect\":{name:\"Solution Architect Agent\",focus:\"AI solution architecture — retrieval design, chunking, reranking, model selection, prompt strategy and system trade-offs.\"},\n \"agent-proposal\":{name:\"Proposal Builder Agent\",focus:\"RFP and RFI responses — bid qualification, response structure, compliance matrices, win themes, commercial models and approved past performance.\"},\n \"agent-sql\":{name:\"Oracle Fusion SQL Agent\",focus:\"writing and running read-only SQL against Oracle Fusion, then explaining the results.\"},\n \"agent-data\":{name:\"Data Engineering Agent\",focus:\"data engineering for AI — ingestion pipelines, embeddings, feature stores, indexing, schema design and data quality.\"},\n \"agent-mlops\":{name:\"MLOps Agent\",focus:\"MLOps — release process, evaluation harnesses, regression gates, rollback, monitoring and model cards.\"},\n \"agent-integration\":{name:\"Integration Agent\",focus:\"integration and orchestration — API design, n8n workflows, tool schemas, retries, error handling and replay.\"},\n \"agent-governance\":{name:\"Governance Agent\",focus:\"AI governance — risk classification, guardrails, data protection, human oversight and audit evidence.\"},\n \"agent-knowledge\":{name:\"Knowledge Agent\",focus:\"cross-project retrieval, summarisation and research over the whole engagement knowledge base.\"}\n};\nvar persona=PERSONAS[agentId]||PERSONAS[\"agent-knowledge\"];\nvar PROJ={\"proj-northwind\":\"Northwind Retail Group — Conversational Commerce Assistant\",\n \"proj-meridian\":\"Meridian Health Network — Clinical Document Intelligence\",\n \"proj-cascade\":\"Cascade Financial — Agentic Back-Office Automation\",\n \"proj-atlas\":\"Atlas Freight Systems — Predictive Logistics Platform\",\n \"proj-vertex\":\"Vertex Manufacturing — Computer Vision Quality Inspection\",\n \"proj-firm\":\"OraDayForce — Bid & Proposal Desk\"};\nvar projLabel=PROJ[projectId]||\"the current engagement\";\nvar isSql=(agentId===\"agent-sql\");\nvar retPid=(agentId===\"agent-proposal\")?null:projectId;\nvar hits=isSql?[]:retrieve(msg,retPid,4);\nvar ctx=hits.map(function(h,i){\n return \"[S\"+(i+1)+\"] \"+h.documentName+(h.page?\" — page \"+h.page:\"\")+(h.section?\", section: \"+h.section:\"\")+\"\\n\"+h.excerpt;\n}).join(\"\\n\\n\");\nvar attLine=atts.length?(\"\\n\\nThe consultant attached these files (metadata only, contents not yet ingested): \"+atts.map(function(x){return x.name;}).join(\", \")+\". Acknowledge them briefly and offer to index them into the project knowledge base.\"):\"\";\nvar sys;\nif(isSql){\n sys=[\n  \"You are the Oracle Fusion SQL Agent inside WorkPlace, the internal AI platform used by OraDayForce.\",\n  \"You answer data questions by writing read-only Oracle SQL and running it with the Oracle Fusion SQL Runner tool, then explaining the results.\",\n  \"The person asking is \"+a.user.name+\", \"+a.user.role+\".\",\n  \"\",\n  \"TOOL USE\",\n  \"- The tool takes two arguments: sql (a single read-only SELECT or WITH...SELECT) and instance (dev2 is the default, dev1 is the alternative).\",\n  \"- Use dev2 unless the person explicitly asks for dev1. If they switch instance, keep using it for the rest of the conversation.\",\n  \"- Only SELECT is permitted. Never attempt INSERT, UPDATE, DELETE, MERGE or DDL — the engine rejects them and you must not try.\",\n  \"- Write one statement, no trailing semicolon, no stacked statements. The engine auto-caps results at 500 rows.\",\n  \"- Prefer explicit column lists over SELECT *, and add a WHERE clause or aggregate when the table is large.\",\n  \"- Query Oracle Fusion tables and views such as gl_ledgers, gl_code_combinations, gl_periods, poz_suppliers, ap_invoices_all, ar_cash_receipts_all, hr_all_organization_units. Use standard Oracle syntax.\",\n  \"\",\n  \"ANSWERING\",\n  \"- Show the SQL you ran in a fenced sql code block, then the results as a markdown table.\",\n  \"- If the tool returns success false, show the error plainly and offer a corrected query. Do not retry the same statement.\",\n  \"- If it returns zero rows, say so and suggest how to widen the filter rather than inventing data.\",\n  \"- Never fabricate rows, column names or counts. Every number you state must come from the tool result.\",\n  \"- If the request is not a data question, answer briefly and do not call the tool.\",\n  attLine\n ].join(\"\\n\");\n}else{\n var extra=\"\";\n if(agentId===\"agent-proposal\"){\n  extra=[\"\",\"PROPOSAL RULES\",\n  \"- Follow the seven-section response structure from the playbook unless the client RFP mandates its own.\",\n  \"- For compliance matrices use Comply, Partially Comply or Alternative Proposed, with a cross reference to the section that evidences the claim.\",\n  \"- Tie every win theme to a named client outcome; never assert a theme on its own.\",\n  \"- Only cite reference engagements approved for external use, and only name a client where a reference agreement is on file — otherwise describe sector and scale.\",\n  \"- Never invent pricing, rates, headcount or delivery dates. If a commercial number is needed and not in the retrieved passages, mark it as [TO BE CONFIRMED WITH THE BID LEAD].\",\n  \"- When asked whether to bid, walk the qualification criteria and give a clear go or no-go with reasons.\"].join(\"\\n\");\n }\n sys=[\n  \"You are the \"+persona.name+\" inside WorkPlace, the internal AI agent platform used by OraDayForce, an AI development consultancy.\",\n  \"Your specialism is \"+persona.focus,\n  \"You are answering for: \"+projLabel+\".\",\n  \"The person asking is \"+a.user.name+\", \"+a.user.role+\".\",\n  \"You have no tools available. Never attempt to call a tool.\",\n  \"\",\n  \"RETRIEVED KNOWLEDGE (from the pgvector knowledge base):\",\n  ctx||\"(no passages retrieved)\",\n  \"\",\n  \"How to answer:\",\n  \"- Ground your answer in the retrieved passages. Where a statement comes from a passage, append its marker, for example [S1], at the end of that sentence.\",\n  \"- If the passages do not cover the question, say so plainly and answer from general practice, clearly flagged as general guidance.\",\n  \"- Write like a senior consultant briefing a colleague: direct, specific, no filler, no restating the question.\",\n  \"- Use markdown. Prefer short labelled sections, numbered steps for processes, and a markdown table when comparing options.\",\n  \"- Keep it to roughly 200-400 words unless the question genuinely needs more.\",\n  \"- Never invent document names, page numbers, metrics or client data that are not in the retrieved passages.\",\n  extra,\n  attLine\n ].join(\"\\n\");\n}\nreturn [{json:{denied:false,systemPrompt:sys,userPrompt:msg,sources:hits.map(function(h){\n return {documentId:h.documentId,documentName:h.documentName,projectId:h.projectId,page:h.page,section:h.section};\n}),agentId:agentId,projectId:projectId,modelId:modelSel.id,modelLabel:modelSel.name,conversationId:b.conversationId||(\"conv-\"+Date.now().toString(36)),\n requestId:\"req-\"+Date.now().toString(36)}}];\n"
+   }
+  },
+  {
+   "id": "08f5d641-b1e2-4527-87fe-e0d525d3551d",
+   "name": "WorkPlace Agent",
+   "type": "@n8n/n8n-nodes-langchain.agent",
+   "typeVersion": 3.1,
+   "position": [
+    512,
+    448
+   ],
+   "parameters": {
+    "promptType": "define",
+    "text": "={{ $json.userPrompt || \"denied\" }}",
+    "options": {
+     "systemMessage": "={{ $json.systemPrompt || \"Respond with nothing.\" }}",
+     "maxIterations": 6,
+     "enableStreaming": false
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "44a67ab7-43fc-4495-9c34-a8960c39b7f2",
+   "name": "Claude (Anthropic)",
+   "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+   "typeVersion": 1.5,
+   "position": [
+    448,
+    672
+   ],
+   "parameters": {
+    "model": {
+     "__rl": true,
+     "mode": "id",
+     "value": "={{ $('Build Agent Context').first().json.modelId || 'claude-sonnet-4-6' }}"
+    },
+    "options": {
+     "maxTokensToSample": 2500,
+     "temperature": 0.3
+    }
+   }
+  },
+  {
+   "id": "20201099-ce92-4cbe-8dc8-3ba24d875d35",
+   "name": "Conversation Memory",
+   "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+   "typeVersion": 1.4,
+   "position": [
+    576,
+    672
+   ],
+   "parameters": {
+    "sessionIdType": "customKey",
+    "sessionKey": "={{ $('Agent Chat Request').item.json.body.conversationId }}",
+    "contextWindowLength": 12
+   }
+  },
+  {
+   "id": "f25680d9-8b4f-4c16-9a00-cf0c5dbed9ca",
+   "name": "Oracle Fusion SQL Runner",
+   "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+   "typeVersion": 2.2,
+   "position": [
+    704,
+    672
+   ],
+   "parameters": {
+    "description": "Run a single read-only SELECT against Oracle Fusion via BI Publisher and return JSON rows. Only the Oracle Fusion SQL Agent should call this, and only for live data questions. Rejects anything that is not a SELECT and caps results at 500 rows.",
+    "source": "database",
+    "workflowId": {
+     "__rl": true,
+     "mode": "list",
+     "value": "7D7sosEIURPDLjRR",
+     "cachedResultName": "Oracle Fusion BIP - SQL Runner (Engine)"
+    },
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "sql": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sql', 'A single read-only Oracle SQL SELECT or WITH...SELECT statement, no trailing semicolon') }}",
+      "instance": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('instance', 'Target Fusion instance: dev2 (default) or dev1') }}"
+     }
+    }
+   }
+  },
+  {
+   "id": "14ddab06-4bd0-47ae-861d-cf86cb055d05",
+   "name": "Format Agent Reply",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    912,
+    560
+   ],
+   "parameters": {
+    "mode": "runOnceForAllItems",
+    "language": "javaScript",
+    "jsCode": "\nvar ctx=$(\"Build Agent Context\").first().json;\nif(ctx.denied)return [{json:{success:false,requestId:\"req-\"+Date.now().toString(36),error:{code:ctx.code,message:ctx.message}}}];\nvar item=$input.first().json||{};\nvar out=(item.output||item.text||\"\").toString().trim();\nvar model={id:ctx.modelId||\"claude-sonnet-4-6\",label:ctx.modelLabel||\"Claude Sonnet 4.6\"};\nvar errMsg=\"\";\nif(item.error){errMsg=(typeof item.error===\"string\")?item.error:(item.error.message||item.error.description||JSON.stringify(item.error));}\nvar mode=\"claude\";\nif(!out&&errMsg){\n mode=\"error\";\n out=\"**\"+model.label+\"** could not answer this request.\\n\\n> \"+String(errMsg).replace(/\\s+/g,\" \").slice(0,400)+\"\\n\\nPick a different model from the selector next to the attach button and send the message again.\";\n ctx=Object.assign({},ctx,{sources:[]});\n}\nif(!out){\n mode=\"demo\";\n var FB={\n  \"agent-architect\":\"## Retrieval design\\n\\nThe retrieval layer is **hybrid**: BM25 lexical scoring combined with dense vector similarity, fused with reciprocal rank fusion [S1].\\n\\n| Parameter | Setting | Why |\\n| --- | --- | --- |\\n| Chunk size | 800 tokens | Tested best on the evaluation set [S1] |\\n| Overlap | 120 tokens | Preserves context across boundaries [S1] |\\n| Candidates | Top 25 | Feeds the reranker [S2] |\\n| Returned | Top 6 | Passed to generation [S2] |\\n\\n**Reranking.** A cross-encoder runs over the top 25 candidates and returns 6, adding 11 points of answer accuracy on the golden set at roughly 180ms per query [S2].\",\n  \"agent-proposal\":\"## Executive summary — draft\\n\\nWrite this section last, and keep it to one page [S1].\\n\\n**Structure.** The response follows seven sections: executive summary, understanding of requirements, proposed solution, delivery approach and plan, team and governance, commercial model, and assumptions and exclusions [S1]. Each client requirement gets a Comply, Partially Comply or Alternative Proposed rating with a cross reference to the section that evidences it [S1].\\n\\n**Win themes to lead with**\\n\\n1. Measurable evaluation before production — tie to the client stated accuracy or risk outcome [S2]\\n2. Orchestration that keeps AI logic outside application code, so changes ship without redeployment [S2]\\n3. Governance evidence produced as a by-product of delivery rather than retrofitted [S2]\\n\\nEach theme must be anchored to a named client outcome, never asserted on its own [S2].\\n\\n**Commercial.** Fixed price needs a completed discovery and a change control clause; outcome-based pricing needs an agreed baseline measurement before work starts [S3]. Any rate not in the playbook is [TO BE CONFIRMED WITH THE BID LEAD].\\n\\nSend me the requirement list and I will draft the compliance matrix row by row.\",\n  \"_default\":\"Here is what the engagement knowledge base holds on this. The retrieved passages cover the decisions, constraints and controls that apply, with citations below pointing to the exact document, page and section.\\n\\n**Note:** this response was generated in demo mode because the model credential is not returning output.\"\n };\n out=FB[ctx.agentId]||FB._default;\n}\nvar srcs=ctx.sources||[],used=[];\nsrcs.forEach(function(s,i){if(out.indexOf(\"[S\"+(i+1)+\"]\")>=0)used.push(s);});\nif(!used.length)used=srcs.slice(0,3);\nfor(var i=1;i<=8;i++){out=out.split(\"[S\"+i+\"]\").join(\"\");}\nout=out.replace(/[ \\t]+([.,;:])/g,\"$1\").replace(/[ \\t]{2,}/g,\" \").trim();\nvar seen={},uniq=[];\nused.forEach(function(s){var k=s.documentId+\"|\"+s.page;if(!seen[k]){seen[k]=1;uniq.push(s);}});\nreturn [{json:{success:true,requestId:ctx.requestId,conversationId:ctx.conversationId,mode:mode,model:model,\n message:{role:\"assistant\",content:out,sources:uniq}}}];\n"
+   }
+  },
+  {
+   "id": "49a8c1ad-7c72-44fa-ac34-d694eaf91dce",
+   "name": "Return Agent Reply",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.5,
+   "position": [
+    1136,
+    560
+   ],
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "={{ $json }}"
+   }
+  },
+  {
+   "id": "bc20d2e5-e771-43e6-8792-2e7302b030e4",
+   "name": "Knowledge Search Request",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2.1,
+   "position": [
+    0,
+    880
+   ],
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "workplace/svc/search",
+    "responseMode": "responseNode"
+   },
+   "webhookId": "2d8e6471-5e4a-44c3-9684-61e837c95db5"
+  },
+  {
+   "id": "b1dff477-9326-4c7b-a697-67939cdeef11",
+   "name": "Search Knowledge Index",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    224,
+    880
+   ],
+   "parameters": {
+    "mode": "runOnceForAllItems",
+    "language": "javaScript",
+    "jsCode": "\nfunction sessions(){var sd=$getWorkflowStaticData('global');if(!sd.sessions)sd.sessions={};return sd.sessions;}\nfunction readToken(j){\n var h=j.headers||{};\n var a=h.authorization||h.Authorization||\"\";\n if(a.indexOf(\"Bearer \")===0)return a.slice(7).trim();\n var b=j.body||{};\n return (b.token||\"\").toString().trim();\n}\nfunction authorize(j){\n var t=readToken(j);\n if(!t)return {ok:false,code:\"UNAUTHENTICATED\",message:\"Sign in to access this workspace.\"};\n var s=sessions()[t];\n if(!s)return {ok:false,code:\"INVALID_SESSION\",message:\"Your session is no longer valid. Please sign in again.\"};\n if(Date.now()>s.exp){delete sessions()[t];return {ok:false,code:\"SESSION_EXPIRED\",message:\"Your session has expired. Please sign in again.\"};}\n return {ok:true,user:{id:s.id,name:s.name,email:s.email,role:s.role,initials:s.initials}};\n}\nfunction deny(a){return [{json:{success:false,requestId:\"req-\"+Date.now().toString(36),error:{code:a.code,message:a.message}}}];}\n\nvar CORPUS=[\n {documentId:\"doc-101\",documentName:\"RAG_Architecture_Blueprint.pdf\",projectId:\"proj-northwind\",page:14,section:\"Retrieval Design\",indexedAt:\"2026-08-14T15:20:00Z\",\n  text:\"The retrieval layer uses hybrid search: BM25 lexical scoring combined with dense vector similarity, fused with reciprocal rank fusion. Chunk size is 800 tokens with 120 tokens of overlap, which tested best against the evaluation set. Every chunk carries product category, locale and document version as metadata so retrieval can be filtered before ranking.\"},\n {documentId:\"doc-101\",documentName:\"RAG_Architecture_Blueprint.pdf\",projectId:\"proj-northwind\",page:19,section:\"Reranking\",indexedAt:\"2026-08-14T15:20:00Z\",\n  text:\"A cross-encoder reranker runs over the top 25 candidates and returns the top 6 to the generation step. Reranking added 11 points of answer accuracy on the golden set at a cost of roughly 180 milliseconds per query. Below 12 candidates the reranker provides no measurable benefit.\"},\n {documentId:\"doc-102\",documentName:\"Evaluation_Framework.docx\",projectId:\"proj-northwind\",page:6,section:\"Metrics\",indexedAt:\"2026-08-13T09:41:00Z\",\n  text:\"Four metrics gate every release: context precision, context recall, answer faithfulness and answer relevance. Faithfulness below 0.85 blocks deployment. The golden set holds 240 question and answer pairs curated with the client subject matter experts and is versioned alongside the prompt templates.\"},\n {documentId:\"doc-103\",documentName:\"Guardrails_And_Safety_Design.pdf\",projectId:\"proj-northwind\",page:8,section:\"Input Guardrails\",indexedAt:\"2026-08-12T11:02:00Z\",\n  text:\"Input guardrails screen for prompt injection, personal data and out-of-scope intent before the request reaches the model. Output guardrails check for unsupported claims, competitor mentions and pricing statements. Any response failing a guardrail is replaced with a deterministic fallback and logged for review.\"},\n {documentId:\"doc-104\",documentName:\"Vector_Store_Selection.md\",projectId:\"proj-northwind\",page:3,section:\"Decision\",indexedAt:\"2026-08-10T18:15:00Z\",\n  text:\"pgvector on Cloud SQL was selected over a dedicated vector database because the corpus sits below ten million chunks, the team already operates PostgreSQL, and transactional metadata can be joined directly to embeddings. An HNSW index is used with m set to 16 and ef_construction set to 64.\"},\n {documentId:\"doc-105\",documentName:\"Clinical_Document_Intelligence_Design.pdf\",projectId:\"proj-meridian\",page:11,section:\"Extraction Pipeline\",indexedAt:\"2026-08-15T13:30:00Z\",\n  text:\"Scanned clinical documents pass through layout-aware OCR before extraction. Structured fields are pulled with a schema-constrained model call and every field carries a confidence score. Anything below 0.9 routes to a human reviewer queue rather than flowing downstream automatically.\"},\n {documentId:\"doc-106\",documentName:\"PHI_Handling_And_Compliance.docx\",projectId:\"proj-meridian\",page:5,section:\"Data Protection\",indexedAt:\"2026-08-15T13:30:00Z\",\n  text:\"Protected health information is redacted before any text leaves the customer boundary. De-identification runs as a separate service and its output is what gets embedded. Raw documents remain in the encrypted bucket with customer-managed keys and a ninety day retention policy.\"},\n {documentId:\"doc-107\",documentName:\"MLOps_Deployment_Runbook.docx\",projectId:\"proj-cascade\",page:9,section:\"Release Process\",indexedAt:\"2026-08-09T10:05:00Z\",\n  text:\"Prompt and model changes ship through the same pipeline as code. Every candidate runs against the evaluation suite in staging, and promotion requires no metric regressing more than two percent. Rollback is a config flag pointing at the previous prompt version and takes under a minute.\"},\n {documentId:\"doc-108\",documentName:\"Agentic_Workflow_Patterns.pdf\",projectId:\"proj-cascade\",page:17,section:\"Tool Use\",indexedAt:\"2026-08-11T14:22:00Z\",\n  text:\"Agents are given narrow tools with explicit schemas rather than broad system access. Any action that writes to a downstream system requires a human approval gate in phase one. Agent runs are capped at eight tool calls, after which the run halts and escalates rather than looping.\"},\n {documentId:\"doc-109\",documentName:\"Predictive_Logistics_Model_Card.md\",projectId:\"proj-atlas\",page:2,section:\"Model Details\",indexedAt:\"2026-08-08T08:50:00Z\",\n  text:\"The delay prediction model is a gradient boosted ensemble trained on thirty months of shipment history. Features cover route, carrier, seasonality, weather and historic dwell time. Known limitation: performance degrades for lanes with fewer than two hundred historic shipments, which are routed to a rules-based fallback.\"},\n {documentId:\"doc-110\",documentName:\"Data_Pipeline_Architecture.pdf\",projectId:\"proj-atlas\",page:12,section:\"Ingestion\",indexedAt:\"2026-08-07T12:00:00Z\",\n  text:\"Batch ingestion runs nightly through the warehouse; streaming events arrive on a message bus for near-real-time features. Both paths write to a single feature store so training and serving read identical definitions, which removed the training and serving skew seen in the pilot.\"},\n {documentId:\"doc-111\",documentName:\"Vision_Inspection_Pilot_Findings.docx\",projectId:\"proj-vertex\",page:7,section:\"Results\",indexedAt:\"2026-08-16T20:30:00Z\",\n  text:\"The pilot reached 96.4 percent defect recall against the labelled validation set with a false positive rate of 3.1 percent. Lighting variation on the second line was the dominant error source. Recommendation is fixed lighting rigs before scaling to the remaining four lines.\"},\n {documentId:\"doc-112\",documentName:\"AI_Governance_Policy.pdf\",projectId:\"proj-meridian\",page:4,section:\"Risk Classification\",indexedAt:\"2026-08-16T09:15:00Z\",\n  text:\"Each use case is classified by risk tier at intake. High risk cases require documented human oversight, a model card, an evaluation report and a named accountable owner before production. Classification is reviewed every six months or whenever the use case materially changes.\"},\n {documentId:\"doc-113\",documentName:\"Integration_And_Orchestration_Spec.pdf\",projectId:\"proj-cascade\",page:10,section:\"Orchestration\",indexedAt:\"2026-08-05T16:12:00Z\",\n  text:\"n8n is the orchestration layer between the product surface and AI services, so retrieval, model calls and downstream actions stay outside the application code. Every workflow returns a correlation identifier, and failures land in a central error table with the payload retained for replay.\"},\n {documentId:\"doc-201\",documentName:\"Proposal_Playbook.docx\",projectId:\"proj-firm\",page:5,section:\"Response Structure\",indexedAt:\"2026-08-16T11:00:00Z\",\n  text:\"Every RFP response follows the same seven sections: executive summary, understanding of requirements, proposed solution, delivery approach and plan, team and governance, commercial model, and assumptions and exclusions. The executive summary is written last and never exceeds one page. Each requirement in the client matrix is answered with a Comply, Partially Comply or Alternative Proposed rating plus a cross reference to the section that evidences it.\"},\n {documentId:\"doc-201\",documentName:\"Proposal_Playbook.docx\",projectId:\"proj-firm\",page:9,section:\"Win Themes\",indexedAt:\"2026-08-16T11:00:00Z\",\n  text:\"Three standing win themes: measurable evaluation before production, orchestration that keeps AI logic outside application code so it can be changed without redeployment, and governance evidence produced as a by-product of delivery rather than retrofitted. Each theme must be tied to a named client outcome, never asserted on its own.\"},\n {documentId:\"doc-202\",documentName:\"Rate_Card_And_Commercial_Models.xlsx\",projectId:\"proj-firm\",page:2,section:\"Commercial Models\",indexedAt:\"2026-08-15T09:30:00Z\",\n  text:\"Three commercial models are offered: time and materials for discovery and open-ended research, fixed price for well-defined delivery phases with a signed scope baseline, and outcome-based pricing where a measurable acceptance metric exists. Fixed price requires a completed discovery and a change control clause. Outcome-based engagements require an agreed baseline measurement before work starts.\"},\n {documentId:\"doc-203\",documentName:\"Past_Performance_Case_Studies.pdf\",projectId:\"proj-firm\",page:12,section:\"Reference Engagements\",indexedAt:\"2026-08-14T16:45:00Z\",\n  text:\"Reference engagements approved for external use: a retail conversational assistant reaching production with a documented evaluation harness, a clinical document extraction platform with confidence-gated human review, and a manufacturing vision pilot achieving 96.4 percent defect recall. Client names may only be used where a written reference agreement is on file; otherwise describe the sector and scale.\"},\n {documentId:\"doc-204\",documentName:\"Bid_Qualification_Criteria.docx\",projectId:\"proj-firm\",page:3,section:\"Go No-Go\",indexedAt:\"2026-08-13T14:10:00Z\",\n  text:\"Qualify out when there is no named executive sponsor, when the evaluation criteria are price-only, when the incumbent wrote the requirements, or when the timeline gives less than ten working days for a full technical response. Qualify in when discovery is funded, when a measurable success metric already exists, and when the client will give access to subject matter experts during the bid.\"}\n];\nfunction score(q,t){\n var qs=String(q||\"\").toLowerCase().replace(/[^a-z0-9 ]/g,\" \").split(/\\s+/).filter(function(w){return w.length>2});\n if(!qs.length)return 0;\n var lt=t.toLowerCase(),hit=0;\n qs.forEach(function(w){if(lt.indexOf(w)>=0)hit++;});\n return hit/qs.length;\n}\nfunction retrieve(q,pid,k){\n var pool=CORPUS.filter(function(c){return !pid||c.projectId===pid});\n if(!pool.length)pool=CORPUS;\n var out=pool.map(function(c){return {c:c,s:score(q,c.text+\" \"+c.documentName+\" \"+c.section)};})\n  .filter(function(r){return r.s>0}).sort(function(a,b){return b.s-a.s}).slice(0,k||5);\n if(!out.length)out=pool.slice(0,Math.min(3,pool.length)).map(function(c){return {c:c,s:0.42}});\n return out.map(function(r){\n  return {documentId:r.c.documentId,documentName:r.c.documentName,projectId:r.c.projectId,page:r.c.page,section:r.c.section,\n   indexedAt:r.c.indexedAt,excerpt:r.c.text,score:Math.min(0.97,0.55+r.s*0.42)};\n });\n}\n\nvar j=$input.first().json;\nvar a=authorize(j);\nif(!a.ok)return deny(a);\nvar b=j.body||{};\nvar q=String(b.query||\"\").trim();\nvar pid=b.projectId||null;\nvar k=Math.min(Math.max(parseInt(b.topK,10)||5,1),10);\nvar rid=\"req-\"+Date.now().toString(36);\nif(!q)return [{json:{success:false,requestId:rid,error:{code:\"INVALID_QUERY\",message:\"A search query is required.\"}}}];\nvar results=retrieve(q,pid,k).map(function(r){\n var e=r.excerpt.length>260?r.excerpt.slice(0,257)+\"...\":r.excerpt;\n return {documentId:r.documentId,documentName:r.documentName,projectId:r.projectId,page:r.page,section:r.section,\n  excerpt:e,score:Number(r.score.toFixed(3)),indexedAt:r.indexedAt};\n});\nreturn [{json:{success:true,requestId:rid,data:{query:q,projectId:pid,strategy:\"pgvector cosine similarity\",results:results,count:results.length}}}];\n"
+   }
+  },
+  {
+   "id": "f983e197-475d-433b-82e1-abb8cc9d44c8",
+   "name": "Return Search Results",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.5,
+   "position": [
+    448,
+    880
+   ],
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "={{ $json }}"
+   }
+  },
+  {
+   "id": "786e0218-766d-43b5-9c7a-96bd024ea574",
+   "name": "Document Ingest Request",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2.1,
+   "position": [
+    0,
+    1104
+   ],
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "workplace/svc/ingest",
+    "responseMode": "responseNode"
+   },
+   "webhookId": "36d48623-2eaf-4d9c-8154-be502d822a22"
+  },
+  {
+   "id": "1172a2af-3642-4b8c-aac1-c80c7f1a4c9d",
+   "name": "Plan Ingestion Job",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    224,
+    1104
+   ],
+   "parameters": {
+    "mode": "runOnceForAllItems",
+    "language": "javaScript",
+    "jsCode": "\nfunction sessions(){var sd=$getWorkflowStaticData('global');if(!sd.sessions)sd.sessions={};return sd.sessions;}\nfunction readToken(j){\n var h=j.headers||{};\n var a=h.authorization||h.Authorization||\"\";\n if(a.indexOf(\"Bearer \")===0)return a.slice(7).trim();\n var b=j.body||{};\n return (b.token||\"\").toString().trim();\n}\nfunction authorize(j){\n var t=readToken(j);\n if(!t)return {ok:false,code:\"UNAUTHENTICATED\",message:\"Sign in to access this workspace.\"};\n var s=sessions()[t];\n if(!s)return {ok:false,code:\"INVALID_SESSION\",message:\"Your session is no longer valid. Please sign in again.\"};\n if(Date.now()>s.exp){delete sessions()[t];return {ok:false,code:\"SESSION_EXPIRED\",message:\"Your session has expired. Please sign in again.\"};}\n return {ok:true,user:{id:s.id,name:s.name,email:s.email,role:s.role,initials:s.initials}};\n}\nfunction deny(a){return [{json:{success:false,requestId:\"req-\"+Date.now().toString(36),error:{code:a.code,message:a.message}}}];}\n\nvar j=$input.first().json;\nvar a=authorize(j);\nif(!a.ok)return deny(a);\nvar b=j.body||{};\nvar rid=\"req-\"+Date.now().toString(36);\nvar missing=[\"documentId\",\"fileName\"].filter(function(f){return !b[f];});\nif(missing.length)return [{json:{success:false,requestId:rid,error:{code:\"INVALID_INGESTION_REQUEST\",message:\"Missing required field(s): \"+missing.join(\", \")+\".\"}}}];\nvar name=String(b.fileName);\nvar ext=(name.split(\".\").pop()||\"\").toLowerCase();\nvar allowed=[\"pdf\",\"docx\",\"doc\",\"txt\",\"csv\",\"xlsx\",\"xls\",\"md\"];\nif(allowed.indexOf(ext)<0)return [{json:{success:false,requestId:rid,error:{code:\"UNSUPPORTED_FILE_TYPE\",message:\"Files of type .\"+ext+\" cannot be indexed. Supported: \"+allowed.join(\", \")+\".\"}}}];\nvar size=Number(b.size)||0;\nif(size>50*1024*1024)return [{json:{success:false,requestId:rid,error:{code:\"FILE_TOO_LARGE\",message:\"The document exceeds the 50 MB ingestion limit.\"}}}];\nreturn [{json:{success:true,requestId:rid,data:{\n jobId:\"ingest-\"+Math.random().toString(36).slice(2,10),\n documentId:b.documentId,projectId:b.projectId||null,fileName:name,mimeType:b.mimeType||null,\n storagePath:b.storagePath||(\"gs://workplace-knowledge/projects/\"+(b.projectId||\"unassigned\")+\"/documents/\"+b.documentId+\"/\"+name),\n status:\"queued\",requestedBy:a.user.email,\n stages:[{status:\"processing\",label:\"Retrieving object from Cloud Storage\",ms:700},\n  {status:\"extracting\",label:\"Parsing and extracting text\",ms:1000},\n  {status:\"chunking\",label:\"Normalising and chunking content\",ms:850},\n  {status:\"embedding\",label:\"Generating embeddings\",ms:1200}],\n estimatedChunks:Math.max(8,Math.round((size||400000)/2600)),\n vectorStore:{engine:\"postgresql/pgvector\",table:\"document_chunks\"},\n acceptedAt:new Date().toISOString()}}}];\n"
+   }
+  },
+  {
+   "id": "655e0b1d-db80-4713-8e19-69632a46f433",
+   "name": "Return Ingest Status",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.5,
+   "position": [
+    448,
+    1104
+   ],
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "={{ $json }}"
+   }
+  },
+  {
+   "id": "9b1fffad-4767-4ccf-854a-757cf211bde3",
+   "name": "Sticky Note ba7c2f60",
+   "type": "n8n-nodes-base.stickyNote",
+   "typeVersion": 1,
+   "position": [
+    576,
+    1168
+   ],
+   "parameters": {
+    "content": "## Authentication — single account\nOnly raju@oradayforce.com can sign in. Password is salted with the email and SHA-256 hashed by the Crypto node, then compared against the USERS array in Verify Credentials. Sessions live in workflow static data for 12 hours.",
+    "color": 3,
+    "width": 1140,
+    "height": 200
+   }
+  },
+  {
+   "id": "6412b7d1-1d61-485f-886b-37dd3304e762",
+   "name": "Sticky Note b5100d13",
+   "type": "n8n-nodes-base.stickyNote",
+   "typeVersion": 1,
+   "position": [
+    576,
+    1168
+   ],
+   "parameters": {
+    "content": "## Workspace Data\nOraDayForce portfolio — 6 projects (5 client engagements plus the internal Bid & Proposal Desk), 8 agents, 21 documents.",
+    "color": 5,
+    "width": 860,
+    "height": 200
+   }
+  },
+  {
+   "id": "a2a4ef52-603b-4ec2-94c5-17a3a896a204",
+   "name": "Sticky Note 8a977d41",
+   "type": "n8n-nodes-base.stickyNote",
+   "typeVersion": 1,
+   "position": [
+    576,
+    1168
+   ],
+   "parameters": {
+    "content": "## Agent Chat\nBuild Agent Context selects the persona and either retrieves grounding passages OR, for the SQL agent, switches to tool mode with no retrieval.\n\nThe Oracle Fusion SQL Runner tool calls the existing BIP engine workflow (read-only SELECT, 500 row cap). Only the SQL agent is told the tool exists; every other persona is instructed it has no tools.\n\nModel selection: the UI sends `model` with every chat request (picker next to the attach button). Build Agent Context validates it against the MODELS allowlist and emits modelId; the Claude node reads that by expression, so one node serves every model.",
+    "color": 4,
+    "width": 1460,
+    "height": 200
+   }
+  },
+  {
+   "id": "af9b062d-2a2b-4c8e-974e-b2f4b8792e29",
+   "name": "Sticky Note 00a41f1b",
+   "type": "n8n-nodes-base.stickyNote",
+   "typeVersion": 1,
+   "position": [
+    576,
+    1168
+   ],
+   "parameters": {
+    "content": "## Retrieval + Ingestion\nSearch runs a pgvector-style cosine query over the AI-engineering and proposal corpus. Ingestion validates type, size and payload, then returns the pipeline plan.",
+    "color": 6,
+    "width": 580,
+    "height": 400
+   }
+  }
+ ],
+ "connections": {
+  "Login Request": {
+   "main": [
+    [
+     {
+      "node": "Hash Password",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Hash Password": {
+   "main": [
+    [
+     {
+      "node": "Verify Credentials",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Verify Credentials": {
+   "main": [
+    [
+     {
+      "node": "Return Session",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Bootstrap Request": {
+   "main": [
+    [
+     {
+      "node": "Load Workspace Data",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Load Workspace Data": {
+   "main": [
+    [
+     {
+      "node": "Return Workspace Data",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Agent Chat Request": {
+   "main": [
+    [
+     {
+      "node": "Build Agent Context",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Build Agent Context": {
+   "main": [
+    [
+     {
+      "node": "WorkPlace Agent",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "WorkPlace Agent": {
+   "main": [
+    [
+     {
+      "node": "Format Agent Reply",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Claude (Anthropic)": {
+   "ai_languageModel": [
+    [
+     {
+      "node": "WorkPlace Agent",
+      "type": "ai_languageModel",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Conversation Memory": {
+   "ai_memory": [
+    [
+     {
+      "node": "WorkPlace Agent",
+      "type": "ai_memory",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Oracle Fusion SQL Runner": {
+   "ai_tool": [
+    [
+     {
+      "node": "WorkPlace Agent",
+      "type": "ai_tool",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Format Agent Reply": {
+   "main": [
+    [
+     {
+      "node": "Return Agent Reply",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Knowledge Search Request": {
+   "main": [
+    [
+     {
+      "node": "Search Knowledge Index",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Search Knowledge Index": {
+   "main": [
+    [
+     {
+      "node": "Return Search Results",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Document Ingest Request": {
+   "main": [
+    [
+     {
+      "node": "Plan Ingestion Job",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Plan Ingestion Job": {
+   "main": [
+    [
+     {
+      "node": "Return Ingest Status",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ }
+}
