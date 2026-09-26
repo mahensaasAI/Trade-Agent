@@ -561,7 +561,7 @@ function modelPicker(){}/* replaced further down */
 function vEvents(){
  var evs=(S.boot||{}).events||[];
  var list=evs.length?'<div class="evs">'+evs.map(function(e){return '<div class="card ev" onclick="A.go(\'#/events/'+attr(e.id)+'\')"><div class="row between"><span class="badge '+(e.status==="live"?"ok":e.status==="done"?"":"info")+'">'+esc(e.status)+'</span><span class="badge">'+esc(e.my_role)+'</span></div><h3>'+esc(e.title)+'</h3><div class="when">'+(e.starts_at?fmtDT(e.starts_at)+' <span class="muted">('+until(e.starts_at)+')</span>':'<span class="muted">date not set</span>')+(e.venue?' - '+esc(e.venue):"")+'</div><div class="stats"><span>'+ic("users")+' '+e.going+' going / '+e.members+'</span><span>'+ic("chk")+' '+e.open_tasks+' open of '+e.tasks+'</span></div></div>';}).join("")+'</div>':'<div class="card"><div class="empty">No events yet. Create one, or join with the code the organiser shared.</div></div>';
- return '<div class="row between" style="margin-bottom:14px"><div><h2 style="font-size:20px;letter-spacing:-.4px">Your events</h2><div class="muted small">Logistics, information and communication for each event in one place. '+(actor().kind==="guest"?'Events you create as a guest move to your account when you <a href="#" onclick="A.openSignIn();return false">sign in</a>.':"")+'</div></div><div class="row"><form class="row" onsubmit="return A.joinEvent(this)"><input name="code" placeholder="Event code" maxlength="12" style="padding:8px 10px;border:1px solid var(--line2);border-radius:9px;width:130px;text-transform:uppercase" required><button class="btn" type="submit">Join</button></form><button class="btn p" onclick="A.newEvent()">'+ic("plus")+'New event</button></div></div>'+list+'<div class="card" style="margin-top:16px"><div class="hd">'+ic("cal")+'<h3>Event Planner agent</h3><div class="sp"></div><span class="muted small">Open an event to plan it with live data</span></div><div class="bd small muted">The planner drafts checklists, roles, budgets and announcements from a short brief. It works best inside an event, where it can see the tasks, RSVPs and updates and add its suggestions with one click.</div></div>';
+ return '<div class="row between" style="margin-bottom:14px"><div><h2 style="font-size:20px;letter-spacing:-.4px">Your events</h2><div class="muted small">Logistics, information and communication for each event in one place. '+(actor().kind==="guest"?'Events you create as a guest move to your account when you <a href="#" onclick="A.openSignIn();return false">sign in</a>.':"")+'</div></div><div class="row"><form class="row" onsubmit="return A.joinEvent(this)"><input name="code" placeholder="Event code" maxlength="12" style="padding:8px 10px;border:1px solid var(--line2);border-radius:9px;width:130px;text-transform:uppercase" required><button class="btn" type="submit">Join</button></form><button class="btn p" onclick="A.agpOpen()">'+ic("spark")+'Agent Planner</button></div></div>'+list+'<div class="card" style="margin-top:16px"><div class="hd">'+ic("cal")+'<h3>Event Planner agent</h3><div class="sp"></div><span class="muted small">Open an event to plan it with live data</span></div><div class="bd small muted">The planner drafts checklists, roles, budgets and announcements from a short brief. It works best inside an event, where it can see the tasks, RSVPs and updates and add its suggestions with one click.</div></div>';
 }
 function eventForm(e){
  e=e||{};
@@ -2893,7 +2893,208 @@ var V41_TYPES_MSG="This kind of file can't be uploaded. Upload a document (PDF, 
  ".v40body audio.v40media{display:block;width:min(640px,calc(100% - 32px));margin:48px auto}";
  document.head.appendChild(st);})();
 
-// ---- v44: Y Square Community - Startups and Jobs ----------------------------------------------------------------------
+// ---- v44: Agent Planner - create an event from a sentence, typed or spoken -------------------------------------------
+// The Events page's "New event" button is now "Agent Planner". People describe the event in their own words or tap the
+// mic (the browser's own speech recognition, as in the chats; nothing is recorded or sent anywhere else). The Event
+// Planner agent reads it into the event fields (task "draft_event"). When the name, the date or the start time is
+// missing it asks for just that; everything else (end time, venue, address, guests, budget, brief) can wait. The event
+// is then created straight away through events.create and opened, and organisers see a "Still to add" card with an
+// Add details button (the existing Edit form). The manual form is still one click away inside the Agent Planner.
+(function(){var st=document.createElement("style");st.id="v44css";st.textContent=
+ ".modal:has(.agp){width:min(560px,100%)}"+
+ ".agp h2{display:flex;align-items:center;gap:8px}"+
+ ".agp-log{display:grid;gap:8px;margin:4px 0 12px;max-height:42vh;overflow-y:auto;padding-right:2px}"+
+ ".agp-b{padding:9px 12px;border-radius:12px;max-width:88%;font-size:14px;line-height:1.45;white-space:pre-wrap;word-break:break-word}"+
+ ".agp-b.u{justify-self:end;background:var(--acs);border:1px solid var(--acl)}"+
+ ".agp-b.a{justify-self:start;background:var(--panel2);border:1px solid var(--line)}"+
+ ".agp-b.e{justify-self:start;background:var(--errs);border:1px solid var(--err);color:var(--err)}"+
+ ".agp-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;white-space:normal}"+
+ ".agp-chips span{font-size:12px;line-height:1.5;padding:2px 9px;border-radius:999px;background:var(--panel);border:1px solid var(--line2);color:var(--tx2)}"+
+ ".agp-in{display:flex;gap:8px;align-items:flex-end}"+
+ ".agp-in textarea{flex:1;min-width:0;min-height:84px;max-height:200px;resize:vertical;padding:10px 12px;border:1px solid var(--line2);border-radius:10px;background:var(--panel);line-height:1.45}"+
+ ".agp-in textarea:focus{border-color:var(--ac);outline:none;box-shadow:0 0 0 3px var(--acl)}"+
+ ".agp-in .mic{flex:none;width:44px;height:44px;display:grid;place-items:center}"+
+ ".agp-foot{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:10px}"+
+ ".agp-ex{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}"+
+ ".agp-ex button{font-size:12.5px;text-align:left;padding:6px 10px;border:1px dashed var(--line2);border-radius:10px;background:transparent;color:var(--tx2);cursor:pointer}"+
+ ".agp-ex button:hover{border-color:var(--ac);color:var(--ac)}"+
+ ".agp-dots{display:inline-flex;gap:3px;margin-right:6px;vertical-align:middle}.agp-dots i{width:6px;height:6px;border-radius:50%;background:var(--tx3);animation:agpd 1s infinite ease-in-out}.agp-dots i:nth-child(2){animation-delay:.15s}.agp-dots i:nth-child(3){animation-delay:.3s}@keyframes agpd{0%,80%,100%{opacity:.25}40%{opacity:1}}"+
+ ".agp-todo .agp-chips{margin:0 0 12px}.agp-todo .agp-chips span{background:var(--warns);border-color:var(--warn);color:var(--warn)}"+
+ "@media (max-width:640px){.agp-in textarea{font-size:16px}.agp-b{max-width:100%}.agp-log{max-height:36vh}}";
+ document.head.appendChild(st);})();
+// The server's own "try one or two sentences" hint is shown when the agent could not read the description.
+SAFE_CODES.DRAFT_FAILED=1;
+var AGP_EX=["Soccer practice for the U10 team next Saturday at 9am at Riverside Park, about 20 kids",
+ "Maya's 10th birthday party on October 18 from 3 to 6pm at our house, 25 guests, budget $300",
+ "Community clean-up this Sunday at 8am at the Oak Street library - bring gloves and trash bags"];
+function agpTz(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||"";}catch(e){return "";}}
+function agpLocalNow(){var d=new Date(),p=function(n){return (n<10?"0":"")+n;};return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes());}
+function agpDay(iso){var d=new Date(+iso.slice(0,4),+iso.slice(5,7)-1,+iso.slice(8,10));return isNaN(d)?iso:d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});}
+function agpTime(hm){var d=new Date(2000,0,1,+hm.slice(0,2),+hm.slice(3,5));return isNaN(d)?hm:d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});}
+// What the agent has understood so far, shown under its question.
+function agpGot(d){
+ if(!d)return "";var c=[];
+ if(d.title)c.push(d.title);
+ if(d.startDate)c.push(agpDay(d.startDate)+(d.startTime?", "+agpTime(d.startTime):""));
+ else if(d.startTime)c.push(agpTime(d.startTime));
+ if(d.venue)c.push(d.venue);
+ if(d.expectedGuests!=null)c.push(d.expectedGuests+" guests");
+ if(d.budget!=null)c.push("Budget "+d.budget);
+ return c.length?'<div class="agp-chips">'+c.map(function(x){return '<span>'+esc(x)+'</span>';}).join("")+'</div>':"";
+}
+function agpMissingWords(m){var w=[];if(m.indexOf("date")>=0)w.push("date");if(m.indexOf("time")>=0)w.push("start time");return w.join(" and ");}
+function agpHtml(){
+ var a=S.agp||{};var mic=voMicOk();var first=!(a.turns||[]).length;
+ var log=(a.turns||[]).map(function(t){return '<div class="agp-b '+t.r+'">'+esc(t.t)+(t.got||"")+'</div>';}).join("");
+ if(a.busy)log+='<div class="agp-b a" aria-live="polite"><span class="agp-dots"><i></i><i></i><i></i></span>'+esc(a.busyText||"Reading your event...")+'</div>';
+ var link=a.link?'<a href="#" onclick="A.agpCreateNow();return false">'+esc(a.link)+'</a>':'';
+ return '<div id="agp-root" class="agp"><div class="row between"><h2>'+ic("spark")+'Agent Planner</h2><button class="btn icon ghost" onclick="A.closeModal()" title="Close" aria-label="Close">'+ic("x")+'</button></div>'+
+  (first?'<p class="sub">Tell me about your event in your own words: what it is, when and where. '+(mic?'Type it or tap the mic. ':'')+'I will fill in the details and create it, and you can change anything afterwards.</p>':'')+
+  (log?'<div class="agp-log" id="agp-log">'+log+'</div>':'')+
+  '<div class="agp-in"><textarea id="agp-in" aria-label="Describe your event" maxlength="'+(first?1500:300)+'" placeholder="'+attr(first?"e.g. Soccer practice for the U10 team next Saturday at 9am at Riverside Park":"Type your answer")+'" oninput="A.agpInput(this)" onkeydown="A.agpKey(event)"'+(a.busy?" disabled":"")+'>'+esc(a.text||"")+'</textarea>'+
+  (mic?'<button type="button" class="btn icon mic" data-agent="agp" title="Speak" aria-label="Speak" onclick="A.agpMic()"'+(a.busy?" disabled":"")+'>'+ic("mic")+'<span class="lv"><i></i><i></i><i></i><i></i></span></button>':'')+'</div>'+
+  '<div class="agp-foot"><span class="small">'+link+'</span><button class="btn p" onclick="A.agpSend()"'+(a.busy?" disabled":"")+'>'+ic(first?"spark":"send")+(first?"Create event":"Send")+'</button></div>'+
+  (first?'<div class="agp-ex">'+AGP_EX.map(function(x,i){return '<button type="button" onclick="A.agpExample('+i+')">'+esc(x)+'</button>';}).join("")+'</div>':'')+
+  '<div class="muted small" style="margin-top:14px">Prefer a form? <a href="#" onclick="A.agpForm();return false">Fill in the details yourself</a></div></div>';
+}
+// The modal is re-drawn on every render (the app refreshes in the background), so it is always rebuilt from S.agp and
+// the text box keeps its focus and cursor.
+var agpBaseRenderModal=renderModal;
+renderModal=function(){
+ var mine=!!(S.agp&&typeof S.modal==="string"&&S.modal.indexOf('id="agp-root"')>=0);
+ var ae=document.activeElement,foc=!!(ae&&ae.id==="agp-in"),s0=foc?ae.selectionStart:null,s1=foc?ae.selectionEnd:null;
+ if(mine)S.modal=agpHtml();
+ agpBaseRenderModal.apply(this,arguments);
+ if(mine){
+  var ta=document.getElementById("agp-in");
+  if(ta&&!ta.disabled&&(foc||S.agp.focus)){S.agp.focus=false;try{ta.focus({preventScroll:true});var n=ta.value.length;ta.setSelectionRange(s0==null?n:Math.min(s0,n),s1==null?n:Math.min(s1,n));}catch(e){}}
+  var lg=document.getElementById("agp-log");if(lg)lg.scrollTop=lg.scrollHeight;
+  try{voPaint();}catch(e){}
+ }else{
+  // Closed (Escape, the X or a click outside): a reply that arrives later is ignored. An event already being created
+  // still opens when it is ready.
+  if(S.agp&&!S.agp.creating)S.agp=null;
+  if(VO.listening&&VO.panelId==="agp"){try{VO.rec.stop();}catch(e){}}
+ }
+};
+function agpShow(){if(S.agp&&typeof S.modal==="string"&&S.modal.indexOf('id="agp-root"')>=0)renderModal();}
+function agpMessage(a){var m=a.base;a.qa.forEach(function(x){m+="\nAgent asked: "+x.q+"\nThey answered: "+x.a;});return m.slice(0,2900);}
+function agpFail(a,msg){
+ // Put what they said back in the box so it can be sent again, and keep only the latest error.
+ var last=a.qa.length?a.qa.pop().a:a.base;if(!a.qa.length&&!a.draft)a.base="";
+ a.turns=a.turns.filter(function(t){return t.r!=="e";});if(a.turns.length&&a.turns[a.turns.length-1].r==="u")a.turns.pop();
+ a.turns.push({r:"e",t:msg});a.text=last;a.busy=false;a.focus=true;agpShow();
+}
+function agpAsk(a,retryModel){
+ var body={agentId:"agent-events",task:"draft_event",message:agpMessage(a),conversationId:a.conv,context:{tz:agpTz(),localNow:agpLocalNow()}};
+ var call;if(retryModel){body.model=retryModel;call=voBaseChatApi(body);}else call=voBaseChatApiMsg(body);
+ return Promise.resolve(call).then(function(j){
+  if(S.agp!==a)return;
+  var code=((j&&j.error)||{}).code||"";
+  // The model did not give usable fields: try once more on another free model.
+  if(j&&!j.success&&code==="DRAFT_FAILED"&&!retryModel){var used=((j.model)||{}).id||"";var alt=voFreeModels().filter(function(id){return id!==used;})[0];if(alt)return agpAsk(a,alt);}
+  // A message the safety check refused comes back as a normal chat answer: show its polite refusal.
+  if(j&&j.success&&!j.draft&&j.message&&j.message.content){agpFail(a,String(j.message.content).slice(0,300));return;}
+  if(!j||!j.success||!j.draft){agpFail(a,friendlyMsg((j&&j.error)||{},"The planner could not answer just now. Please try again in a moment."));return;}
+  a.draft=j.draft;a.missing=Array.isArray(j.missing)?j.missing:[];a.turns=a.turns.filter(function(t){return t.r!=="e";});
+  if(!a.missing.length){agpCreate(a,false);return;}
+  var key=a.missing.join(",");a.asks[key]=(a.asks[key]||0)+1;
+  a.lastQ=String(j.question||"Can you tell me a bit more about the event?");
+  a.turns.push({r:"a",t:a.lastQ,got:agpGot(a.draft)});
+  // Name, date and start time are asked for; after asking twice for the same thing it can be left for later.
+  a.link=(a.asks[key]>=2&&a.draft.title)?"Create it now and add the "+agpMissingWords(a.missing)+" later":"";
+  a.busy=false;a.focus=true;agpShow();
+  if(a.voice&&voTtsOk()){try{voSpeak(a.lastQ);}catch(e){}}
+ }).catch(function(){if(S.agp===a)agpFail(a,"We could not connect. Check your internet connection and try again.");});
+}
+function agpCreate(a,later){
+ var d=a.draft||{};if(!d.title)return;
+ var o={title:d.title,type:d.type||"community",venue:d.venue||"",address:d.address||"",description:d.description||""};
+ if(d.expectedGuests!=null)o.expectedGuests=d.expectedGuests;
+ if(d.budget!=null)o.budget=d.budget;
+ if(d.startDate&&d.startTime){o.startsAt=d.startDate+"T"+d.startTime;if(d.endDate&&d.endTime)o.endsAt=d.endDate+"T"+d.endTime;}
+ else if(later&&d.startDate)o.description=("Date: "+agpDay(d.startDate)+" (start time to be decided). "+o.description).trim();
+ zoneTimes(o);
+ a.busy=true;a.creating=true;a.busyText="Creating your event...";a.link="";agpShow();
+ api("events.create",o).then(function(r){
+  if(!r||!r.event)throw {message:"You have created a lot of events today. Please try again tomorrow."};
+  if(S.agp===a){S.agp=null;closeModal();}
+  toast("Event created - code "+r.event.code,"ok");S.event=null;S.tab="overview";
+  return api("events.list").then(function(l){S.boot.events=l;}).catch(function(){}).then(function(){go("#/events/"+r.event.id);});
+ }).catch(function(e){
+  a.creating=false;if(S.agp!==a)return;
+  a.busy=false;a.turns=a.turns.filter(function(t){return t.r!=="e";});
+  a.turns.push({r:"e",t:(e&&e.message)||"The event could not be created. Please try again."});
+  a.link="Try creating it again";a.retryCreate=true;agpShow();
+ });
+}
+A.agpOpen=function(){
+ if(VO.listening){try{VO.rec.stop();}catch(e){}}
+ S.agp={text:"",base:"",qa:[],turns:[],draft:null,missing:[],asks:{},busy:false,voice:false,link:"",conv:"agp-"+uid("").slice(0,12),focus:true};
+ openModal(agpHtml());
+};
+A.agpInput=function(el){if(S.agp)S.agp.text=el.value;};
+A.agpKey=function(ev){if(ev.key==="Enter"&&!ev.shiftKey&&!ev.isComposing){ev.preventDefault();A.agpSend();}};
+A.agpExample=function(i){if(!S.agp||S.agp.busy)return;S.agp.text=AGP_EX[i]||"";S.agp.focus=true;agpShow();};
+A.agpForm=function(){if(VO.listening){try{VO.rec.stop();}catch(e){}}S.agp=null;A.newEvent();};
+A.agpCreateNow=function(){var a=S.agp;if(!a||a.busy||!a.draft||!a.draft.title)return;agpCreate(a,!a.retryCreate||!(a.draft.startDate&&a.draft.startTime));};
+A.agpSend=function(viaVoice){
+ var a=S.agp;if(!a||a.busy)return;
+ var ta=document.getElementById("agp-in");var txt=String((ta?ta.value:a.text)||"").replace(/\s+/g," ").trim();
+ if(!txt){toast("Describe your event first.","err");if(ta)ta.focus();return;}
+ if(VO.listening&&VO.panelId==="agp"){try{VO.rec.abort();}catch(e){}}
+ a.voice=viaVoice===true;a.retryCreate=false;
+ if(!a.base)a.base=txt.slice(0,1500);else{a.qa.push({q:a.lastQ||"",a:txt.slice(0,300)});a.qa=a.qa.slice(-4);}
+ a.turns=a.turns.filter(function(t){return t.r!=="e";});a.turns.push({r:"u",t:txt});
+ a.text="";a.link="";a.busy=true;a.busyText=a.qa.length?"Updating the details...":"Reading your event...";agpShow();
+ agpAsk(a);
+};
+// Microphone: the browser listens (as in the chats), fills the box while they talk and sends when they stop; the
+// agent's follow-up question is then read out, because they were speaking to it.
+A.agpMic=function(){
+ var a=S.agp;if(!a||a.busy)return;
+ if(VO.listening){try{VO.rec.stop();}catch(e){}return;}
+ var R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){toast("This browser cannot listen. Type instead.","err");return;}
+ try{A.voStop();}catch(e){}
+ var rec=new R();rec.lang=navigator.language||"en-US";rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;
+ var finalText="",startText=String(a.text||"").trim();
+ rec.onstart=function(){VO.listening=true;VO.panelId="agp";VO.rec=rec;voPaint();};
+ rec.onresult=function(ev){var interim="";for(var i=ev.resultIndex;i<ev.results.length;i++){var r=ev.results[i];if(r.isFinal)finalText+=r[0].transcript;else interim+=r[0].transcript;}
+  var v=((startText?startText+" ":"")+finalText+" "+interim).replace(/\s+/g," ").trim();a.text=v;var ta=document.getElementById("agp-in");if(ta)ta.value=v;};
+ rec.onerror=function(ev){VO.listening=false;voPaint();if(ev&&ev.error==="not-allowed")toast("Microphone permission is blocked for this site.","err");else if(ev&&ev.error!=="aborted"&&ev.error!=="no-speech")toast("Could not hear that. Try again.","err");};
+ rec.onend=function(){VO.listening=false;voPaint();if(S.agp===a&&!a.busy&&finalText.trim()&&String(a.text||"").trim())A.agpSend(true);};
+ try{rec.start();}catch(e){toast("Could not start the microphone.","err");}
+};
+// Events page: the organiser-facing wording points at the Agent Planner.
+var agpBaseEvents=vEvents;
+vEvents=function(){
+ var h=agpBaseEvents.apply(this,arguments);
+ return h.replace(/(No (?:approved )?events yet\. )Create one, or join/,"$1Tap Agent Planner to create one, or join");
+};
+// Event page: organisers see what is still empty, with the existing Edit form one click away. Hidden per event.
+var AGP_TODO=[["ends_at","End time"],["venue","Venue"],["address","Address"],["expected_guests","Expected guests"],["budget","Budget"],["description","Brief"]];
+function agpTodoCard(d){
+ var e=d.event;if(!e||e.status==="done"||e.status==="cancelled")return "";
+ var hid=LS.get("agpTodoHide",[]);if(Array.isArray(hid)&&hid.indexOf(e.id)>=0)return "";
+ var miss=[];if(!e.starts_at)miss.push("Date and start time");
+ AGP_TODO.forEach(function(f){var v=e[f[0]];if(v==null||String(v).trim()==="")miss.push(f[1]);});
+ if(!miss.length)return "";
+ return '<div class="card agp-todo" style="margin-bottom:14px"><div class="hd">'+ic("spark")+'<h3>Still to add</h3><div class="sp"></div><button class="btn xs ghost" title="Hide this card" aria-label="Hide this card" onclick="A.agpTodoHide(\''+attr(e.id)+'\')">'+ic("x")+'</button></div><div class="bd"><div class="agp-chips">'+miss.map(function(m){return '<span>'+esc(m)+'</span>';}).join("")+'</div><div class="row"><button class="btn s p" onclick="A.editEvent()">'+ic("cog")+'Add details</button><span class="muted small">Fill these in whenever you know them.</span></div></div></div>';
+}
+var agpBaseEvent=vEvent;
+vEvent=function(id){
+ var h=agpBaseEvent.apply(this,arguments);
+ try{
+  var d=S.event;if(S.tab!=="overview"||!d||!d.event||d.event.id!==id||d.pending)return h;
+  var me=(d.members||[]).filter(function(m){return m.member_id===actor().id;})[0];
+  if(!me||me.role!=="organizer")return h;
+  var i=h.indexOf('<div class="kpis"');if(i<0)return h;
+  return h.slice(0,i)+agpTodoCard(d)+h.slice(i);
+ }catch(e){return h;}
+};
+A.agpTodoHide=function(id){var h=LS.get("agpTodoHide",[]);if(!Array.isArray(h))h=[];if(h.indexOf(id)<0)h.push(id);LS.set("agpTodoHide",h.slice(-100));render();};
+
+// ---- Y Square Community: Startups and Jobs (ysc) ------------------------------------------------------------------------
 // "Community" in the menu is now "Y Square Community", with two new pages next to Volunteer:
 //  - Startups: Y Square's startup goal, the Entrepreneurship and Startup Program for middle and high schoolers, and a
 //    "send us a message" form. Messages go to POST /svc/interest (workflow "Y Square - Ecosystem Interest"), which
@@ -2904,149 +3105,239 @@ var V41_TYPES_MSG="This kind of file can't be uploaded. Upload a document (PDF, 
 ICONS.rocket='<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>';
 ICONS.briefcase='<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>';
 NT_KIND.interest=["rocket","ac"];
-var V44_VIEWS={startups:"Startups",jobs:"Startup Jobs"};
-var V44_YC="https://www.ycombinator.com/";
-(function(){var st=document.createElement("style");st.id="v44css";st.textContent=
- ".v44sec{margin:28px 0 14px}.v44sec h2{font-size:20px;letter-spacing:-.3px;margin:0 0 6px}.v44sec p{margin:0;color:var(--tx2);max-width:760px}"+
- ".v44story .bd p{margin:0 0 12px;color:var(--tx2);line-height:1.65;max-width:780px}.v44story .bd p:last-child{margin-bottom:0}"+
- ".v44story .goal{font-size:17px;font-weight:700;color:var(--tx);letter-spacing:-.2px}"+
- ".v44tracks{display:grid;grid-template-columns:1fr 1fr;gap:18px}"+
- ".v44track{padding:22px;display:grid;gap:10px;align-content:start}.v44track h3{margin:0;font-size:16.5px;letter-spacing:-.2px}"+
- ".v44track ul{margin:0;padding-left:18px;color:var(--tx2);display:grid;gap:6px;font-size:13.5px;line-height:1.5}"+
- ".v44ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#fff;background:var(--ac)}"+
- ".v44ico.hs{background:linear-gradient(135deg,#4338ca,#6d28d9)}"+
- ".v44steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}"+
- ".v44step{padding:18px;display:grid;gap:6px;align-content:start}.v44step b{font-size:14px}.v44step span{color:var(--tx2);font-size:13px;line-height:1.5}"+
- ".v44n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--acs);color:var(--ac);font-weight:700;font-size:13px}"+
- ".v44form .f{align-content:start}.v44form .check{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--tx2);margin:2px 0 12px}.v44form .check input{margin-top:3px;width:auto}"+
- ".v44trap{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}"+
- ".v44done{display:flex;gap:12px;align-items:flex-start}.v44done .v44ico{background:var(--ok)}"+
- ".v44jobs{display:grid;gap:14px}"+
- ".v44job{padding:18px 20px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start}"+
- ".v44logo{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:var(--acs);color:var(--ac);font-weight:700;font-size:14px}"+
- ".v44job h3{margin:0 0 2px;font-size:15.5px;letter-spacing:-.2px}.v44job .co{font-size:13px;color:var(--tx2)}"+
- ".v44job .about{margin:6px 0 8px;color:var(--tx2);font-size:13px;line-height:1.5}.v44job .m{display:flex;gap:6px;flex-wrap:wrap}"+
- ".v44job .m .badge{white-space:normal;max-width:100%}.v44src svg{flex:none}"+
- ".v44job .v44act{display:grid;gap:6px;justify-items:end}"+
- ".v44src{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 14px;font-size:12.5px;color:var(--tx3)}"+
- "@media (max-width:1000px){.v44steps{grid-template-columns:1fr 1fr}}"+
- "@media (max-width:760px){.v44tracks,.v44steps{grid-template-columns:1fr}.v44job{grid-template-columns:auto 1fr}.v44job .v44act{grid-column:1/-1;justify-items:start;grid-auto-flow:column;justify-content:start}}";
+var YSC_VIEWS={startups:"Startups",jobs:"Startup Jobs"};
+var YSC_YC="https://www.ycombinator.com/";
+(function(){var st=document.createElement("style");st.id="ysccss";st.textContent=
+ ".yscsec{margin:28px 0 14px}.yscsec h2{font-size:20px;letter-spacing:-.3px;margin:0 0 6px}.yscsec p{margin:0;color:var(--tx2);max-width:760px}"+
+ ".yscstory .bd p{margin:0 0 12px;color:var(--tx2);line-height:1.65;max-width:780px}.yscstory .bd p:last-child{margin-bottom:0}"+
+ ".yscstory .goal{font-size:17px;font-weight:700;color:var(--tx);letter-spacing:-.2px}"+
+ ".ysctracks{display:grid;grid-template-columns:1fr 1fr;gap:18px}"+
+ ".ysctrack{padding:22px;display:grid;gap:10px;align-content:start}.ysctrack h3{margin:0;font-size:16.5px;letter-spacing:-.2px}"+
+ ".ysctrack ul{margin:0;padding-left:18px;color:var(--tx2);display:grid;gap:6px;font-size:13.5px;line-height:1.5}"+
+ ".yscico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#fff;background:var(--ac)}"+
+ ".yscico.hs{background:linear-gradient(135deg,#4338ca,#6d28d9)}"+
+ ".yscsteps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}"+
+ ".yscstep{padding:18px;display:grid;gap:6px;align-content:start}.yscstep b{font-size:14px}.yscstep span{color:var(--tx2);font-size:13px;line-height:1.5}"+
+ ".yscn{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--acs);color:var(--ac);font-weight:700;font-size:13px}"+
+ ".yscform .f{align-content:start}.yscform .check{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--tx2);margin:2px 0 12px}.yscform .check input{margin-top:3px;width:auto}"+
+ ".ysctrap{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}"+
+ ".yscdone{display:flex;gap:12px;align-items:flex-start}.yscdone .yscico{background:var(--ok)}"+
+ ".yscjobs{display:grid;gap:14px}"+
+ ".yscjob{padding:18px 20px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start}"+
+ ".ysclogo{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:var(--acs);color:var(--ac);font-weight:700;font-size:14px}"+
+ ".yscjob h3{margin:0 0 2px;font-size:15.5px;letter-spacing:-.2px}.yscjob .co{font-size:13px;color:var(--tx2)}"+
+ ".yscjob .about{margin:6px 0 8px;color:var(--tx2);font-size:13px;line-height:1.5}.yscjob .m{display:flex;gap:6px;flex-wrap:wrap}"+
+ ".yscjob .m .badge{white-space:normal;max-width:100%}.yscsrc svg{flex:none}"+
+ ".yscjob .yscact{display:grid;gap:6px;justify-items:end}"+
+ ".yscsrc{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 14px;font-size:12.5px;color:var(--tx3)}"+
+ "@media (max-width:1000px){.yscsteps{grid-template-columns:1fr 1fr}}"+
+ "@media (max-width:760px){.ysctracks,.yscsteps{grid-template-columns:1fr}.yscjob{grid-template-columns:auto 1fr}.yscjob .yscact{grid-column:1/-1;justify-items:start;grid-auto-flow:column;justify-content:start}}";
  document.head.appendChild(st);})();
-function v44Hero(title,text,btns){
+function yscHero(title,text,btns){
  return '<div class="hero" style="grid-template-columns:1fr;margin-bottom:16px"><div class="lead"><span class="badge" style="background:rgba(255,255,255,.18);color:#fff;width:max-content">Y Square Community</span><h2>'+title+'</h2><p>'+text+'</p>'+(btns?'<div class="row" style="margin-top:6px;gap:8px;flex-wrap:wrap">'+btns+'</div>':'')+'</div></div>';
 }
-function v44Scroll(id){var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});}
-A.v44Go=function(id){v44Scroll(id);};
+function yscScroll(id){var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});}
+A.yscGo=function(id){yscScroll(id);};
 // ---- Startups page ----
 function vStartups(){
- var h=v44Hero("Build the next billion-dollar startup",
+ var h=yscHero("Build the next billion-dollar startup",
   "Y Square's goal is to help create a billion-dollar startup from young founders like you. Our cohort program gives middle and high school students the platform to turn big ideas into real companies.",
-  '<button class="btn" style="background:#fff;color:#4338ca;border-color:#fff" onclick="A.v44Go(\'v44form\')">'+ic("send")+'I am interested</button><a class="btn" style="background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.35)" href="#/jobs">'+ic("briefcase")+'See startup jobs</a>');
- h+='<div class="card v44story"><div class="hd">'+ic("rocket")+'<h3>Our story</h3></div><div class="bd">'+
+  '<button class="btn" style="background:#fff;color:#4338ca;border-color:#fff" onclick="A.yscGo(\'yscform\')">'+ic("send")+'I am interested</button><a class="btn" style="background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.35)" href="#/jobs">'+ic("briefcase")+'See startup jobs</a>');
+ h+='<div class="card yscstory"><div class="hd">'+ic("rocket")+'<h3>Our story</h3></div><div class="bd">'+
   '<p>Every great company started as a small idea - usually from someone who noticed a problem and decided to fix it. We believe many of tomorrow\'s founders are in middle and high school classrooms today.</p>'+
   '<p class="goal">Our goal: a billion-dollar startup, built by young founders like you.</p>'+
   '<p>That is why we are building the Y Square cohort program. It gives students a platform - people to build with, mentors to learn from and AI tools to build faster - so they can chase their ideas and fulfil their dreams.</p>'+
   '</div></div>';
- h+='<div class="v44sec" id="v44program"><h2>Y Square Entrepreneurship and Startup Program</h2><p>A cohort program for middle and high schoolers. Students learn together, work on a problem they care about and build something real.</p></div>';
- h+='<div class="v44tracks">'+
-  '<div class="card v44track"><div class="v44ico">'+ic("spark")+'</div><span class="badge info" style="width:max-content">Grades 6-8</span><h3>Middle school</h3><ul><li>Learn how startups begin: spotting problems worth solving</li><li>Brainstorm ideas and work as a team</li><li>Build a first simple project and share it</li></ul></div>'+
-  '<div class="card v44track"><div class="v44ico hs">'+ic("rocket")+'</div><span class="badge info" style="width:max-content">Grades 9-12</span><h3>High school</h3><ul><li>Go from idea to a working prototype, using AI tools</li><li>Talk to real users and learn what they need</li><li>Learn the basics of business and funding, then pitch your startup</li></ul></div>'+
+ h+='<div class="yscsec" id="yscprogram"><h2>Y Square Entrepreneurship and Startup Program</h2><p>A cohort program for middle and high schoolers. Students learn together, work on a problem they care about and build something real.</p></div>';
+ h+='<div class="ysctracks">'+
+  '<div class="card ysctrack"><div class="yscico">'+ic("spark")+'</div><span class="badge info" style="width:max-content">Grades 6-8</span><h3>Middle school</h3><ul><li>Learn how startups begin: spotting problems worth solving</li><li>Brainstorm ideas and work as a team</li><li>Build a first simple project and share it</li></ul></div>'+
+  '<div class="card ysctrack"><div class="yscico hs">'+ic("rocket")+'</div><span class="badge info" style="width:max-content">Grades 9-12</span><h3>High school</h3><ul><li>Go from idea to a working prototype, using AI tools</li><li>Talk to real users and learn what they need</li><li>Learn the basics of business and funding, then pitch your startup</li></ul></div>'+
   '</div>';
- h+='<div class="v44sec"><h2>How the cohort works</h2></div><div class="v44steps">'+
-  [["Join a cohort","Learn alongside other students who want to build."],["Pick a problem","Choose something you care about and want to fix."],["Build it","Turn your idea into a prototype with mentors and Y Square's AI tools."],["Launch and pitch","Show what you built and tell its story."]].map(function(s,i){return '<div class="card v44step"><span class="v44n">'+(i+1)+'</span><b>'+esc(s[0])+'</b><span>'+esc(s[1])+'</span></div>';}).join("")+
+ h+='<div class="yscsec"><h2>How the cohort works</h2></div><div class="yscsteps">'+
+  [["Join a cohort","Learn alongside other students who want to build."],["Pick a problem","Choose something you care about and want to fix."],["Build it","Turn your idea into a prototype with mentors and Y Square's AI tools."],["Launch and pitch","Show what you built and tell its story."]].map(function(s,i){return '<div class="card yscstep"><span class="yscn">'+(i+1)+'</span><b>'+esc(s[0])+'</b><span>'+esc(s[1])+'</span></div>';}).join("")+
   '</div><p class="muted small" style="margin:12px 0 0">Dates and details for each cohort are shared with everyone who sends us a message below.</p>';
- h+='<div class="v44sec" id="v44form"><h2>Be part of the Y Square ecosystem</h2><p>Interested? Send us a message - whether you are a student, a parent, a teacher, or a founder, mentor or investor who wants to help.</p></div>'+v44Form();
+ h+='<div class="yscsec" id="yscform"><h2>Be part of the Y Square ecosystem</h2><p>Interested? Send us a message - whether you are a student, a parent, a teacher, or a founder, mentor or investor who wants to help.</p></div>'+yscForm();
  return h;
 }
-function v44Form(){
- var st=S.v44||{},d=S.v44Draft||{},a=actor();
- if(st.sent)return '<div class="card v44form"><div class="bd v44done"><div class="v44ico">'+ic("check")+'</div><div><b>Thanks'+(st.name?', '+esc(st.name):'')+'! Your message is on its way.</b><div class="muted small" style="margin-top:4px">The Y Square team will reply to the email address you gave us.</div><button class="btn s" style="margin-top:10px" onclick="A.v44Again()">Send another message</button></div></div></div>';
+function yscForm(){
+ var st=S.ysc||{},d=S.yscDraft||{},a=actor();
+ if(st.sent)return '<div class="card yscform"><div class="bd yscdone"><div class="yscico">'+ic("check")+'</div><div><b>Thanks'+(st.name?', '+esc(st.name):'')+'! Your message is on its way.</b><div class="muted small" style="margin-top:4px">The Y Square team will reply to the email address you gave us.</div><button class="btn s" style="margin-top:10px" onclick="A.yscAgain()">Send another message</button></div></div></div>';
  var name=d.name!=null?d.name:(signedIn()?a.name||"":"");
  var email=d.email!=null?d.email:(signedIn()?(a.email||(S.user||{}).email||""):"");
  var role=d.role||"",grade=d.grade||"";
  function opt(v,l,cur){return '<option value="'+attr(v)+'"'+(v===cur?' selected':'')+'>'+esc(l)+'</option>';}
  var roles=[["","Choose one"],["student","Student"],["parent","Parent or guardian"],["educator","Teacher or coach"],["mentor","Founder, mentor or investor"],["other","Other"]];
  var grades=[["","Not a student"]].concat(["6","7","8","9","10","11","12"].map(function(g){return [g,"Grade "+g];}));
- return '<div class="card v44form"><div class="bd"><form onsubmit="return A.v44Send(this)" oninput="A.v44Input(event)" onchange="A.v44Input(event)" novalidate>'+
-  '<div class="grid2"><div class="f"><label for="v44name">Your name *</label><input id="v44name" name="name" maxlength="80" autocomplete="name" value="'+attr(name)+'" required></div>'+
-  '<div class="f"><label for="v44email">Email *</label><input id="v44email" name="email" type="email" maxlength="200" autocomplete="email" value="'+attr(email)+'" required><span class="help">We only use this to reply to you.</span></div></div>'+
-  '<div class="grid2"><div class="f"><label for="v44role">I am a *</label><select id="v44role" name="role" required>'+roles.map(function(r){return opt(r[0],r[1],role);}).join("")+'</select></div>'+
-  '<div class="f"><label for="v44grade">Grade</label><select id="v44grade" name="grade">'+grades.map(function(g){return opt(g[0],g[1],grade);}).join("")+'</select></div></div>'+
-  '<div class="f"><label for="v44msg">Message</label><textarea id="v44msg" name="message" maxlength="1500" placeholder="Tell us about your idea, what you would like to learn, or how you would like to help.">'+esc(d.message||"")+'</textarea></div>'+
-  '<label class="check" id="v44age" style="'+(role==="student"?'':'display:none')+'"><input type="checkbox" name="over13"'+(d.over13?' checked':'')+'><span>I am 13 or older. <span class="muted">Under 13? Please ask a parent or guardian to send this message for you.</span></span></label>'+
-  '<div class="v44trap" aria-hidden="true"><label>Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label></div>'+
+ return '<div class="card yscform"><div class="bd"><form onsubmit="return A.yscSend(this)" oninput="A.yscInput(event)" onchange="A.yscInput(event)" novalidate>'+
+  '<div class="grid2"><div class="f"><label for="yscname">Your name *</label><input id="yscname" name="name" maxlength="80" autocomplete="name" value="'+attr(name)+'" required></div>'+
+  '<div class="f"><label for="yscemail">Email *</label><input id="yscemail" name="email" type="email" maxlength="200" autocomplete="email" value="'+attr(email)+'" required><span class="help">We only use this to reply to you.</span></div></div>'+
+  '<div class="grid2"><div class="f"><label for="yscrole">I am a *</label><select id="yscrole" name="role" required>'+roles.map(function(r){return opt(r[0],r[1],role);}).join("")+'</select></div>'+
+  '<div class="f"><label for="yscgrade">Grade</label><select id="yscgrade" name="grade">'+grades.map(function(g){return opt(g[0],g[1],grade);}).join("")+'</select></div></div>'+
+  '<div class="f"><label for="yscmsg">Message</label><textarea id="yscmsg" name="message" maxlength="1500" placeholder="Tell us about your idea, what you would like to learn, or how you would like to help.">'+esc(d.message||"")+'</textarea></div>'+
+  '<label class="check" id="yscage" style="'+(role==="student"?'':'display:none')+'"><input type="checkbox" name="over13"'+(d.over13?' checked':'')+'><span>I am 13 or older. <span class="muted">Under 13? Please ask a parent or guardian to send this message for you.</span></span></label>'+
+  '<div class="ysctrap" aria-hidden="true"><label>Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label></div>'+
   (st.err?'<div class="small" style="color:var(--err);margin:0 0 10px" role="alert">'+esc(st.err)+'</div>':'')+
   '<div class="row" style="gap:10px;flex-wrap:wrap"><button class="btn p" type="submit"'+(st.busy?' disabled':'')+'>'+ic("send")+(st.busy?'Sending...':'Send message')+'</button><span class="small muted">See our <a href="#/privacy">Privacy Policy</a>.</span></div>'+
   '</form></div></div>';
 }
-A.v44Input=function(e){
+A.yscInput=function(e){
  var el=e&&e.target;if(!el||!el.name||el.name==="website")return;
- S.v44Draft=S.v44Draft||{};S.v44Draft[el.name]=el.type==="checkbox"?el.checked:el.value;
- if(el.name==="role"){var w=document.getElementById("v44age");if(w)w.style.display=el.value==="student"?"":"none";}
+ S.yscDraft=S.yscDraft||{};S.yscDraft[el.name]=el.type==="checkbox"?el.checked:el.value;
+ if(el.name==="role"){var w=document.getElementById("yscage");if(w)w.style.display=el.value==="student"?"":"none";}
 };
-A.v44Again=function(){S.v44={};S.v44Draft={};render();setTimeout(function(){v44Scroll("v44form");},0);};
-A.v44Send=function(f){
- var st=S.v44=S.v44||{};if(st.busy)return false;
+A.yscAgain=function(){S.ysc={};S.yscDraft={};render();setTimeout(function(){yscScroll("yscform");},0);};
+A.yscSend=function(f){
+ var st=S.ysc=S.ysc||{};if(st.busy)return false;
  var v=function(n){return String((f.elements[n]||{}).value||"").trim();};
  var body={name:v("name"),email:v("email"),role:v("role"),grade:v("grade"),message:v("message"),over13:!!(f.elements.over13&&f.elements.over13.checked),website:v("website")};
  var err=!body.name?"Please tell us your name.":!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(body.email)?"Please enter an email address we can reply to.":!body.role?"Please choose who you are.":(body.role==="student"&&!body.over13)?"Students under 13: please ask a parent or guardian to send this message for you.":"";
- if(err){st.err=err;render();setTimeout(function(){v44Scroll("v44form");},0);return false;}
+ if(err){st.err=err;render();setTimeout(function(){yscScroll("yscform");},0);return false;}
  st.busy=true;st.err="";render();
  fetch(BASE+"/svc/interest",{method:"POST",headers:{"Content-Type":"application/json","X-Guest-Id":S.guestId},body:JSON.stringify(body)})
   .then(function(r){return r.json().catch(function(){return {success:false,error:{message:"The server returned an unexpected response ("+r.status+")."}};});})
-  .then(function(j){st.busy=false;if(j&&j.success){S.v44={sent:true,name:body.name.split(" ")[0]};S.v44Draft={};}else{st.err=((j&&j.error)||{}).message||"We could not send your message. Please try again.";}},
+  .then(function(j){st.busy=false;if(j&&j.success){S.ysc={sent:true,name:body.name.split(" ")[0]};S.yscDraft={};}else{st.err=((j&&j.error)||{}).message||"We could not send your message. Please try again.";}},
         function(){st.busy=false;st.err="We could not connect. Check your internet connection and try again.";})
-  .then(function(){render();setTimeout(function(){v44Scroll("v44form");},0);});
+  .then(function(){render();setTimeout(function(){yscScroll("yscform");},0);});
  return false;
 };
 // ---- Jobs page ----
-function v44JobUrl(u){u=String(u||"");return u.indexOf(V44_YC)===0?u:"";}
-function v44Initials(n){var p=String(n||"").replace(/[^A-Za-z0-9 ]/g," ").trim().split(/\s+/);return ((p[0]||"")[0]||"").toUpperCase()+((p[1]||"")[0]||"").toUpperCase();}
-function v44JobCard(j){
- var url=v44JobUrl(j.url),co=v44JobUrl(j.companyUrl);if(!url)return "";
+function yscJobUrl(u){u=String(u||"");return u.indexOf(YSC_YC)===0?u:"";}
+function yscInitials(n){var p=String(n||"").replace(/[^A-Za-z0-9 ]/g," ").trim().split(/\s+/);return ((p[0]||"")[0]||"").toUpperCase()+((p[1]||"")[0]||"").toUpperCase();}
+function yscJobCard(j){
+ var url=yscJobUrl(j.url),co=yscJobUrl(j.companyUrl);if(!url)return "";
  var badges=[j.location?'<span class="badge">'+ic("map")+' '+esc(j.location)+'</span>':'',j.type?'<span class="badge">'+ic("clock")+' '+esc(j.type)+'</span>':'',j.role?'<span class="badge info">'+esc(j.role)+'</span>':'',j.salary?'<span class="badge">'+esc(j.salary)+'</span>':'',j.experience?'<span class="badge">'+esc(j.experience)+(/year/i.test(j.experience)?' experience':'')+'</span>':''].join("");
- return '<div class="card v44job"><div class="v44logo" aria-hidden="true">'+esc(v44Initials(j.company))+'</div><div style="min-width:0"><h3>'+esc(j.title)+'</h3><div class="co"><b>'+esc(j.company)+'</b>'+(j.batch?' &middot; YC '+esc(j.batch):'')+'</div>'+(j.about?'<div class="about">'+esc(j.about)+'</div>':'')+'<div class="m">'+badges+'</div></div>'+
-  '<div class="v44act"><a class="btn s p" href="'+attr(url)+'" target="_blank" rel="noopener noreferrer">'+ic("link")+'View job</a>'+(co?'<a class="btn xs ghost" href="'+attr(co)+'" target="_blank" rel="noopener noreferrer">About '+esc(j.company)+'</a>':'')+'</div></div>';
+ return '<div class="card yscjob"><div class="ysclogo" aria-hidden="true">'+esc(yscInitials(j.company))+'</div><div style="min-width:0"><h3>'+esc(j.title)+'</h3><div class="co"><b>'+esc(j.company)+'</b>'+(j.batch?' &middot; YC '+esc(j.batch):'')+'</div>'+(j.about?'<div class="about">'+esc(j.about)+'</div>':'')+'<div class="m">'+badges+'</div></div>'+
+  '<div class="yscact"><a class="btn s p" href="'+attr(url)+'" target="_blank" rel="noopener noreferrer">'+ic("link")+'View job</a>'+(co?'<a class="btn xs ghost" href="'+attr(co)+'" target="_blank" rel="noopener noreferrer">About '+esc(j.company)+'</a>':'')+'</div></div>';
 }
 function vJobs(){
  var feed=((((S.boot||{}).settings||{}).organization)||{}).startupJobs||null;
- var jobs=feed&&Array.isArray(feed.jobs)?feed.jobs.filter(function(j){return j&&v44JobUrl(j.url);}).slice(0,10):[];
- var h=v44Hero("Top 10 startup jobs","Current openings at Y Combinator startups - a look at what fast-growing startups hire for. Most of these roles are for experienced professionals, but they show the skills worth building now.",
-  '<a class="btn" style="background:#fff;color:#4338ca;border-color:#fff" href="'+V44_YC+'jobs" target="_blank" rel="noopener noreferrer">'+ic("link")+'All jobs on ycombinator.com</a><a class="btn" style="background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.35)" href="#/startups">'+ic("rocket")+'Y Square Startup Program</a>');
+ var jobs=feed&&Array.isArray(feed.jobs)?feed.jobs.filter(function(j){return j&&yscJobUrl(j.url);}).slice(0,10):[];
+ var h=yscHero("Top 10 startup jobs","Current openings at Y Combinator startups - a look at what fast-growing startups hire for. Most of these roles are for experienced professionals, but they show the skills worth building now.",
+  '<a class="btn" style="background:#fff;color:#4338ca;border-color:#fff" href="'+YSC_YC+'jobs" target="_blank" rel="noopener noreferrer">'+ic("link")+'All jobs on ycombinator.com</a><a class="btn" style="background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.35)" href="#/startups">'+ic("rocket")+'Y Square Startup Program</a>');
  if(!S.boot)return h+loadingHtml("Loading jobs","One moment...");
- if(!jobs.length)return h+'<div class="card"><div class="empty"><div class="v44ico" style="margin:0 auto 10px">'+ic("briefcase","ic22")+'</div><b>No job listings to show right now</b><div class="small">You can see every opening on <a href="'+V44_YC+'jobs" target="_blank" rel="noopener noreferrer">Y Combinator\'s job board</a>.</div></div></div>';
- h+='<div class="v44src">'+ic("refresh")+'<span>From <a href="'+V44_YC+'jobs" target="_blank" rel="noopener noreferrer">Y Combinator\'s job board</a>, one job per company, updated daily'+(feed.fetchedAt?' - last updated '+esc(fmtD(feed.fetchedAt))+'.':'.')+' Applications happen on ycombinator.com.</span></div>';
- h+='<div class="v44jobs">'+jobs.map(v44JobCard).join("")+'</div>';
- h+='<div class="card" style="margin-top:18px"><div class="bd row" style="gap:12px;flex-wrap:wrap"><div class="v44ico hs">'+ic("rocket")+'</div><div style="flex:1;min-width:200px"><b>Want to build your own startup?</b><div class="muted small">Join the Y Square Entrepreneurship and Startup Program for middle and high schoolers.</div></div><a class="btn p" href="#/startups">Learn more</a></div></div>';
+ if(!jobs.length)return h+'<div class="card"><div class="empty"><div class="yscico" style="margin:0 auto 10px">'+ic("briefcase","ic22")+'</div><b>No job listings to show right now</b><div class="small">You can see every opening on <a href="'+YSC_YC+'jobs" target="_blank" rel="noopener noreferrer">Y Combinator\'s job board</a>.</div></div></div>';
+ h+='<div class="yscsrc">'+ic("refresh")+'<span>From <a href="'+YSC_YC+'jobs" target="_blank" rel="noopener noreferrer">Y Combinator\'s job board</a>, one job per company, updated daily'+(feed.fetchedAt?' - last updated '+esc(fmtD(feed.fetchedAt))+'.':'.')+' Applications happen on ycombinator.com.</span></div>';
+ h+='<div class="yscjobs">'+jobs.map(yscJobCard).join("")+'</div>';
+ h+='<div class="card" style="margin-top:18px"><div class="bd row" style="gap:12px;flex-wrap:wrap"><div class="yscico hs">'+ic("rocket")+'</div><div style="flex:1;min-width:200px"><b>Want to build your own startup?</b><div class="muted small">Join the Y Square Entrepreneurship and Startup Program for middle and high schoolers.</div></div><a class="btn p" href="#/startups">Learn more</a></div></div>';
  return h;
 }
 // ---- menu, phone tab bar, volunteer badge and routes ----
-var v44BaseSidebar=sidebar;
+var yscBaseSidebar=sidebar;
 sidebar=function(){
- var h=v44BaseSidebar.apply(this,arguments),v=(S.route||{}).view;
+ var h=yscBaseSidebar.apply(this,arguments),v=(S.route||{}).view;
  h=h.replace('<div class="sec">Community</div>','<div class="sec">Y Square Community</div>');
  var i=h.indexOf('href="#/volunteer"'),j=i<0?-1:h.indexOf('</a>',i);
  if(j<0)return h;
  function item(k,icn,label){return '<a href="#/'+k+'" class="'+(v===k?"on":"")+'">'+ic(icn)+esc(label)+'</a>';}
  return h.slice(0,j+4)+item("startups","rocket","Startups")+item("jobs","briefcase","Jobs")+h.slice(j+4);
 };
-var v44BaseTabbar=tabbar;
+var yscBaseTabbar=tabbar;
 tabbar=function(){
- var h=v44BaseTabbar.apply(this,arguments);
- if(V44_VIEWS[(S.route||{}).view])h=h.replace('<button type="button" class="" onclick="A.drawer(true)">','<button type="button" class="on" onclick="A.drawer(true)">');
+ var h=yscBaseTabbar.apply(this,arguments);
+ if(YSC_VIEWS[(S.route||{}).view])h=h.replace('<button type="button" class="" onclick="A.drawer(true)">','<button type="button" class="on" onclick="A.drawer(true)">');
  return h;
 };
-var v44BaseVolunteer=vVolunteer;
-vVolunteer=function(){return v44BaseVolunteer.apply(this,arguments).replace('>Community</span><h2>Volunteer opportunities','>Y Square Community</span><h2>Volunteer opportunities');};
-var v44BaseRender=render;
+var yscBaseVolunteer=vVolunteer;
+vVolunteer=function(){return yscBaseVolunteer.apply(this,arguments).replace('>Community</span><h2>Volunteer opportunities','>Y Square Community</span><h2>Volunteer opportunities');};
+var yscBaseRender=render;
 render=function(){
  var r=parseHash(),v=r.view;
- if(!V44_VIEWS[v]||(S.err&&!S.boot))return v44BaseRender.apply(this,arguments);
+ if(!YSC_VIEWS[v]||(S.err&&!S.boot))return yscBaseRender.apply(this,arguments);
  S.route=r;var root=document.getElementById("app");
  var body=v==="jobs"?vJobs():vStartups();
- root.innerHTML='<div class="shell">'+sidebar()+'<div class="main">'+header(V44_VIEWS[v])+'<div class="content"><div class="wrap">'+body+footerHtml()+'</div></div></div></div>'+tabbar()+'<div class="scrim" onclick="A.drawer(false)"></div>';
+ root.innerHTML='<div class="shell">'+sidebar()+'<div class="main">'+header(YSC_VIEWS[v])+'<div class="content"><div class="wrap">'+body+footerHtml()+'</div></div></div></div>'+tabbar()+'<div class="scrim" onclick="A.drawer(false)"></div>';
  renderModal();try{renderGoogleButtons();}catch(e){}
 };
+
+// ---- One place to sign in: the account menu at the top right (ysa) -----------------------------------------------------
+// Like Google's apps: signed out, the header shows one "Sign in" button that opens the sign-in page (#/account, which
+// keeps Google sign-in, email sign-in and sign-up). Signed in, the header shows the member's picture or initials; it
+// opens a card with their name, email and plan, "Manage your account" and "Sign out". Everywhere else the extra
+// sign-in buttons and links are taken out: the "Guest" chip, the menu's "Sign in / Sign up" and "Account" items, the
+// plan box button, and the buttons and links inside pages (a link becomes plain text). Pop-ups that are a step of
+// something the person started (upgrading, saving) still offer sign-in, and so does the sign-in page itself.
+(function(){var st=document.createElement("style");st.id="ysacss";st.textContent=
+ ".ysa{position:relative;display:flex;align-items:center}"+
+ ".ysa-av{width:40px;height:40px;padding:3px;border:0;border-radius:50%;background:transparent;cursor:pointer;display:grid;place-items:center}"+
+ ".ysa-av:hover,.ysa-av[aria-expanded=true]{background:var(--muts)}"+
+ ".ysa-av:focus-visible{outline:2px solid var(--ac);outline-offset:2px}"+
+ ".ysa-av .av{width:32px;height:32px;font-size:12px}"+
+ ".ysa-p{position:absolute;right:0;top:calc(100% + 10px);width:340px;max-width:calc(100vw - 24px);padding:16px 18px 12px;background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 14px 36px rgba(15,23,42,.18);z-index:60;text-align:center;display:grid;gap:10px;justify-items:center}"+
+ ".ysa-mail{font-size:13px;color:var(--tx2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}"+
+ ".ysa-p .av.big{width:76px;height:76px;font-size:28px;margin-top:4px}"+
+ ".ysa-hi{font-size:20px;font-weight:600;letter-spacing:-.3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}"+
+ ".ysa-p .btn.ysa-man{border-radius:999px;padding:8px 18px;border-color:var(--line2)}"+
+ ".ysa-p .btn.ysa-out{width:100%;justify-content:center;border-radius:14px;margin-top:4px}"+
+ ".ysa-foot{display:flex;gap:10px;justify-content:center;font-size:11.5px;color:var(--tx3);padding-top:2px}.ysa-foot a{color:var(--tx3)}"+
+ ".ysa-in{white-space:nowrap}"+
+ ".v39act:empty{display:none}";
+ document.head.appendChild(st);})();
+var YSA={open:false,hash:""};
+function ysaInitials(a){return esc(a.initials||initialsOf(a.name||""));}
+function ysaAvatar(a,big){var u=a.avatarUrl||a.avatar_url||"";return '<span class="av'+(big?' big':'')+'" aria-hidden="true">'+(u?'<img src="'+attr(u)+'" alt="" referrerpolicy="no-referrer">':ysaInitials(a))+'</span>';}
+function ysaEmail(a){return a.email||((S.user||{}).email)||((S.account||{}).user||{}).email||"";}
+function ysaPlan(){try{return tierName(myTier());}catch(e){return isPremium()?"Premium":"Free";}}
+function ysaInner(){
+ var a=actor();
+ if(!signedIn()){
+  var onSignIn=(S.route||{}).view==="account";
+  return onSignIn?'':'<button type="button" class="btn s p ysa-in" onclick="A.ysaSignIn()">'+ic("user")+'Sign in</button>';
+ }
+ var first=String(a.name||"").trim().split(/\s+/)[0]||"there";
+ var h='<button type="button" class="ysa-av" title="Your account" aria-label="Your account: '+attr(a.name||"")+'" aria-haspopup="true" aria-expanded="'+(YSA.open?'true':'false')+'" onclick="A.ysaToggle(event)">'+ysaAvatar(a)+'</button>';
+ if(!YSA.open)return h;
+ return h+'<div class="ysa-p" role="dialog" aria-label="Your account">'+
+  '<div class="ysa-mail">'+esc(ysaEmail(a))+'</div>'+ysaAvatar(a,true)+
+  '<div class="ysa-hi">Hi, '+esc(first)+'!</div>'+
+  '<span class="badge'+(isPremium()?' ac':'')+'">'+esc(ysaPlan())+' plan</span>'+
+  '<a class="btn ysa-man" href="#/account" onclick="A.ysaClose()">Manage your account</a>'+
+  '<button type="button" class="btn ysa-out" onclick="A.ysaClose();A.signOut()">'+ic("out")+'Sign out</button>'+
+  '<div class="ysa-foot"><a href="#/privacy" onclick="A.ysaClose()">Privacy Policy</a><span>&middot;</span><a href="#/terms" onclick="A.ysaClose()">Terms</a></div></div>';
+}
+function ysaPaint(){var el=document.getElementById("ysaw");if(el)el.innerHTML=ysaInner();}
+A.ysaSignIn=function(){openSignIn();};
+A.ysaToggle=function(e){if(e)e.stopPropagation();YSA.open=!YSA.open;if(YSA.open&&typeof NT!=="undefined"&&NT.open){NT.open=false;ntPaint();}ysaPaint();};
+A.ysaClose=function(){if(YSA.open){YSA.open=false;ysaPaint();}};
+document.addEventListener("click",function(e){if(YSA.open&&!e.target.closest("#ysaw")){YSA.open=false;ysaPaint();}});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&YSA.open){YSA.open=false;ysaPaint();var b=document.querySelector("#ysaw .ysa-av");if(b)b.focus();}});
+// Header: drop the old Sign in button and the name chip, add the account control at the right-hand end.
+var ysaBaseHeader=header;
+header=function(title){
+ var h=ysaBaseHeader.apply(this,arguments);
+ h=h.replace(/<button class="btn s p" onclick="A\.openSignIn\(\)">(?:(?!<\/button>)[\s\S])*<\/button>/,"");
+ h=h.replace(/<a class="who" href="#\/account">[\s\S]*?<\/a>/,"");
+ var j=h.lastIndexOf("</div>");
+ return j<0?h:h.slice(0,j)+'<div class="ysa" id="ysaw">'+ysaInner()+'</div>'+h.slice(j);
+};
+// The account card closes when the page changes.
+var ysaBaseRender=render;
+render=function(){if(YSA.hash!==location.hash){YSA.hash=location.hash;YSA.open=false;}var r=ysaBaseRender.apply(this,arguments);ysaSweep();return r;};
+// Limit messages: keep the upgrade button, the sign-in button moves to the header.
+var ysaBaseLimitButtons=limitButtons;
+limitButtons=function(){return ysaBaseLimitButtons.apply(this,arguments).replace(/<button class="btn s p" onclick="A\.openSignIn\(\)">(?:(?!<\/button>)[\s\S])*<\/button>/g,"").replace(/<div class="row"[^>]*><\/div>/,"");};
+// Takes the other sign-in buttons and links out of the menu and the pages (not the header, pop-ups or sign-in page).
+function ysaSweep(){
+ var app=document.getElementById("app");if(!app)return;
+ var sb=app.querySelector(".sb");
+ if(sb){
+  sb.querySelectorAll('a[href="#/account"]').forEach(function(a){a.remove();});
+  sb.querySelectorAll('button[onclick^="A.openSignIn"]').forEach(function(b){b.remove();});
+  sb.querySelectorAll(".nav .sec,nav .sec").forEach(function(sec){var n=sec.nextElementSibling;if(!n||n.classList.contains("sec"))sec.remove();});
+ }
+ if((S.route||{}).view==="account")return;
+ var main=app.querySelector(".main .content");if(!main)return;
+ main.querySelectorAll('button[onclick^="A.openSignIn"]').forEach(function(b){
+  var p=b.parentElement;b.remove();
+  if(p&&p.classList&&p.classList.contains("f")&&!p.querySelector("input,select,textarea,button"))p.remove();
+ });
+ main.querySelectorAll('a[onclick^="A.openSignIn"]').forEach(function(a){a.replaceWith(document.createTextNode(a.textContent));});
+}
+// Parts of a page that redraw on their own (chat replies, StudyPals bar) get the same clean-up.
+(function(){
+ var app=document.getElementById("app");if(!app||!window.MutationObserver)return;
+ var queued=false;
+ new MutationObserver(function(){if(queued)return;queued=true;setTimeout(function(){queued=false;ysaSweep();},0);}).observe(app,{childList:true,subtree:true});
+})();
 
 render();boot();
 })();

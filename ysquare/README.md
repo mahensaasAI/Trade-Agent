@@ -173,8 +173,9 @@ from `dist/workflows/volunteer_links.sdk.js` and run it once. Other cities get t
 ## Y Square Community: Startups and Jobs
 
 The menu section "Community" is now "Y Square Community": Volunteer, Startups and Jobs. The pages are the
-`v44` block at the end of the live page script (source: `ui/v44_startups_jobs.js`), which wraps the sidebar,
-tab bar and router the same way the earlier `vNN` blocks do.
+`ysc` block near the end of the live page script (source: `ui/ysc_startups_jobs.js`), which wraps the sidebar,
+tab bar and router the same way the numbered `vNN` blocks do. It uses its own `ysc` prefix rather than a version
+number so it cannot clash with the next numbered block.
 
 - **Startups** (`#/startups`) tells Y Square's goal (a billion-dollar startup from young founders), describes the
   Y Square Entrepreneurship and Startup Program for middle school (grades 6-8) and high school (grades 9-12), and ends
@@ -188,6 +189,17 @@ tab bar and router the same way the earlier `vNN` blocks do.
   YC batch, one-liner, location, type, role, salary and experience, each linking to the listing on ycombinator.com.
   Only `https://www.ycombinator.com/companies/...` links are shown. With no saved list the page says so and links to
   the board - listings are never made up.
+
+## Signing in: one place, top right
+
+Sign-in lives in one place, the top-right corner, the way Google's apps do it (`ysa` block, source
+`ui/ysa_account_menu.js`, appended after `ysc`). Signed out, the header shows a single **Sign in** button that opens
+the sign-in page (`#/account`: Google sign-in, email sign-in and sign-up, unchanged). Signed in, it shows the member's
+picture or initials, which opens a card with their email, name, plan, **Manage your account** (`#/account`) and
+**Sign out**. The old header chip, the menu's "Sign in / Sign up" / "Account" items and the plan box's Sign in button
+are gone, and a small sweep after every redraw removes sign-in buttons inside pages and turns sign-in links into plain
+text, so a later block that adds one does not bring the clutter back. Pop-ups that are a step of something the person
+started (the upgrade window, saving a profile) and the sign-in page itself still offer sign-in.
 
 ## Hosting and domains
 
