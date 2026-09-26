@@ -52,6 +52,9 @@ Callers send either `X-Guest-Id: guest-...` (free version) or `Authorization: Be
 | Y Square - Upload UI Page (chunked) | Manual helper: uploads the page in MD5-verified chunks via workflow executions (never publish it) |
 | Y Square - Volunteer Links (Dallas) | Weekly link keeper for the volunteer board: re-checks the curated Dallas listings, falls back to the next candidate URL, refreshes each blurb from the page itself and upserts them into `ys_volunteer` |
 | Y Square Billing | Records payment events and switches plans (Stripe Payment Link / Checkout) |
+| Y Square - Startup Jobs (Y Combinator) | Every morning (06:17) reads `ycombinator.com/jobs`, keeps the top 10 listings (one per company, in YC's order) and writes them to `ys_settings.organization.startupJobs` for the Jobs page. Keeps the previous list if the page can't be read |
+| Y Square - Ecosystem Interest | `POST /svc/interest`: the "send us a message" form on the Startups page. Stores the message in `ys_interest` and notifies every admin in the app |
+| Y Square - DB Update v44 (ecosystem interest) | Manual, idempotent: creates `ys_interest` |
 
 The SDK code that created each workflow is in `dist/workflows/*.sdk.js`, generated from the sources below.
 
@@ -166,6 +169,25 @@ community submissions rather than in the admin approval queue. `vol.list` needs 
 mirrored into `ys_settings.organization.volunteerOpportunities`, which is the fallback the page reads when nobody is
 signed in. To change what is listed, edit `volunteer/dallas.json`, run `npm run gen:volunteer`, update the workflow
 from `dist/workflows/volunteer_links.sdk.js` and run it once. Other cities get their own catalogue file the same way.
+
+## Y Square Community: Startups and Jobs
+
+The menu section "Community" is now "Y Square Community": Volunteer, Startups and Jobs. The pages are the
+`v44` block at the end of the live page script (source: `ui/v44_startups_jobs.js`), which wraps the sidebar,
+tab bar and router the same way the earlier `vNN` blocks do.
+
+- **Startups** (`#/startups`) tells Y Square's goal (a billion-dollar startup from young founders), describes the
+  Y Square Entrepreneurship and Startup Program for middle school (grades 6-8) and high school (grades 9-12), and ends
+  with a "Be part of the Y Square ecosystem" form. The form posts to `/svc/interest`
+  (`services/interest_check.js`, `services/interest_save.sql`, `services/interest_reply.js`): name, email, who they
+  are, grade and a message. Students must confirm they are 13 or older; younger students are asked to have a parent
+  or guardian send it. A hidden field catches bots, one email is accepted once an hour, a network (the daily-salted
+  `ys_net_key`, kept 2 days) 5 times a day, and 300 messages a day in total. Each message becomes an `interest`
+  notification for every active admin; the rows stay in `ys_interest` (`status` starts as `new`).
+- **Jobs** (`#/jobs`) lists what the Startup Jobs workflow saved (`services/startup_jobs_parse.js`): title, company,
+  YC batch, one-liner, location, type, role, salary and experience, each linking to the listing on ycombinator.com.
+  Only `https://www.ycombinator.com/companies/...` links are shown. With no saved list the page says so and links to
+  the board - listings are never made up.
 
 ## Hosting and domains
 
