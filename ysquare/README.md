@@ -60,6 +60,7 @@ Callers send either `X-Guest-Id: guest-...` (free version) or `Authorization: Be
 | Y Square - DB Update My Plan v1 | Manual, idempotent: `ys_plan_items`, `ys_plan_sent`, `ys_plan_prefs` and `ys_plan_occ(from, to)` |
 | Y Square - Event Admin | `POST /svc/events-admin`: `events.admin_list` (admins: every event with its people, tasks, updates and chat counts) and `events.delete` (admins any event; organisers - signed in, or the guest who created it - their own). Removes the event with its tasks, updates, chat and members and notifies the other members (`event_removed`) |
 | Y Square - DB Update v44b (interest track) | Manual, idempotent: `ys_interest.track` |
+| Y Square - Account Basics | `POST /svc/me`: the signed-in person's own name and month and year of birth (same session check as Y Square Services), so the Athlete Edge profile form can be filled in for them |
 
 The SDK code that created each workflow is in `dist/workflows/*.sdk.js`, generated from the sources below.
 
@@ -209,6 +210,21 @@ number so it cannot clash with the next numbered block.
   **Admin > Events** tab (every event, "looks unused" = nobody else joined and no tasks, updates or chat, with one
   button to delete all unused ones) and a "Delete (admin)" button on events they are in but not organising.
   Deleting cannot be undone; setting the status to cancelled keeps the history instead.
+
+## Athlete Edge for every age
+
+`yat` block (source `ui/yat_athlete_age.js`, placed after `yev` and before `ysa`):
+
+- **Age groups** run 8-11, 12-14, 15-17, 18-22, 23-29, 30-39, 40-49, 50-59 and 60+ (22 used to be the oldest).
+- **Filled in for you.** Signed in, "Add profile" / "Edit" opens with the blanks filled from the account: the first
+  name, and the age group from the month and year of birth given at sign-up (`POST /svc/me`, counted the conservative
+  way sign-up does: in the birth month the birthday is taken as not reached). Only empty fields are filled, plus an old
+  "18-22" the account's age has outgrown; a note says what was filled. Nothing is saved until Save profile.
+- **The agent** (Build Prompt in Y Square Agents, source `agents/build_prompt.js`) keeps the child rules for anyone under
+  18 or with no age group (no supplements, caffeine, energy drinks, fasting or diets) and, from 18, may explain the
+  evidence on caffeine, protein powder or creatine in general terms, never weight-loss doses, fasting or weight
+  cutting, and points to a doctor or registered dietitian first; over-40s also hear about recovery, protein spread,
+  bone health and hydration.
 
 ## Startups: Undergraduates (Future Founders Academy)
 
