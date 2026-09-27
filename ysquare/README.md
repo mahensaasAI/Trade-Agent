@@ -55,6 +55,9 @@ Callers send either `X-Guest-Id: guest-...` (free version) or `Authorization: Be
 | Y Square - Startup Jobs (Y Combinator) | Every morning (06:17) reads `ycombinator.com/jobs`, keeps the top 10 listings (one per company, in YC's order) and writes them to `ys_settings.organization.startupJobs` for the Jobs page. Keeps the previous list if the page can't be read |
 | Y Square - Ecosystem Interest | `POST /svc/interest`: the "send us a message" form on the Startups page. Stores the message in `ys_interest` and notifies every admin in the app |
 | Y Square - DB Update v44 (ecosystem interest) | Manual, idempotent: creates `ys_interest` |
+| Y Square - My Plan | `POST /svc/plan` (list, save, save_many, delete, prefs, feed, and `plan.parse`: a sentence or an Athlete Edge / StudyPals answer turned into plan items by Gemini) and `GET /svc/calendar?k=...`, the private iCalendar feed. Checks sessions exactly like Y Square Services |
+| Y Square - My Plan Reminders | Every 5 minutes: due reminders into the notification bell (`plan_reminder`). Every hour: the 7am "Your plan today" email, in each person's time zone, never to under-13 accounts |
+| Y Square - DB Update My Plan v1 | Manual, idempotent: `ys_plan_items`, `ys_plan_sent`, `ys_plan_prefs` and `ys_plan_occ(from, to)` |
 
 The SDK code that created each workflow is in `dist/workflows/*.sdk.js`, generated from the sources below.
 
@@ -189,6 +192,27 @@ number so it cannot clash with the next numbered block.
   YC batch, one-liner, location, type, role, salary and experience, each linking to the listing on ycombinator.com.
   Only `https://www.ycombinator.com/companies/...` links are shown. With no saved list the page says so and links to
   the board - listings are never made up.
+
+## My Plan
+
+One personal calendar for meals, workouts, study and events (`ypl` block, source `ui/ypl_my_plan.js`, placed between
+`ysc` and `ysa`). It is the second item in the menu, the **Plan** tab on phones (Events moves under More), and a
+**Today** card at the top of Home for signed-in members.
+
+- **Adding things.** "Describe it" takes a typed or spoken sentence ("Gym Mon, Wed, Fri at 5pm"); the AI reading
+  (`services/plan_prompt.js`, `plan_clean.js`) is always shown for approval before anything is saved, and a vague
+  request gets one question back ("What day and time is the dentist appointment?"). There is also a plain form, and
+  an **Add to My Plan** button under Athlete Edge and StudyPals answers that turns a meal, workout or study plan into
+  repeating items. Parsing is limited to 40 a day per person.
+- **Storage.** `ys_plan_items` holds one row per item; a repeating item (daily, weekdays, or weekly on chosen days,
+  optionally until a date) is stored once with its IANA time zone, so 7am stays 7am across daylight-saving changes.
+  `ys_plan_occ(from, to)` expands occurrences for the reminders; the page expands them itself. Group events the
+  person is going to are shown alongside (read-only). Every request is checked in `services/plan_route.js`.
+- **Reminders.** In the bell (every 5 minutes, once per occurrence via `ys_plan_sent`), a 7am email on days with
+  something planned (switch in My Plan > Settings; not sent to under-13 accounts or unverified emails), an
+  **Add to Google Calendar** link on every item, and a private subscription link (Settings) for Google Calendar,
+  Apple Calendar or Outlook so the phone reminds them too (`services/plan_ics.js`). Making a new link turns the old
+  one off.
 
 ## Signing in: one place, top right
 
