@@ -58,6 +58,8 @@ Callers send either `X-Guest-Id: guest-...` (free version) or `Authorization: Be
 | Y Square - My Plan | `POST /svc/plan` (list, save, save_many, delete, prefs, feed, and `plan.parse`: a sentence or an Athlete Edge / StudyPals answer turned into plan items by Gemini) and `GET /svc/calendar?k=...`, the private iCalendar feed. Checks sessions exactly like Y Square Services |
 | Y Square - My Plan Reminders | Every 5 minutes: due reminders into the notification bell (`plan_reminder`). Every hour: the 7am "Your plan today" email, in each person's time zone, never to under-13 accounts |
 | Y Square - DB Update My Plan v1 | Manual, idempotent: `ys_plan_items`, `ys_plan_sent`, `ys_plan_prefs` and `ys_plan_occ(from, to)` |
+| Y Square - Event Admin | `POST /svc/events-admin`: `events.admin_list` (admins: every event with its people, tasks, updates and chat counts) and `events.delete` (admins any event; organisers - signed in, or the guest who created it - their own). Removes the event with its tasks, updates, chat and members and notifies the other members (`event_removed`) |
+| Y Square - DB Update v44b (interest track) | Manual, idempotent: `ys_interest.track` |
 
 The SDK code that created each workflow is in `dist/workflows/*.sdk.js`, generated from the sources below.
 
@@ -192,6 +194,30 @@ number so it cannot clash with the next numbered block.
   YC batch, one-liner, location, type, role, salary and experience, each linking to the listing on ycombinator.com.
   Only `https://www.ycombinator.com/companies/...` links are shown. With no saved list the page says so and links to
   the board - listings are never made up.
+
+## Events: Agent Planner on the page, and removing events
+
+`yev` block (source `ui/yev_events.js`, placed after `ypl`):
+
+- **Agent Planner** opens as a panel at the top of the Events page instead of a pop-up. Its **Create an event** tab is
+  the existing Agent Planner conversation (describe it, answer what is missing, it creates the event); its
+  **AI Planner** tab is the Event Planner agent's chat for checklists, roles, budgets and announcements before an event
+  exists (inside an event the AI Planner tab still sees the live tasks and RSVPs). The panel re-uses the Agent
+  Planner's own code: `agpShow` repaints the panel, and `renderModal` skips the Agent Planner's clean-up while the
+  panel is open so the conversation is not lost on background redraws.
+- **Deleting.** Organisers get a "Delete this event" section at the bottom of the event's Edit window; admins get the
+  **Admin > Events** tab (every event, "looks unused" = nobody else joined and no tasks, updates or chat, with one
+  button to delete all unused ones) and a "Delete (admin)" button on events they are in but not organising.
+  Deleting cannot be undone; setting the status to cancelled keeps the history instead.
+
+## Startups: Undergraduates (Future Founders Academy)
+
+The Startups page also presents the **Y Square Future Founders Academy - Career Advantage** program for undergraduates
+(and experienced professionals): five tracks - Agentic AI, BPM, ERP, Career Edge, Upskill - with "Entrepreneurship is
+built into every track" and where each track can lead (engineering, business, global). Each track has an
+"I am interested" button that opens the message form with the track chosen. The form now also takes "College /
+undergraduate student" and "Working professional", and stores the chosen track in `ys_interest.track`; the admin
+notification names the track.
 
 ## My Plan
 

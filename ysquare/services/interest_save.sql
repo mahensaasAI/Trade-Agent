@@ -4,8 +4,8 @@ st AS (SELECT
   (SELECT count(*) FROM ys_interest i, k WHERE k.net IS NOT NULL AND i.net_key = k.net AND i.created_at > now() - interval '1 day') AS by_net,
   (SELECT count(*) FROM ys_interest WHERE created_at > now() - interval '1 day') AS total,
   EXISTS (SELECT 1 FROM ys_interest WHERE email = $2 AND created_at > now() - interval '1 hour') AS dup),
-ins AS (INSERT INTO ys_interest (name, email, role, grade, message, guest_id, net_key)
-  SELECT $1, $2, $3, nullif($4, ''), nullif($5, ''), nullif($6, ''), k.net FROM k, st
+ins AS (INSERT INTO ys_interest (name, email, role, grade, track, message, guest_id, net_key)
+  SELECT $1, $2, $3, nullif($4, ''), nullif($9, ''), nullif($5, ''), nullif($6, ''), k.net FROM k, st
   WHERE st.by_net < 5 AND st.total < 300 AND NOT st.dup RETURNING id),
 nt AS (INSERT INTO ys_notifications (recipient_id, recipient_email, kind, title, body, link, actor_name, created_at)
   SELECT u.id, u.email, 'interest', 'Wants to join the Y Square ecosystem', $8, '#/startups', $1, now()
