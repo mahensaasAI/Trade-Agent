@@ -358,6 +358,7 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
 }
 @media(max-width:430px){
  .pub-brand .pb-t em{display:none}
+.nav-home span{display:none}
  .nav-signin{display:none}
 }
 @supports(height:100dvh){.pub{min-height:100dvh}}
@@ -614,14 +615,14 @@ function pubRoute(){
 function pubNav(active){
  return '<header class="pub-nav"><div class="pub-in">'+
   '<a class="pub-brand" href="#/" title="Home"><span class="logo">W</span><span class="pb-t"><b>WorkPlace</b><em>OraDayForce</em></span></a>'+
-  '<button class="btn btn-g" data-a="theme" title="Switch theme">'+ic(document.documentElement.getAttribute("data-t")==="dark"?"sun":"moon")+'</button>'+
+  '<a class="btn btn-g nav-home" href="https://oradayforce.com/" title="Back to the OraDayForce website">'+ic("back")+'<span>oradayforce.com</span></a>'+'<button class="btn btn-g" data-a="theme" title="Switch theme">'+ic(document.documentElement.getAttribute("data-t")==="dark"?"sun":"moon")+'</button>'+
   (active==="signin"?'':'<a class="btn btn-g nav-signin" href="#/signin">'+ic("lock")+'Sign in</a>')+
   (active==="signup"?'':'<a class="btn btn-p" href="#/signup">'+ic("plus")+'Request access</a>')+
   '</div></header>';
 }
 function pubFoot(){
  return '<footer class="pub-foot"><div class="pub-in">'+
-  '<span>WorkPlace &middot; OraDayForce</span><span style="margin-left:auto">Accounts are approved by an administrator.</span>'+
+  '<span>WorkPlace &middot; <a href="https://oradayforce.com/" style="color:inherit">OraDayForce</a></span><span style="margin-left:auto">Accounts are approved by an administrator.</span>'+
   '</div></footer>';
 }
 function vLanding(){
@@ -741,7 +742,7 @@ function sidebar(){
  '<div class="sb-lbl">PINNED</div>'+
  d.projects.slice(0,3).map(function(p){return '<a class="nv" href="#/projects/'+p.id+'"><span class="stat-dot" style="background:'+p.color+'"></span><span class="nv-t" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.client)+'</span></a>';}).join("")+
  '</nav><div class="sb-bot">'+(planKnown()||isAdmin()?'<div class="sb-plan">'+(planKnown()?'<span class="planchip'+(isPremium()?' pro':'')+'">'+ic(isPremium()?'shield':'lock')+(isPremium()?'PREMIUM':'FREE PLAN')+'</span>':'<span></span>')+(isAdmin()?'<span class="meta">Admin</span>':'')+'</div>':'')+
- '<button class="u-row" data-a="nav" data-v="#/settings"><div class="av">'+esc(d.user.initials)+'</div><div class="u-meta"><b>'+esc(d.user.name)+'</b><small>'+esc(d.user.role)+'</small></div></button>'+
+ '<a class="u-row" href="https://oradayforce.com/" title="Back to the OraDayForce website" style="color:var(--tx3);text-decoration:none">'+ic("back","ic18")+'<span class="u-meta"><b style="font-size:12.5px;font-weight:560">oradayforce.com</b></span></a>'+'<button class="u-row" data-a="nav" data-v="#/settings"><div class="av">'+esc(d.user.initials)+'</div><div class="u-meta"><b>'+esc(d.user.name)+'</b><small>'+esc(d.user.role)+'</small></div></button>'+
  '<button class="u-row" data-a="signout" style="color:var(--tx3)">'+ic("out","ic18")+'<span class="u-meta"><b style="font-size:12.5px;font-weight:560">Sign out</b></span></button>'+
  '</div></aside>';
 }
