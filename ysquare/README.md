@@ -267,6 +267,20 @@ are gone, and a small sweep after every redraw removes sign-in buttons inside pa
 text, so a later block that adds one does not bring the clutter back. Pop-ups that are a step of something the person
 started (the upgrade window, saving a profile) and the sign-in page itself still offer sign-in.
 
+## Chat layout for the agents
+
+`ych` block (source `ui/ych_chat_layout.js`, appended after `ysa`, just before `render();boot();`):
+
+- **Laptops.** Athlete Edge, SynthIQ and StudyPals (Tutor and Ask AI) fit the window: the settings bar, the chat and a
+  slim footer, with no page scroll. The chat takes the height that is left (the message area on a 1440x860 screen went
+  from 291 to 407 px on SynthIQ, more once the starter questions go). The layout switches on only when a chat view is on
+  screen (`body.ych`, plus `ych-sp` for StudyPals); every other page scrolls as before.
+- **SynthIQ** shows the sources and a **Filters** button on one line; the button counts the filters that differ from
+  the defaults and opens the year, study type, results per source and free-full-text options underneath.
+- **StudyPals** shows grade, subject and topic on one line (labels hidden, the selects say what they are) with slimmer tabs.
+- **Disclaimers** move from above the chat to one small line under the message box, inside the chat card. Phones get a
+  one-line short form for Athlete Edge and SynthIQ (`YCH_SHORT`), where before they showed no disclaimer at all.
+
 ## Hosting and domains
 
 One GCP VM runs everything: nginx terminates TLS, n8n runs behind it, and the database is CloudSQL. The two hostnames

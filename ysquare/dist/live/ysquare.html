@@ -3928,8 +3928,14 @@ function ysaSweep(){
 // - SynthIQ's sources and filters sit on one line; the filters open from a "Filters" button that counts what is set.
 // - StudyPals' grade, subject and topic sit on one line, with slimmer tabs.
 // - The disclaimers ("not medical advice", "a study aid", which Tutor answers from) move from above the chat to one
-//   small line under the message box, the way chat apps show them. They show on phones too, where they used to be hidden.
+//   small line under the message box, the way chat apps show them. Phones get a one-line short form (they used to show
+//   no disclaimer at all).
 var YCH={fil:false};
+// Short forms for phones, where every line counts.
+var YCH_SHORT={
+ "agent-athlete":"Food-first guidance, not medical advice. Ask a doctor or dietitian about health concerns.",
+ "agent-synthiq":"A study aid, not clinical advice. Check the cited papers."
+};
 var YCH_NOTES={
  "agent-synthiq":"SynthIQ searches only the sources you switch on and cites what it finds. It is a study aid, not clinical advice.",
  "agent-askai":"Ask AI answers any question, even outside your class materials. For answers from what your coach uploaded, use <a href=\"#\" onclick=\"A.spTab('tutor');return false\">Tutor</a>."
@@ -3942,7 +3948,7 @@ function ychNote(a){
 }
 (function(){var st=document.createElement("style");st.id="ychcss";st.textContent=
  ".ych-note{padding:0 16px 9px;font-size:11px;line-height:1.45;color:var(--tx3);text-align:center}"+
- ".ych-note a{color:inherit;text-decoration:underline}"+
+ ".ych-note a{color:inherit;text-decoration:underline}.ych-note .ych-s{display:none}"+
  ".chat .composer{padding-bottom:8px}"+
  ".ych-bar .sqrow{padding:8px 12px;gap:10px}"+
  ".ych-bar .sqlab{flex:none}"+
@@ -3967,7 +3973,7 @@ function ychNote(a){
   "body.ych-sp .spchat{flex:1 1 auto;min-height:340px;display:flex;flex-direction:column}"+
   "body.ych-sp .spchat .chat{flex:1 1 auto;height:auto;min-height:300px}"+
  "}"+
- "@media(max-width:760px){.ych-note{padding:0 12px 6px;font-size:10.5px}.ych-bar .sqrow{padding:8px 10px}.ych-bar .sqlab b{display:none}}";
+ "@media(max-width:760px){.ych-note{padding:0 12px 6px;font-size:10.5px}.ych-note .ych-l{display:none}.ych-note .ych-s{display:inline}.ych-bar .sqrow{padding:8px 10px}.ych-bar .sqlab b{display:none}}";
  document.head.appendChild(st);})();
 
 // The disclaimer goes under the message box, inside the chat card.
@@ -3975,7 +3981,8 @@ var ychBaseChatPanel=chatPanel;
 chatPanel=function(a){
  var h=ychBaseChatPanel.apply(this,arguments);var note=ychNote(a);
  if(!note||h.slice(-6)!=="</div>")return h;
- return h.slice(0,-6)+'<div class="ych-note">'+note+'</div></div>';
+ var sh=a&&YCH_SHORT[a.id];
+ return h.slice(0,-6)+'<div class="ych-note">'+(sh?'<span class="ych-l">'+note+'</span><span class="ych-s">'+esc(sh)+'</span>':note)+'</div></div>';
 };
 // ...and leaves the bars above the chat.
 function ychNoTopNote(h){return String(h).replace(/<div class="sqnote[^"]*">[\s\S]*?<\/div>/,"").replace(/<div class="sphint[^"]*">[\s\S]*?<\/div>/,"");}
@@ -4004,7 +4011,6 @@ render=function(){
   b.classList.toggle("ych",sp||!!document.querySelector(".content .sqview, .content .apview"));b.classList.toggle("ych-sp",sp);}catch(e){}
  return r;
 };
-
 render();boot();
 })();
 </script>
