@@ -363,6 +363,45 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
 }
 @supports(height:100dvh){.pub{min-height:100dvh}}
 
+/* odf-collab: Internal Agent panel and RFPs page */
+.team-btn{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;border-radius:9px;border:1px solid var(--acl);background:var(--acs);color:var(--ac);font:inherit;font-size:12.5px;font-weight:650;cursor:pointer;margin-right:6px;position:relative}
+.team-btn:hover{border-color:var(--ac)}
+.tb-n{min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#db2777;color:#fff;font-size:10.5px;font-weight:700;display:inline-grid;place-items:center}
+.tp-scrim{position:fixed;inset:0;background:rgba(10,12,18,.28);z-index:190}
+.tp{position:fixed;top:0;right:0;bottom:0;width:min(760px,100vw);background:var(--panel);border-left:1px solid var(--line);box-shadow:var(--sh2);z-index:191;display:flex;flex-direction:column}
+.tp-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.tp-h b{display:block;font-size:15px}.tp-h small{display:block;color:var(--tx3);font-size:12px}.tp-h .ib{margin-left:auto}
+.tp-body{flex:1;display:flex;min-height:0}
+.tp-list{width:230px;border-right:1px solid var(--line);overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:2px}
+.tc{display:flex;align-items:center;gap:9px;padding:8px;border-radius:9px;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;width:100%}
+.tc:hover{background:var(--muts)}.tc.on{background:var(--acs)}
+.tc-a{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex:none;background:var(--brand-grad,var(--ac));color:#fff;font-size:11px;font-weight:700}
+.tc-t{min-width:0;flex:1}.tc-t b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tc-t small{display:block;color:var(--tx3);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tp-chat{flex:1;display:flex;flex-direction:column;min-width:0}
+.tp-ct{padding:10px 16px;font-weight:650;border-bottom:1px solid var(--line);font-size:13.5px}
+.tp-msgs{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.tp-e{margin:auto;text-align:center;color:var(--tx2);max-width:360px}.tp-e p{margin:8px 0}
+.tm{display:flex;gap:9px;align-items:flex-start}
+.tm-a{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--muts);color:var(--tx2);font-size:10.5px;font-weight:700}
+.tm.me .tm-a{background:var(--acs);color:var(--ac)}.tm.ag .tm-a{background:var(--brand-grad,var(--ac));color:#fff}
+.tm-b{min-width:0;flex:1}.tm-n{font-size:12.5px;font-weight:650}.tm-n span{color:var(--tx3);font-weight:500;margin-left:7px;font-size:11.5px}
+.tm-t{font-size:13.5px;line-height:1.55;margin-top:2px;overflow-wrap:anywhere}
+.tm.ag .tm-t{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.tp-err{margin:0 16px 8px;font-size:12px;color:var(--err)}
+.tp-comp{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
+.tp-comp textarea{flex:1;resize:none;border:1px solid var(--line2);border-radius:10px;padding:9px 11px;background:var(--panel);color:var(--tx);font:inherit;font-size:13.5px;min-height:44px;max-height:140px}
+.tp-comp textarea:focus{outline:none;border-color:var(--ac)}
+@media(max-width:700px){.tp-body{flex-direction:column}.tp-list{width:auto;flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);flex:none}.tc{width:auto;flex:none}.tc-t small{display:none}.team-btn .tb-l{display:none}.team-btn{padding:0 9px}}
+.rfps{display:flex;flex-direction:column;gap:10px}
+.rfp{display:flex;gap:14px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.rfp.wk{border-color:var(--acl);background:var(--acs)}
+.rfp-rank{width:30px;height:30px;flex:none;border-radius:9px;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--brand-grad,var(--ac));color:#fff}
+.rfp-main{flex:1;min-width:0}
+.rfp-t{font-weight:650;font-size:14.5px;color:var(--tx);text-decoration:none;line-height:1.35}.rfp-t:hover{color:var(--ac);text-decoration:underline}
+.rfp-s{font-size:13px;color:var(--tx2);margin:6px 0 2px}
+.rfp-act{display:flex;flex-direction:column;gap:6px;flex:none}
+@media(max-width:700px){.rfp{flex-wrap:wrap}.rfp-act{flex-direction:row;width:100%}}
+
 /* odf-brand-v3: OraDayForce brand layer (see oradayforce/brand/workplace-theme.css) */
 :root{--brand-grad:linear-gradient(120deg,#4f46e5 0%,#7c3aed 55%,#db2777 100%);--brand-grad-text:linear-gradient(92deg,#4f46e5,#7c3aed 55%,#db2777)}
 [data-t="dark"]{--brand-grad-text:linear-gradient(92deg,#818cf8,#a78bfa 55%,#f472b6)}
@@ -544,7 +583,7 @@ function parseHash(){
  if(h[0]==="agents")return h[1]?{v:"agent",id:h[1]}:{v:"agents"};
  if(h[0]==="chat")return {v:"chat"};
  if(h[0]==="activity")return {v:"activity"};
- if(h[0]==="settings")return {v:"settings"};
+ if(h[0]==="settings")return {v:"settings"}; if(h[0]==="rfps")return {v:"rfps"};
  return {v:"dash"};
 }
 function go(h){location.hash=h;}
@@ -733,14 +772,13 @@ function tabbar(){
 function sidebar(){
  var r=S.route,d=S.data;
  var items=[["dash","home","Home","#/dashboard",""],["projects","folder","Projects","#/projects",String(d.projects.length)],
-  ["knowledge","db","Knowledge Bases","#/knowledge",String(d.documents.length)],["agents","bot","Agents","#/agents",String(d.agents.length)],
+  ["knowledge","db","Knowledge Bases","#/knowledge",String(d.documents.length)],["agents","bot","Agents","#/agents",String(d.agents.length)],["rfps","clip","RFPs","#/rfps",R.loaded?String(Math.min(R.items.length,10)):""],
   ["activity","act","Activity","#/activity",""],["settings","cog","Settings","#/settings",""]];
- var on={dash:"dash",projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"activity",settings:"settings"}[r.v];
+ var on={dash:"dash",projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"activity",settings:"settings",rfps:"rfps"}[r.v];
  return '<aside class="sb"><a class="sb-top" href="#/dashboard" style="text-decoration:none;color:inherit" title="Home"><div class="logo">W</div><div class="brand">WorkPlace<span>'+esc(d.organization.name)+'</span></div></a>'+
  '<nav class="sb-nav"><div class="sb-lbl nv-t">WORKSPACE</div>'+
  items.map(function(it){return '<a class="nv'+(on===it[0]?" on":"")+'" href="'+it[3]+'" title="'+attr(it[2])+'">'+ic(it[1],"ic18")+'<span class="nv-t">'+it[2]+'</span>'+(it[4]?'<span class="cnt">'+it[4]+'</span>':'')+'</a>';}).join("")+
- '<div class="sb-lbl">PINNED</div>'+
- d.projects.slice(0,3).map(function(p){return '<a class="nv" href="#/projects/'+p.id+'"><span class="stat-dot" style="background:'+p.color+'"></span><span class="nv-t" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.client)+'</span></a>';}).join("")+
+ 
  '</nav><div class="sb-bot">'+(planKnown()||isAdmin()?'<div class="sb-plan">'+(planKnown()?'<span class="planchip'+(isPremium()?' pro':'')+'">'+ic(isPremium()?'shield':'lock')+(isPremium()?'PREMIUM':'FREE PLAN')+'</span>':'<span></span>')+(isAdmin()?'<span class="meta">Admin</span>':'')+'</div>':'')+
  '<a class="u-row" href="https://oradayforce.com/" title="Back to the OraDayForce website" style="color:var(--tx3);text-decoration:none">'+ic("back","ic18")+'<span class="u-meta"><b style="font-size:12.5px;font-weight:560">oradayforce.com</b></span></a>'+'<button class="u-row" data-a="nav" data-v="#/settings"><div class="av">'+esc(d.user.initials)+'</div><div class="u-meta"><b>'+esc(d.user.name)+'</b><small>'+esc(d.user.role)+'</small></div></button>'+
  '<button class="u-row" data-a="signout" style="color:var(--tx3)">'+ic("out","ic18")+'<span class="u-meta"><b style="font-size:12.5px;font-weight:560">Sign out</b></span></button>'+
@@ -764,7 +802,7 @@ function header(){
  return '<header class="hd"><button class="ib mob-only" data-a="drawer" aria-label="Menu">'+ic("menu","ic18")+'</button>'+
  '<button class="ib desk-only" data-a="sbtoggle" aria-label="Collapse sidebar">'+ic("list","ic18")+'</button>'+crumbs()+
  '<div class="srch">'+ic("srch")+'<input id="gsearch" type="search" placeholder="Search projects, documents, agents…" value="'+attr(S.gq)+'" data-a="gq" autocomplete="off" aria-label="Search">'+globalResults()+'</div>'+
- '<div class="hd-act">'+
+ '<div class="hd-act">'+teamBtn()+
  '<button class="ib" data-a="pop" data-v="notif" aria-label="Notifications">'+ic("bell","ic18")+(unread?'<span class="dot"></span>':'')+'</button>'+
  '<button class="ib" data-a="pop" data-v="help" aria-label="Help">'+ic("help","ic18")+'</button>'+
  '<button class="ib" data-a="theme" aria-label="Theme">'+ic(document.documentElement.getAttribute("data-t")==="dark"?"sun":"moon","ic18")+'</button>'+
@@ -1099,6 +1137,103 @@ function skeleton(){
  '<div class="grid g4" style="margin-bottom:16px">'+"1234".split("").map(function(){return '<div class="sk" style="height:104px"></div>';}).join("")+'</div>'+
  '<div class="grid g2">'+"12".split("").map(function(){return '<div class="sk" style="height:190px"></div>';}).join("")+'</div></div></div></div>';
 }
+/* ---- OraDayForce collaboration: Internal Agent (team chat + @agent) and RFPs. Talks to WorkPlace Collaboration API (/svc/collab). ---- */
+var T={open:false,conv:"team",people:[],convs:[],unread:0,msgs:{},last:{},draft:"",sending:false,agentBusy:false,me:null,lastPoll:0,polling:false,err:null,stick:true};
+var R={loaded:false,loading:false,items:[],more:false,lastRun:null,samConfigured:false,refreshPending:false,isAdmin:false,err:null,keyOpen:false};
+function capi(action,payload){ var h={"Content-Type":"application/json"}; if(S.token)h.Authorization="Bearer "+S.token;
+ return fetch(API+"/collab",{method:"POST",headers:h,body:JSON.stringify({action:action,payload:payload||{}})}).then(function(r){return r.json().catch(function(){throw new Error("HTTP "+r.status);});})
+  .then(function(j){ if(!j||j.success===false)throw new Error((j&&j.error&&j.error.message)||"Request failed"); return j.data; }); }
+function convName(c){ if(c==="team")return "# team"; var ids=c.slice(3).split("|"),me=T.me&&T.me.id,o=ids[0]===me?ids[1]:ids[0]; var p=T.people.filter(function(x){return x.id===o})[0]; return p?p.name:"Direct message"; }
+function dmConv(otherId){ var me=T.me&&T.me.id; if(!me||!otherId||me===otherId)return null; var a=[me,otherId].sort(); return "dm:"+a[0]+"|"+a[1]; }
+function convUnread(c){ var x=T.convs.filter(function(k){return k.conv===c})[0]; return x?Number(x.unread)||0:0; }
+function teamPoll(force){ if(!S.auth||!S.data||T.polling)return; var gap=T.open?8000:25000; if(!force&&Date.now()-T.lastPoll<gap)return; T.polling=true;T.lastPoll=Date.now();
+ capi("team.poll").then(function(d){ var changed=d.unread!==T.unread||!T.me; T.me=d.me;T.people=d.people||[];T.convs=d.convs||[];T.unread=d.unread||0;T.err=null; T.polling=false;
+  if(T.open){teamLoad(T.conv);} else if(changed)render(); })
+ .catch(function(e){T.polling=false;T.err=e.message;}); }
+function teamLoad(c){ var after=T.last[c]||0; return capi("team.list",{conv:c,after:after}).then(function(d){ var list=T.msgs[c]||(T.msgs[c]=[]); var added=0;
+  (d.messages||[]).forEach(function(m){ if(!list.some(function(x){return String(x.id)===String(m.id)})){list.push(m);added++;} });
+  if(list.length)T.last[c]=list[list.length-1].id;
+  if(T.open&&T.conv===c&&list.length){ capi("team.read",{conv:c,lastId:T.last[c]}).catch(function(){}); T.convs.forEach(function(k){if(k.conv===c)k.unread=0;}); T.unread=T.convs.reduce(function(s,k){return s+(Number(k.unread)||0)},0); }
+  if(added||T.open)render(); }).catch(function(e){T.err=e.message;render();}); }
+function teamOpen(c){ T.open=true; if(c)T.conv=c; T.stick=true; render(); teamPoll(true); teamLoad(T.conv); setTimeout(function(){var i=document.getElementById("tinput");if(i)i.focus();},60); }
+function teamSend(){ var t=(T.draft||"").trim(); if(!t||T.sending)return; var c=T.conv; T.sending=true; T.stick=true;
+ capi("team.post",{conv:c,body:t}).then(function(d){ T.draft="";T.sending=false; var l=T.msgs[c]||(T.msgs[c]=[]); l.push(d.message); T.last[c]=d.message.id; render();
+  if(/(^|\s)@agent\b/i.test(t))askAgent(c,t.replace(/(^|\s)@agent\b/ig," ").trim()); })
+ .catch(function(e){T.sending=false;toast("Message not sent",e.message,"err");render();}); }
+function askAgent(c,q){ if(!q){toast("Ask the Internal Agent","Type a question after @agent","");return;}
+ var ag=S.data.agents.filter(function(a){return /knowledge/i.test(a.name)||/knowledge/i.test(a.id)})[0]||S.data.agents[0], p=proj(S.chat.projectId)||S.data.projects[0];
+ if(!ag||!p){toast("Internal Agent unavailable","No agent or project is set up yet","err");return;}
+ var ctx=(T.msgs[c]||[]).slice(-8).map(function(m){return (m.kind==="agent"?"Internal Agent":m.sender_name)+": "+String(m.body).slice(0,600)}).join("\n");
+ T.agentBusy=true;render(); var u=S.data.user;
+ api("/chat",{projectId:p.id,agentId:ag.id,conversationId:"team-"+c,message:"You are the OraDayForce Internal Agent answering a colleague in the WorkPlace team chat. Recent messages:\n"+ctx+"\n\nQuestion from "+u.name+": "+q,model:modelOf(S.chat.model).id,userContext:{userId:u.id,role:u.role},attachments:[]})
+ .then(function(r){ var a=r&&r.message&&r.message.content; if(!a)throw new Error("No answer"); return capi("team.post",{conv:c,kind:"agent",body:a+"\n\n*Asked by "+u.name+"*"}); })
+ .then(function(d){ T.agentBusy=false; var l=T.msgs[c]||(T.msgs[c]=[]); l.push(d.message); T.last[c]=d.message.id; render(); })
+ .catch(function(e){T.agentBusy=false;toast("Internal Agent could not answer",e.message,"err");render();}); }
+function teamBtn(){ return '<button class="team-btn" data-a="team" aria-label="Internal Agent: team chat">'+ic("users","ic18")+'<span class="tb-l">Internal Agent</span>'+(T.unread?'<span class="tb-n">'+(T.unread>99?"99+":T.unread)+'</span>':'')+'</button>'; }
+function teamMsg(m){ var mine=T.me&&m.sender_id===T.me.id&&m.kind!=="agent", ag=m.kind==="agent";
+ var who=ag?"Internal Agent":m.sender_name, ini=ag?"AI":String(who||"?").split(" ").map(function(w){return w[0]}).join("").slice(0,2).toUpperCase();
+ return '<div class="tm'+(mine?" me":"")+(ag?" ag":"")+'"><span class="tm-a">'+esc(ini)+'</span><div class="tm-b"><div class="tm-n">'+esc(who)+'<span>'+esc(when(m.created_at))+'</span></div><div class="tm-t'+(ag?" mdb":"")+'">'+(ag?md(m.body):esc(m.body).replace(/\n/g,"<br>"))+'</div></div></div>'; }
+function teamPanel(){ if(!T.open)return "";
+ var convs=[{conv:"team",name:"# team",sub:"Everyone in WorkPlace"}].concat(T.people.filter(function(p){return !T.me||p.id!==T.me.id}).map(function(p){return {conv:dmConv(p.id),name:p.name,sub:p.role||p.email||"",ini:p.initials};}));
+ var list=convs.map(function(k){ var n=convUnread(k.conv); return '<button class="tc'+(k.conv===T.conv?" on":"")+'" data-a="teamconv" data-v="'+attr(k.conv)+'"><span class="tc-a">'+(k.conv==="team"?"#":esc(k.ini||k.name[0]))+'</span><span class="tc-t"><b>'+esc(k.name)+'</b><small>'+esc(k.sub)+'</small></span>'+(n?'<span class="tb-n">'+n+'</span>':'')+'</button>'; }).join("");
+ var msgs=T.msgs[T.conv]||[];
+ var body=msgs.length?msgs.map(teamMsg).join(""):'<div class="tp-e">'+ic("users","ic18")+'<p>'+(T.conv==="team"?"Say hello to the team. Questions here reach everyone in WorkPlace, so there's no need for an email.":"Start a direct conversation.")+'</p><p class="meta">Type <b>@agent</b> anywhere in a message to have the Internal Agent answer in the thread.</p></div>';
+ if(T.agentBusy)body+='<div class="tm ag"><span class="tm-a">AI</span><div class="tm-b"><div class="tm-n">Internal Agent</div><div class="tm-t meta">'+ic("sync","spin")+' thinking…</div></div></div>';
+ return '<div class="tp-scrim" data-a="teamclose"></div><aside class="tp" role="dialog" aria-label="Internal Agent">'+
+  '<div class="tp-h"><div><b>Internal Agent</b><small>Team chat for everyone in WorkPlace · @agent asks the AI</small></div><button class="ib" data-a="teamclose" aria-label="Close">'+ic("x","ic18")+'</button></div>'+
+  '<div class="tp-body"><nav class="tp-list">'+list+'</nav><section class="tp-chat"><div class="tp-ct">'+esc(convName(T.conv))+'</div><div class="tp-msgs" id="tmsgs">'+body+'</div>'+
+  (T.err?'<div class="tp-err">'+esc(T.err)+'</div>':'')+
+  '<div class="tp-comp"><textarea id="tinput" rows="2" placeholder="Message '+attr(convName(T.conv))+'… (Enter to send, @agent to ask the AI)">'+esc(T.draft)+'</textarea><button class="btn btn-p" data-a="teamsend" aria-label="Send"'+(T.sending?" disabled":"")+'>'+ic("send")+'</button></div></section></div></aside>'; }
+function teamAfterRender(){ var b=document.getElementById("tmsgs"); if(b&&T.stick)b.scrollTop=b.scrollHeight; }
+function rfpLoad(){ if(R.loading)return; R.loading=true;R.err=null;
+ capi("rfps.list").then(function(d){ R.loading=false;R.loaded=true;R.items=d.items||[];R.lastRun=d.lastRun;R.samConfigured=d.samConfigured;R.refreshPending=d.refreshPending;R.isAdmin=d.isAdmin;render(); })
+ .catch(function(e){R.loading=false;R.loaded=true;R.err=e.message;render();}); }
+function daysLeft(iso){ var d=Math.round((new Date(iso).getTime()-Date.now())/86400000); return isFinite(d)?d:null; }
+function vRfps(){ if(!R.loaded&&!R.loading)setTimeout(rfpLoad,0);
+ var lr=R.lastRun, head='<div class="card"><div class="card-h"><h2>Open RFPs · AI enablement and Oracle</h2><div class="row" style="margin-left:auto;gap:8px">'+
+  (R.isAdmin?'<button class="btn btn-s btn-g" data-a="rfpkey">'+ic("lock")+(R.samConfigured?"SAM.gov key set":"Add SAM.gov key")+'</button><button class="btn btn-s btn-p" data-a="rfprefresh"'+(R.refreshPending?" disabled":"")+'>'+ic("sync",R.refreshPending?"spin":"")+(R.refreshPending?"Refresh queued":"Refresh now")+'</button>':'')+
+  '</div></div><div class="card-b"><p class="meta">Publicly released solicitations due in more than 7 days, ranked by fit for AI enablement and Oracle work. Refreshed every morning at 7 AM Central from SAM.gov'+(R.samConfigured?"":" (key not set yet)")+' and a web search of state, local and education bid portals.'+
+  (lr?' Last refresh '+esc(when(lr.started_at))+': '+(lr.sam_fetched||0)+' federal and '+(lr.web_fetched||0)+' web notices checked, '+(lr.kept||0)+' matched.':'')+'</p>'+
+  (lr&&lr.error?'<p class="meta" style="color:var(--warn)">Last refresh note: '+esc(lr.error)+'</p>':'')+
+  (R.keyOpen?'<div class="row" style="gap:8px;margin-top:10px"><input id="samkey" type="password" class="inp" placeholder="Paste SAM.gov public API key" autocomplete="off" style="max-width:360px"><button class="btn btn-s btn-p" data-a="rfpkeysave">Save key</button><a class="meta" href="https://sam.gov/profile/details" target="_blank" rel="noopener">Get a key on sam.gov ↗</a></div>':'')+
+  '</div></div>';
+ if(!R.loaded)return '<div class="wrap">'+head+'<div class="card"><div class="card-b"><div class="sk" style="height:18px;width:60%"></div><div class="sk" style="height:14px;margin-top:10px"></div></div></div></div>';
+ if(R.err)return '<div class="wrap">'+head+'<div class="card"><div class="emp"><h3>RFPs unavailable</h3><p>'+esc(R.err)+'</p><button class="btn btn-p" data-a="rfpreload">'+ic("sync")+'Retry</button></div></div></div>';
+ var items=R.items.slice(0,R.more?30:10);
+ var rows=items.length?items.map(function(r,i){ var dl=daysLeft(r.due_at);
+  return '<div class="rfp'+(r.status==="working"?" wk":"")+'"><div class="rfp-rank">'+(i+1)+'</div><div class="rfp-main"><a class="rfp-t" href="'+attr(r.url)+'" target="_blank" rel="noopener">'+esc(r.title)+'</a>'+
+   '<div class="meta">'+esc([r.agency,r.place].filter(Boolean).join(" · "))+'</div>'+
+   '<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><span class="bg b-ac">'+esc(r.category||"")+'</span><span class="bg">Fit '+r.fit_score+'</span><span class="bg'+(dl!=null&&dl<14?" b-wa":"")+'">Due '+esc(new Date(r.due_at).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}))+(dl!=null?" · "+dl+" days":"")+'</span><span class="bg">'+esc(r.source)+(r.notice_type?" · "+esc(r.notice_type):"")+'</span>'+(r.set_aside?'<span class="bg">'+esc(r.set_aside)+'</span>':'')+(r.status==="working"?'<span class="bg b-ok">Working'+(r.status_by?" · "+esc(r.status_by):"")+'</span>':'')+'</div>'+
+   (r.summary?'<p class="rfp-s">'+esc(r.summary)+'</p>':'')+(r.fit_reasons?'<div class="meta">Matched: '+esc(r.fit_reasons)+'</div>':'')+'</div>'+
+   '<div class="rfp-act"><button class="btn btn-s btn-p" data-a="rfpstart" data-v="'+r.id+'">'+ic("clip")+'Start response</button>'+
+   (r.status==="working"?'<button class="btn btn-s btn-g" data-a="rfpstatus" data-v="'+r.id+':new">Unmark</button>':'<button class="btn btn-s btn-g" data-a="rfpstatus" data-v="'+r.id+':working">Mark working</button>')+
+   '<button class="btn btn-s btn-g" data-a="rfpstatus" data-v="'+r.id+':dismissed" title="Hide this RFP">'+ic("x")+'</button></div></div>'; }).join(""):
+  '<div class="emp"><div class="ico">'+ic("clip","ic18")+'</div><h3>No matching RFPs yet</h3><p>'+(R.samConfigured?"Nothing released recently matches AI enablement or Oracle with more than 7 days to respond. The list refreshes every morning.":"Add a SAM.gov API key (administrators) to include federal opportunities. Web results refresh every morning.")+'</p></div>';
+ return '<div class="wrap">'+head+'<div class="card"><div class="card-h"><h2>Top '+Math.min(items.length,R.more?30:10)+'</h2>'+(R.items.length>10?'<button class="btn btn-s btn-g" style="margin-left:auto" data-a="rfpmore">'+(R.more?"Show top 10":"Show more ("+R.items.length+")")+'</button>':'')+'</div><div class="card-b rfps">'+rows+'</div></div></div>'; }
+function collabAct(a,v){
+ if(a==="team"){ if(T.open){T.open=false;render();} else teamOpen(); return true; }
+ if(a==="teamclose"){T.open=false;render();return true;}
+ if(a==="teamconv"){T.conv=v;T.stick=true;render();teamLoad(v);setTimeout(function(){var i=document.getElementById("tinput");if(i)i.focus();},60);return true;}
+ if(a==="teamsend"){var i=document.getElementById("tinput");if(i)T.draft=i.value;teamSend();return true;}
+ if(a==="rfpreload"){rfpLoad();return true;}
+ if(a==="rfpmore"){R.more=!R.more;render();return true;}
+ if(a==="rfpkey"){R.keyOpen=!R.keyOpen;render();return true;}
+ if(a==="rfpkeysave"){var k=document.getElementById("samkey");capi("rfps.setkey",{key:k?k.value.trim():""}).then(function(d){R.samConfigured=d.samConfigured;R.keyOpen=false;toast("SAM.gov key saved","Federal opportunities will be included from the next refresh","ok");render();}).catch(function(e){toast("Key not saved",e.message,"err");});return true;}
+ if(a==="rfprefresh"){capi("rfps.refresh").then(function(){R.refreshPending=true;toast("Refresh queued","New results arrive within about 15 minutes","ok");render();}).catch(function(e){toast("Refresh failed",e.message,"err");});return true;}
+ if(a==="rfpstatus"){var pr=String(v).split(":");capi("rfps.status",{id:pr[0],status:pr[1]}).then(function(){R.items.forEach(function(r){if(String(r.id)===pr[0]){r.status=pr[1];r.status_by=S.data.user.name;}}); if(pr[1]==="dismissed")R.items=R.items.filter(function(r){return String(r.id)!==pr[0]}); render();}).catch(function(e){toast("Update failed",e.message,"err");});return true;}
+ if(a==="rfpstart"){var r=R.items.filter(function(x){return String(x.id)===String(v)})[0]; if(!r)return true;
+  var ag=S.data.agents.filter(function(x){return /proposal/i.test(x.name)||/proposal/i.test(x.id)})[0]||S.data.agents[0];
+  if(ag)S.chat.agentId=ag.id; if(!proj(S.chat.projectId)&&S.data.projects[0])S.chat.projectId=S.data.projects[0].id;
+  S.chat.draft="Help me start a response to this RFP.\n\nTitle: "+r.title+"\nIssuer: "+(r.agency||"")+"\nDue: "+new Date(r.due_at).toDateString()+"\nLink: "+r.url+(r.summary?"\nScope: "+r.summary:"")+"\n\nGive me: 1) a short go/no-go view for OraDayForce, 2) the likely requirements and evaluation criteria, 3) a response outline with win themes, 4) a compliance checklist and the questions to submit to the buyer.";
+  if(r.status!=="working")capi("rfps.status",{id:r.id,status:"working"}).catch(function(){});
+  go("#/chat"); return true; }
+ return false; }
+document.addEventListener("keydown",function(e){ if(e.target&&e.target.id==="tinput"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();T.draft=e.target.value;teamSend();} if(e.key==="Escape"&&T.open){T.open=false;render();} });
+document.addEventListener("input",function(e){ if(e.target&&e.target.id==="tinput")T.draft=e.target.value; });
+document.addEventListener("scroll",function(e){ if(e.target&&e.target.id==="tmsgs"){var b=e.target;T.stick=b.scrollHeight-b.scrollTop-b.clientHeight<60;} },true);
+setInterval(function(){ if(S.auth&&S.data)teamPoll(false); },4000);
+/* ---- end collaboration ---- */
+
 function view(){
  if(!S.auth)return vPublic();
  if(S.loading||!S.data)return skeleton();
@@ -1106,9 +1241,9 @@ function view(){
  var v=S.route.v,c;
  if(v==="projects")c=vProjects();else if(v==="proj")c=vProject();else if(v==="knowledge")c=vKnowledge();
  else if(v==="agents")c=vAgents();else if(v==="agent")c=vAgent();else if(v==="chat")c=vChat();
- else if(v==="activity")c=vActivity();else if(v==="settings")c=vSettings();else c=vDash();
+ else if(v==="activity")c=vActivity();else if(v==="settings")c=vSettings();else if(v==="rfps")c=vRfps();else c=vDash();
  return '<div class="shell">'+sidebar()+'<div class="main">'+header()+c+'</div></div>'+tabbar()+
- (document.body.getAttribute("data-drawer")==="1"?'<div class="scrim" data-a="drawer"></div>':"")+modalHtml()+toastsHtml();
+ (document.body.getAttribute("data-drawer")==="1"?'<div class="scrim" data-a="drawer"></div>':"")+teamPanel()+modalHtml()+toastsHtml();
 }
 var lastN=0;
 function render(){
@@ -1121,7 +1256,7 @@ function render(){
  var nk=document.querySelector("[data-keepscroll]");
  if(nk){var n=(S.data&&S.chat.agentId)?getConv().msgs.length:0;
   if(n!==lastN||S.chat.sending||atBot){nk.scrollTop=nk.scrollHeight;lastN=n;}else if(sc!=null)nk.scrollTop=sc;}
- var ta=document.getElementById("cinput");
+ teamAfterRender();var ta=document.getElementById("cinput");
  if(ta){ta.style.height="auto";ta.style.height=Math.min(ta.scrollHeight,170)+"px";}
 }
 function setDoc(id,patch){var a=S.data.documents;for(var i=0;i<a.length;i++)if(a[i].id===id){for(var k in patch)a[i][k]=patch[k];return a[i];}return null;}
@@ -1273,7 +1408,7 @@ document.addEventListener("click",function(ev){
  if(a==="closemodal"&&ev.target.closest("[data-stop]")&&ev.target!==el)return;
  if(a!=="pop"&&S.pop)S.pop=null;
  if(a!=="modelmenu"&&a!=="selmodel"&&a!=="planinfo"&&S.chat.modelOpen)S.chat.modelOpen=false;
- if(a==="modelmenu"){S.chat.modelOpen=!S.chat.modelOpen;render();return;}
+ if(collabAct(a,v))return; if(a==="modelmenu"){S.chat.modelOpen=!S.chat.modelOpen;render();return;}
  if(a==="signup"){doSignup();return;}
  if(a==="adminload"){loadRoster();return;}
  if(a==="approve"){adminAct("approve",v);return;}
