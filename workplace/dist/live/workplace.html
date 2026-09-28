@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>WorkPlace — OraDayForce</title>
+<meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237c3aed'/%3E%3Cstop offset='1' stop-color='%23db2777'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='20' y='16' width='38' height='38' rx='9' transform='skewX(-14)' fill='%234f46e5'/%3E%3Crect x='16' y='8' width='38' height='38' rx='9' transform='skewX(-14)' fill='url(%23g)' fill-opacity='.92'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -359,6 +361,14 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
  .nav-signin{display:none}
 }
 @supports(height:100dvh){.pub{min-height:100dvh}}
+
+/* odf-brand-v3: OraDayForce brand layer (see oradayforce/brand/workplace-theme.css) */
+:root{--brand-grad:linear-gradient(120deg,#4f46e5 0%,#7c3aed 55%,#db2777 100%);--brand-grad-text:linear-gradient(92deg,#4f46e5,#7c3aed 55%,#db2777)}
+[data-t="dark"]{--brand-grad-text:linear-gradient(92deg,#818cf8,#a78bfa 55%,#f472b6)}
+.logo{background:var(--brand-grad)!important;box-shadow:0 6px 16px rgba(79,70,229,.32)}
+.gr{background:var(--brand-grad-text)!important;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.pub-hero h1 em{background:var(--brand-grad-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.bar>i{background:var(--brand-grad)!important}
 </style>
 </head>
 <body data-sb="full">
