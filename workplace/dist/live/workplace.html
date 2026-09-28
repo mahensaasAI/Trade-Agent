@@ -1139,7 +1139,9 @@ function skeleton(){
 }
 /* ---- OraDayForce collaboration: Internal Agent (team chat + @agent) and RFPs. Talks to WorkPlace Collaboration API (/svc/collab). ---- */
 var T={open:false,conv:"team",people:[],convs:[],unread:0,msgs:{},last:{},draft:"",sending:false,agentBusy:false,me:null,lastPoll:0,polling:false,err:null,stick:true};
-var R={loaded:false,loading:false,items:[],more:false,lastRun:null,samConfigured:false,refreshPending:false,isAdmin:false,err:null,keyOpen:false};
+var R={loaded:false,loading:false,items:[],more:false,lastRun:null,samConfigured:false,refreshPending:false,isAdmin:false,err:null,keyOpen:false,tab:"federal"};
+var SEG={federal:{label:"Federal",sub:"US federal solicitations from SAM.gov"},commercial:{label:"Commercial",sub:"Private-sector RFPs from small and mid-size businesses, found by a daily web search"}};
+function segOf(r){return r.source==="SAM.gov"?"federal":"commercial";}
 function capi(action,payload){ var h={"Content-Type":"application/json"}; if(S.token)h.Authorization="Bearer "+S.token;
  return fetch(API+"/collab",{method:"POST",headers:h,body:JSON.stringify({action:action,payload:payload||{}})}).then(function(r){return r.json().catch(function(){throw new Error("HTTP "+r.status);});})
   .then(function(j){ if(!j||j.success===false)throw new Error((j&&j.error&&j.error.message)||"Request failed"); return j.data; }); }
@@ -1192,14 +1194,16 @@ function daysLeft(iso){ var d=Math.round((new Date(iso).getTime()-Date.now())/86
 function vRfps(){ if(!R.loaded&&!R.loading)setTimeout(rfpLoad,0);
  var lr=R.lastRun, head='<div class="card"><div class="card-h"><h2>Open RFPs · AI enablement and Oracle</h2><div class="row" style="margin-left:auto;gap:8px">'+
   (R.isAdmin?'<button class="btn btn-s btn-g" data-a="rfpkey">'+ic("lock")+(R.samConfigured?"SAM.gov key set":"Add SAM.gov key")+'</button><button class="btn btn-s btn-p" data-a="rfprefresh"'+(R.refreshPending?" disabled":"")+'>'+ic("sync",R.refreshPending?"spin":"")+(R.refreshPending?"Refresh queued":"Refresh now")+'</button>':'')+
-  '</div></div><div class="card-b"><p class="meta">Publicly released solicitations due in more than 7 days, ranked by fit for AI enablement and Oracle work. Refreshed every morning at 7 AM Central from SAM.gov'+(R.samConfigured?"":" (key not set yet)")+' and a web search of state, local and education bid portals.'+
-  (lr?' Last refresh '+esc(when(lr.started_at))+': '+(lr.sam_fetched||0)+' federal and '+(lr.web_fetched||0)+' web notices checked, '+(lr.kept||0)+' matched.':'')+'</p>'+
+  '</div></div><div class="card-b"><p class="meta">Publicly released solicitations due in more than 7 days, ranked by fit for AI enablement and Oracle work. Refreshed every morning at 7 AM Central: federal from SAM.gov'+(R.samConfigured?"":" (key not set yet)")+', commercial from a web search for small and mid-size business RFPs.'+
+  (lr?' Last refresh '+esc(when(lr.started_at))+': '+(lr.sam_fetched||0)+' federal and '+(lr.web_fetched||0)+' commercial notices checked, '+(lr.kept||0)+' matched.':'')+'</p>'+
   (lr&&lr.error?'<p class="meta" style="color:var(--warn)">Last refresh note: '+esc(lr.error)+'</p>':'')+
   (R.keyOpen?'<div class="row" style="gap:8px;margin-top:10px"><input id="samkey" type="password" class="inp" placeholder="Paste SAM.gov public API key" autocomplete="off" style="max-width:360px"><button class="btn btn-s btn-p" data-a="rfpkeysave">Save key</button><a class="meta" href="https://sam.gov/profile/details" target="_blank" rel="noopener">Get a key on sam.gov ↗</a></div>':'')+
   '</div></div>';
  if(!R.loaded)return '<div class="wrap">'+head+'<div class="card"><div class="card-b"><div class="sk" style="height:18px;width:60%"></div><div class="sk" style="height:14px;margin-top:10px"></div></div></div></div>';
  if(R.err)return '<div class="wrap">'+head+'<div class="card"><div class="emp"><h3>RFPs unavailable</h3><p>'+esc(R.err)+'</p><button class="btn btn-p" data-a="rfpreload">'+ic("sync")+'Retry</button></div></div></div>';
- var items=R.items.slice(0,R.more?30:10);
+ var seg=SEG[R.tab]?R.tab:"federal", all=R.items.filter(function(r){return segOf(r)===seg;}), items=all.slice(0,R.more?30:5);
+ var cnt=function(k){return R.items.filter(function(r){return segOf(r)===k;}).length;};
+ var tabs='<div class="tabs" style="margin-bottom:0">'+Object.keys(SEG).map(function(k){return '<button class="'+(k===seg?"on":"")+'" data-a="rfptab" data-v="'+k+'">'+SEG[k].label+' <span class="bg">'+Math.min(cnt(k),5)+'</span></button>';}).join("")+'</div>';
  var rows=items.length?items.map(function(r,i){ var dl=daysLeft(r.due_at);
   return '<div class="rfp'+(r.status==="working"?" wk":"")+'"><div class="rfp-rank">'+(i+1)+'</div><div class="rfp-main"><a class="rfp-t" href="'+attr(r.url)+'" target="_blank" rel="noopener">'+esc(r.title)+'</a>'+
    '<div class="meta">'+esc([r.agency,r.place].filter(Boolean).join(" · "))+'</div>'+
@@ -1208,14 +1212,15 @@ function vRfps(){ if(!R.loaded&&!R.loading)setTimeout(rfpLoad,0);
    '<div class="rfp-act"><button class="btn btn-s btn-p" data-a="rfpstart" data-v="'+r.id+'">'+ic("clip")+'Start response</button>'+
    (r.status==="working"?'<button class="btn btn-s btn-g" data-a="rfpstatus" data-v="'+r.id+':new">Unmark</button>':'<button class="btn btn-s btn-g" data-a="rfpstatus" data-v="'+r.id+':working">Mark working</button>')+
    '<button class="btn btn-s btn-g" data-a="rfpstatus" data-v="'+r.id+':dismissed" title="Hide this RFP">'+ic("x")+'</button></div></div>'; }).join(""):
-  '<div class="emp"><div class="ico">'+ic("clip","ic18")+'</div><h3>No matching RFPs yet</h3><p>'+(R.samConfigured?"Nothing released recently matches AI enablement or Oracle with more than 7 days to respond. The list refreshes every morning.":"Add a SAM.gov API key (administrators) to include federal opportunities. Web results refresh every morning.")+'</p></div>';
- return '<div class="wrap">'+head+'<div class="card"><div class="card-h"><h2>Top '+Math.min(items.length,R.more?30:10)+'</h2>'+(R.items.length>10?'<button class="btn btn-s btn-g" style="margin-left:auto" data-a="rfpmore">'+(R.more?"Show top 10":"Show more ("+R.items.length+")")+'</button>':'')+'</div><div class="card-b rfps">'+rows+'</div></div></div>'; }
+  '<div class="emp"><div class="ico">'+ic("clip","ic18")+'</div><h3>No matching '+SEG[seg].label.toLowerCase()+' RFPs yet</h3><p>'+(seg==="commercial"?"No open commercial RFPs for AI enablement or Oracle with more than 7 days to respond were found. The web search runs every morning.":R.samConfigured?"Nothing released recently matches AI enablement or Oracle with more than 7 days to respond. The list refreshes every morning.":"Add a SAM.gov API key (administrators) to include federal opportunities. Web results refresh every morning.")+'</p></div>';
+ return '<div class="wrap">'+head+tabs+'<div class="card" style="margin-top:12px"><div class="card-h"><div><h2>Top '+items.length+' '+SEG[seg].label.toLowerCase()+'</h2><div class="meta">'+SEG[seg].sub+'</div></div>'+(all.length>5?'<button class="btn btn-s btn-g" style="margin-left:auto" data-a="rfpmore">'+(R.more?"Show top 5":"Show more ("+all.length+")")+'</button>':'')+'</div><div class="card-b rfps">'+rows+'</div></div></div>'; }
 function collabAct(a,v){
  if(a==="team"){ if(T.open){T.open=false;render();} else teamOpen(); return true; }
  if(a==="teamclose"){T.open=false;render();return true;}
  if(a==="teamconv"){T.conv=v;T.stick=true;render();teamLoad(v);setTimeout(function(){var i=document.getElementById("tinput");if(i)i.focus();},60);return true;}
  if(a==="teamsend"){var i=document.getElementById("tinput");if(i)T.draft=i.value;teamSend();return true;}
  if(a==="rfpreload"){rfpLoad();return true;}
+ if(a==="rfptab"){R.tab=v;R.more=false;render();return true;}
  if(a==="rfpmore"){R.more=!R.more;render();return true;}
  if(a==="rfpkey"){R.keyOpen=!R.keyOpen;render();return true;}
  if(a==="rfpkeysave"){var k=document.getElementById("samkey");capi("rfps.setkey",{key:k?k.value.trim():""}).then(function(d){R.samConfigured=d.samConfigured;R.keyOpen=false;toast("SAM.gov key saved","Federal opportunities will be included from the next refresh","ok");render();}).catch(function(e){toast("Key not saved",e.message,"err");});return true;}
@@ -1233,7 +1238,6 @@ document.addEventListener("input",function(e){ if(e.target&&e.target.id==="tinpu
 document.addEventListener("scroll",function(e){ if(e.target&&e.target.id==="tmsgs"){var b=e.target;T.stick=b.scrollHeight-b.scrollTop-b.clientHeight<60;} },true);
 setInterval(function(){ if(S.auth&&S.data)teamPoll(false); },4000);
 /* ---- end collaboration ---- */
-
 function view(){
  if(!S.auth)return vPublic();
  if(S.loading||!S.data)return skeleton();
