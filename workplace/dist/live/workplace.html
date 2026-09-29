@@ -402,6 +402,35 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
 .rfp-act{display:flex;flex-direction:column;gap:6px;flex:none}
 @media(max-width:700px){.rfp{flex-wrap:wrap}.rfp-act{flex-direction:row;width:100%}}
 
+
+/* odf-pipeline: lead pipeline */
+.lps{display:flex;flex-direction:column;gap:10px}
+.lp{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px}
+.lp.on{border-color:var(--acl);box-shadow:0 0 0 3px var(--acs)}
+.lp-top{display:flex;gap:14px;align-items:flex-start}
+.lp-score{width:38px;height:38px;flex:none;border-radius:10px;display:grid;place-items:center;font-weight:750;font-size:13.5px;background:var(--brand-grad,var(--ac));color:#fff}
+.lp-main{flex:1;min-width:0}
+.lp-co{font-weight:680;font-size:15px}.lp-co .meta{font-weight:500}
+.lp-t{display:block;font-size:13.5px;color:var(--tx);text-decoration:none;font-weight:560}.lp-t:hover{color:var(--ac);text-decoration:underline}
+.lp-why{font-size:13px;color:var(--tx2);margin:6px 0 2px}
+.lp-ct{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:8px 0 4px;font-size:13px}
+.lp-ct a{display:inline-flex;align-items:center;gap:5px;color:var(--ac);text-decoration:none}.lp-ct a:hover{text-decoration:underline}
+.lp-ct .ic{width:14px;height:14px}
+.lp-link{border:0;background:none;padding:0;color:var(--ac);font:inherit;cursor:pointer;text-decoration:underline}
+.lp-act{display:flex;flex-direction:column;gap:6px;flex:none;min-width:132px}
+.lp-act .btn{justify-content:center}
+.lp-stage{height:32px;border:1px solid var(--line2);border-radius:8px;background:var(--panel);color:var(--tx);font:inherit;font-size:12.5px;padding:0 8px}
+.lp-pane{margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+.lp-pane label{display:block;margin:8px 0 4px}
+.lp-ph{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin-bottom:4px}
+.lp-tel{display:inline-flex;align-items:center;gap:5px;font-weight:650;color:var(--ac);text-decoration:none}
+.lp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 12px}
+.lp-fits{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.lp-chip{border:1px solid var(--line2);background:var(--panel);color:var(--tx2);border-radius:999px;padding:4px 11px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.lp-chip:hover{border-color:var(--acl)}.lp-chip.on{background:var(--acs);border-color:var(--acl);color:var(--ac)}
+.lp-acts{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.lp-a{font-size:12.5px}.lp-ab{white-space:pre-wrap;color:var(--tx2);margin-top:3px;font-size:12.5px;max-height:120px;overflow:auto}
+@media(max-width:700px){.lp-top{flex-wrap:wrap}.lp-act{flex-direction:row;flex-wrap:wrap;width:100%;min-width:0}.lp-act .btn,.lp-stage{flex:1 1 auto}}
 /* odf-brand-v3: OraDayForce brand layer (see oradayforce/brand/workplace-theme.css) */
 :root{--brand-grad:linear-gradient(120deg,#4f46e5 0%,#7c3aed 55%,#db2777 100%);--brand-grad-text:linear-gradient(92deg,#4f46e5,#7c3aed 55%,#db2777)}
 [data-t="dark"]{--brand-grad-text:linear-gradient(92deg,#818cf8,#a78bfa 55%,#f472b6)}
@@ -583,7 +612,7 @@ function parseHash(){
  if(h[0]==="agents")return h[1]?{v:"agent",id:h[1]}:{v:"agents"};
  if(h[0]==="chat")return {v:"chat"};
  if(h[0]==="activity")return {v:"activity"};
- if(h[0]==="settings")return {v:"settings"}; if(h[0]==="rfps")return {v:"rfps"};
+ if(h[0]==="settings")return {v:"settings"}; if(h[0]==="rfps")return {v:"rfps"}; if(h[0]==="pipeline")return {v:"pipeline"};
  return {v:"dash"};
 }
 function go(h){location.hash=h;}
@@ -772,9 +801,9 @@ function tabbar(){
 function sidebar(){
  var r=S.route,d=S.data;
  var items=[["dash","home","Home","#/dashboard",""],["projects","folder","Projects","#/projects",String(d.projects.length)],
-  ["knowledge","db","Knowledge Bases","#/knowledge",String(d.documents.length)],["agents","bot","Agents","#/agents",String(d.agents.length)],["rfps","clip","RFPs","#/rfps",R.loaded?String(Math.min(R.items.length,10)):""],
+  ["knowledge","db","Knowledge Bases","#/knowledge",String(d.documents.length)],["agents","bot","Agents","#/agents",String(d.agents.length)],["rfps","clip","RFPs","#/rfps",R.loaded?String(Math.min(R.items.length,10)):""],["pipeline","funnel","Pipeline","#/pipeline",LP.loaded?String(LP.items.filter(function(l){return l.status==="new"}).length||""):""],
   ["activity","act","Activity","#/activity",""],["settings","cog","Settings","#/settings",""]];
- var on={dash:"dash",projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"activity",settings:"settings",rfps:"rfps"}[r.v];
+ var on={dash:"dash",projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"activity",settings:"settings",rfps:"rfps",pipeline:"pipeline"}[r.v];
  return '<aside class="sb"><a class="sb-top" href="#/dashboard" style="text-decoration:none;color:inherit" title="Home"><div class="logo">W</div><div class="brand">WorkPlace<span>'+esc(d.organization.name)+'</span></div></a>'+
  '<nav class="sb-nav"><div class="sb-lbl nv-t">WORKSPACE</div>'+
  items.map(function(it){return '<a class="nv'+(on===it[0]?" on":"")+'" href="'+it[3]+'" title="'+attr(it[2])+'">'+ic(it[1],"ic18")+'<span class="nv-t">'+it[2]+'</span>'+(it[4]?'<span class="cnt">'+it[4]+'</span>':'')+'</a>';}).join("")+
@@ -1238,6 +1267,131 @@ document.addEventListener("input",function(e){ if(e.target&&e.target.id==="tinpu
 document.addEventListener("scroll",function(e){ if(e.target&&e.target.id==="tmsgs"){var b=e.target;T.stick=b.scrollHeight-b.scrollTop-b.clientHeight<60;} },true);
 setInterval(function(){ if(S.auth&&S.data)teamPoll(false); },4000);
 /* ---- end collaboration ---- */
+/* ---- odf-pipeline: Lead pipeline. Leads come from the WorkPlace Lead Finder (n8n); the team emails and calls from here. ---- */
+P.phone='<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>';
+P.mail='<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>';
+P.funnel='<path d="M3 4h18l-7 8v6l-4 2v-8z"/>';
+var LP={loaded:false,loading:false,items:[],lastRun:null,adzuna:false,adzunaId:"",feeds:"",footer:"",minScore:"55",refreshPending:false,isAdmin:false,err:null,stage:"new",fit:"",more:false,open:null,act:{},draft:null,call:null,setOpen:false};
+var LP_STAGES=[["new","New"],["contacted","Contacted"],["meeting","Meeting"],["proposal","Proposal"],["won","Won"],["lost","Lost"]];
+var LP_FITS=["AI enablement","Oracle Cloud ERP","NetSuite","EBS","Google Cloud"];
+var LP_CALL=[["No answer","contacted"],["Left voicemail","contacted"],["Spoke - interested","meeting"],["Spoke - call back later","contacted"],["Not interested","lost"],["Wrong number",""]];
+function lpLoad(){ if(LP.loading)return; LP.loading=true;LP.err=null;
+ capi("leads.list").then(function(d){ LP.loading=false;LP.loaded=true;LP.items=d.items||[];LP.lastRun=d.lastRun;LP.adzuna=d.adzuna;LP.adzunaId=d.adzunaId||"";LP.feeds=d.feeds||"";LP.footer=d.footer||"";LP.minScore=d.minScore||"55";LP.refreshPending=d.refreshPending;LP.isAdmin=d.isAdmin;render(); })
+ .catch(function(e){LP.loading=false;LP.loaded=true;LP.err=e.message;render();}); }
+function lpById(id){return LP.items.filter(function(l){return String(l.id)===String(id)})[0];}
+function lpRank(s){return ["new","contacted","meeting","proposal","won","lost"].indexOf(s);}
+function lpStageName(s){var x=LP_STAGES.filter(function(k){return k[0]===s})[0];return x?x[1]:s;}
+function lpTel(p){return String(p||"").replace(/[^0-9+]/g,"");}
+function lpFooter(){return LP.footer||"OraDayForce · oradayforce.com\nIf you'd rather not hear from us, reply \"unsubscribe\" and we won't email you again.";}
+function lpF(lab,id,v,ph){return '<div class="f"><label class="meta">'+lab+'</label><input class="inp" id="'+id+'" value="'+attr(v||"")+'"'+(ph?' placeholder="'+attr(ph)+'"':'')+'></div>';}
+function lpSignalLine(l){ var t=String(l.title||"").split(" | ")[0];
+ return l.signal==="Hiring"?"is hiring for "+(t||"these skills"):l.signal==="RFP"?"has an open request for proposals"+(t?" (\""+t+"\")":""):"was looking for help"+(t?" (\""+t+"\")":""); }
+function lpTemplate(l){ var u=S.data.user, first=String(l.contact_name||"").split(" ")[0];
+ return {subject:(String(l.fit||"").split(", ")[0]||"A quick idea")+" support for "+l.company,
+  body:"Hi "+(first||"there")+",\n\nI noticed "+l.company+" "+lpSignalLine(l)+". At OraDayForce we help small and mid-size teams with "+(l.fit||"AI and Oracle Cloud ERP")+(l.pitch?": "+l.pitch.charAt(0).toLowerCase()+l.pitch.slice(1):".")+"\n\nWould a 20-minute call next week be useful to compare notes on your plans?\n\nBest,\n"+u.name}; }
+function lpGen(l){ var u=S.data.user, p=proj(S.chat.projectId)||S.data.projects[0];
+ var ag=S.data.agents.filter(function(x){return /proposal/i.test(x.name)||/proposal/i.test(x.id)})[0]||S.data.agents[0];
+ var fallback=function(){var t=lpTemplate(l);LP.draft={id:l.id,busy:false,to:l.email||"",subject:t.subject,body:t.body+"\n\n--\n"+lpFooter()};render();};
+ LP.draft={id:l.id,busy:true,to:l.email||"",subject:"",body:""};render();
+ if(!ag||!p){fallback();return;}
+ var msg="Write a short first-touch business email (under 120 words) from "+u.name+" at OraDayForce to "+(l.contact_name||("the team at "+l.company))+".\nOraDayForce helps small and mid-size businesses with AI enablement, Oracle Cloud ERP, NetSuite, Oracle E-Business Suite and Google Cloud.\nThe public signal we noticed: "+l.company+" "+lpSignalLine(l)+(l.summary?" - "+String(l.summary).slice(0,300):"")+".\nWhat they may need: "+(l.why||"")+"\nOur angle: "+(l.pitch||"")+"\nRules: plain and specific, mention the signal naturally, no hype, no invented facts, numbers or client names, one clear ask (a 20-minute call), sign off with "+u.name+". Do not add a footer or an unsubscribe line.\nReply in exactly this format:\nSubject: <subject line>\n\n<email body>";
+ api("/chat",{projectId:p.id,agentId:ag.id,conversationId:"lead-"+l.id+"-"+Date.now(),message:msg,model:modelOf(S.chat.model).id,userContext:{userId:u.id,role:u.role},attachments:[]})
+ .then(function(r){ var t=String(r&&r.message&&r.message.content||"").trim(); if(!t){fallback();return;}
+   var m=t.match(/^[ *]*subject[ *]*:[ *]*(.+)$/im), subj=m?m[1].replace(/[*]/g,"").trim():lpTemplate(l).subject, body=m?t.slice(t.indexOf(m[0])+m[0].length).trim():t;
+   LP.draft={id:l.id,busy:false,to:l.email||"",subject:subj,body:body.replace(/[*][*]/g,"")+"\n\n--\n"+lpFooter()};render(); })
+ .catch(function(){fallback();}); }
+function lpReadDraft(){ var d=LP.draft;if(!d)return; var t=document.getElementById("lpto"),s=document.getElementById("lpsub"),b=document.getElementById("lpbody"); if(t)d.to=t.value.trim(); if(s)d.subject=s.value; if(b)d.body=b.value; }
+function lpSetStage(l,st){ var upd={id:l.id,status:st,contact_name:l.contact_name,contact_role:l.contact_role,email:l.email,phone:l.phone,owner:l.owner,notes:l.notes};
+ capi("leads.update",upd).then(function(){ if(st==="dismissed")LP.items=LP.items.filter(function(x){return x!==l}); else l.status=st; LP.open=null; toast(st==="dismissed"?"Removed from the pipeline":"Moved to "+lpStageName(st),l.company,"ok"); render(); })
+ .catch(function(e){toast("Not saved",e.message,"err");render();}); }
+function lpSettings(){ return '<div class="lp-pane"><div class="lp-ph"><b>Lead sources</b><span class="meta">Free channels. The Lead Finder uses these from its next search.</span></div><div class="lp-grid">'+
+ lpF("Adzuna app id (free at developer.adzuna.com)","lpazid",LP.adzunaId)+'<div class="f"><label class="meta">Adzuna app key'+(LP.adzuna?" (saved, leave blank to keep it)":"")+'</label><input class="inp" id="lpazkey" type="password" autocomplete="off"></div></div>'+
+ '<label class="meta">Google Alerts RSS feeds, one per line (google.com/alerts, Show options, Deliver to: RSS feed)</label><textarea class="inp" id="lpfeeds" rows="3" placeholder="https://www.google.com/alerts/feeds/...">'+esc(LP.feeds)+'</textarea>'+
+ '<label class="meta">Email footer: company name, postal address and an unsubscribe line (needed for cold email under CAN-SPAM)</label><textarea class="inp" id="lpfoot" rows="3">'+esc(LP.footer||lpFooter())+'</textarea>'+
+ '<div class="lp-grid">'+lpF("Minimum AI score to keep a lead (0-99)","lpmin",LP.minScore)+'</div>'+
+ '<div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-s btn-p" data-a="lpsetsave">Save sources</button><button class="btn btn-s btn-g" data-a="lpset">Close</button></div></div>'; }
+function lpDraftHtml(l,d){ return '<div class="lp-pane"><div class="lp-ph"><b>Email draft</b><span class="meta">Review before sending. It opens in your own mail app, so replies come straight to you.</span></div>'+
+ (d.busy?'<p class="meta">'+ic("sync","spin")+' Writing a first draft…</p>':
+ '<label class="meta">To</label><input class="inp" id="lpto" value="'+attr(d.to)+'" placeholder="name@company.com"><label class="meta">Subject</label><input class="inp" id="lpsub" value="'+attr(d.subject)+'"><label class="meta">Message</label><textarea class="inp" id="lpbody" rows="11">'+esc(d.body)+'</textarea>'+
+ '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-s btn-p" data-a="lpmailto" data-v="'+l.id+'">'+ic("send")+'Open in my mail app</button><button class="btn btn-s btn-g" data-a="lpcopy" data-v="'+l.id+'">'+ic("copy")+'Copy</button><button class="btn btn-s btn-g" data-a="lpsent" data-v="'+l.id+'">'+ic("chk")+'Mark as emailed</button><button class="btn btn-s btn-g" data-a="lpdraft" data-v="'+l.id+'">'+ic("sync")+'Rewrite</button><button class="btn btn-s btn-g" data-a="lpclosepane">Close</button></div>')+'</div>'; }
+function lpCallHtml(l,c){ var u=S.data.user;
+ return '<div class="lp-pane"><div class="lp-ph"><b>Call</b>'+(l.phone?'<a class="lp-tel" href="tel:'+attr(lpTel(l.phone))+'">'+ic("phone")+esc(l.phone)+'</a>':'<span class="meta">No phone yet: add one under Details.</span>')+'</div>'+
+ '<p class="meta"><b>Opening:</b> "Hi, this is '+esc(u.name)+' from OraDayForce. I saw that '+esc(l.company)+' '+esc(lpSignalLine(l))+', and we help teams your size with '+esc(l.fit||"this")+'. Is now a bad time for two minutes?"</p>'+
+ '<div class="lp-fits">'+LP_CALL.map(function(o,i){return '<button class="lp-chip'+(c.o===i?" on":"")+'" data-a="lpcallo" data-v="'+i+'">'+esc(o[0])+'</button>';}).join("")+'</div>'+
+ '<textarea class="inp" id="lpcallnote" rows="3" placeholder="Notes: who you spoke to, next step…" style="margin-top:8px">'+esc(c.note||"")+'</textarea>'+
+ '<div class="row" style="gap:8px;margin-top:8px"><button class="btn btn-s btn-p" data-a="lpcallsave" data-v="'+l.id+'"'+(c.o==null?" disabled":"")+'>Save call</button><button class="btn btn-s btn-g" data-a="lpclosepane">Cancel</button></div></div>'; }
+function lpDetailHtml(l){ var acts=LP.act[l.id];
+ return '<div class="lp-pane"><div class="lp-grid">'+lpF("Contact name","lpcn",l.contact_name)+lpF("Role","lpcr",l.contact_role)+lpF("Email","lpem",l.email,"name@company.com")+lpF("Phone","lpph",l.phone)+lpF("Owner","lpow",l.owner)+'</div>'+
+ '<label class="meta">Notes</label><textarea class="inp" id="lpno" rows="3">'+esc(l.notes||"")+'</textarea>'+
+ '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-s btn-p" data-a="lpsave" data-v="'+l.id+'">Save</button><button class="btn btn-s btn-g" data-a="lpdismiss" data-v="'+l.id+'">Not a fit</button><button class="btn btn-s btn-g" data-a="lpoptout" data-v="'+l.id+'" title="Stop all contact with this company">Do not contact</button></div>'+
+ '<div class="lp-acts"><b class="meta">Activity</b>'+(acts?(acts.length?acts.map(function(a){return '<div class="lp-a"><span class="bg">'+esc(a.kind)+'</span> '+(a.outcome?'<b>'+esc(a.outcome)+'</b> ':'')+'<span class="meta">'+esc(when(a.at))+(a.by_name?' · '+esc(a.by_name):'')+'</span>'+(a.body?'<div class="lp-ab">'+esc(String(a.body).slice(0,500))+'</div>':'')+'</div>';}).join(""):'<p class="meta">Nothing logged yet.</p>'):'<p class="meta">Loading…</p>')+'</div></div>'; }
+function lpCard(l){
+ var open=String(LP.open)===String(l.id), d=LP.draft&&String(LP.draft.id)===String(l.id)?LP.draft:null, c=LP.call&&String(LP.call.id)===String(l.id)?LP.call:null;
+ var contact=(l.email||l.phone)?'<div class="lp-ct">'+(l.contact_name?'<b>'+esc(l.contact_name)+'</b>'+(l.contact_role?' · '+esc(l.contact_role):'')+'':'')+(l.email?'<a href="mailto:'+attr(l.email)+'">'+ic("mail")+esc(l.email)+'</a>':'')+(l.phone?'<a href="tel:'+attr(lpTel(l.phone))+'">'+ic("phone")+esc(l.phone)+'</a>':'')+(l.contact_source?'<a class="meta" href="'+attr(l.contact_source)+'" target="_blank" rel="noopener">source ↗</a>':'')+'</div>'
+  :'<div class="lp-ct meta">No published contact found yet. <button class="lp-link" data-a="lpopen" data-v="'+l.id+'">Add one</button>'+(l.website?' from <a href="https://'+attr(l.website)+'" target="_blank" rel="noopener">'+esc(l.website)+'</a>':'')+'.</div>';
+ var la=l.last_act?'<div class="meta">Last: '+esc(l.last_act.kind)+(l.last_act.outcome?' · '+esc(l.last_act.outcome):'')+' · '+esc(when(l.last_act.at))+(l.last_act.by_name?' · '+esc(l.last_act.by_name):'')+'</div>':'';
+ var h='<div class="lp'+(open||d||c?" on":"")+'"><div class="lp-top"><span class="lp-score" title="AI fit score">'+(l.score||0)+'</span><div class="lp-main">'+
+  '<div class="lp-co">'+esc(l.company)+(l.website?' <a class="meta" href="https://'+attr(l.website)+'" target="_blank" rel="noopener">'+esc(l.website)+'</a>':'')+(l.est_employees&&l.est_employees!=="unknown"?' <span class="meta">· '+esc(l.est_employees)+' employees</span>':'')+(l.industry?' <span class="meta">· '+esc(l.industry)+'</span>':'')+'</div>'+
+  '<div class="row" style="gap:6px;margin:6px 0;flex-wrap:wrap"><span class="bg b-ac">'+esc(l.signal)+'</span>'+String(l.fit||"").split(", ").filter(Boolean).map(function(f){return '<span class="bg">'+esc(f)+'</span>';}).join("")+(l.location?'<span class="bg">'+esc(l.location)+'</span>':'')+(l.due_at?'<span class="bg b-wa">Due '+esc(new Date(l.due_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}))+'</span>':'')+'</div>'+
+  (l.url?'<a class="lp-t" href="'+attr(l.url)+'" target="_blank" rel="noopener">'+esc(l.title||l.url)+'</a>':'<div class="lp-t">'+esc(l.title||"")+'</div>')+
+  (l.why?'<p class="lp-why">'+esc(l.why)+'</p>':'')+(l.pitch?'<p class="meta"><b>Angle:</b> '+esc(l.pitch)+'</p>':'')+contact+la+'</div>'+
+  '<div class="lp-act"><button class="btn btn-s btn-p" data-a="lpdraft" data-v="'+l.id+'">'+ic("mail")+'Draft email</button>'+
+  (l.phone?'<a class="btn btn-s btn-g" href="tel:'+attr(lpTel(l.phone))+'" data-a="lpcall" data-v="'+l.id+'">'+ic("phone")+'Call</a>':'<button class="btn btn-s btn-g" data-a="lpcall" data-v="'+l.id+'">'+ic("phone")+'Log call</button>')+
+  '<select class="lp-stage" data-lp-stage="'+l.id+'" aria-label="Stage">'+LP_STAGES.map(function(s){return '<option value="'+s[0]+'"'+(l.status===s[0]?" selected":"")+'>'+s[1]+'</option>';}).join("")+'</select>'+
+  '<button class="btn btn-s btn-g" data-a="lpopen" data-v="'+l.id+'">'+ic(open?"x":"edit")+(open?"Close":"Details")+'</button></div></div>';
+ if(d)h+=lpDraftHtml(l,d); if(c)h+=lpCallHtml(l,c); if(open)h+=lpDetailHtml(l);
+ return h+'</div>'; }
+function vPipeline(){ if(!LP.loaded&&!LP.loading)setTimeout(lpLoad,0);
+ var lr=LP.lastRun;
+ var head='<div class="card"><div class="card-h"><h2>Lead pipeline</h2><div class="row" style="margin-left:auto;gap:8px">'+(LP.isAdmin?'<button class="btn btn-s btn-g" data-a="lpset">'+ic("cog")+'Sources</button><button class="btn btn-s btn-p" data-a="lprefresh"'+(LP.refreshPending?" disabled":"")+'>'+ic("sync",LP.refreshPending?"spin":"")+(LP.refreshPending?"Search queued":"Find leads now")+'</button>':'')+'</div></div>'+
+  '<div class="card-b"><p class="meta">Small and mid-size businesses that show a need for AI enablement, Oracle Cloud ERP, NetSuite, EBS or Google Cloud: companies hiring for these skills, commercial RFPs, Google Alerts and community posts. AI qualifies each one, and only business contacts a company publishes itself are kept. New leads arrive every morning at 6 AM Central.'+(lr?' Last search '+esc(when(lr.started_at))+': '+(lr.fetched||0)+' signals, '+(lr.candidates||0)+' candidates, '+(lr.kept||0)+' qualified, '+(lr.contacts||0)+' with a contact.':'')+'</p>'+
+  (lr&&lr.error?'<p class="meta" style="color:var(--warn)">Last search note: '+esc(lr.error)+'</p>':'')+
+  (!LP.adzuna&&LP.isAdmin?'<p class="meta">Add a free Adzuna key under Sources to include companies hiring for these skills, the strongest signal.</p>':'')+
+  (LP.setOpen?lpSettings():'')+'</div></div>';
+ if(!LP.loaded)return '<div class="wrap">'+head+'<div class="card"><div class="card-b"><div class="sk" style="height:18px;width:60%"></div><div class="sk" style="height:14px;margin-top:10px"></div></div></div></div>';
+ if(LP.err)return '<div class="wrap">'+head+'<div class="card"><div class="emp"><h3>Pipeline unavailable</h3><p>'+esc(LP.err)+'</p><button class="btn btn-p" data-a="lpreload">'+ic("sync")+'Retry</button></div></div></div>';
+ var cnt=function(s){return LP.items.filter(function(l){return l.status===s}).length;};
+ var tabs='<div class="tabs" style="margin-bottom:0">'+LP_STAGES.map(function(s){return '<button class="'+(LP.stage===s[0]?"on":"")+'" data-a="lpstage" data-v="'+s[0]+'">'+s[1]+' <span class="bg">'+cnt(s[0])+'</span></button>';}).join("")+'</div>';
+ var fits='<div class="lp-fits">'+[""].concat(LP_FITS).map(function(f){return '<button class="lp-chip'+(LP.fit===f?" on":"")+'" data-a="lpfit" data-v="'+attr(f)+'">'+esc(f||"All areas")+'</button>';}).join("")+'</div>';
+ var list=LP.items.filter(function(l){return l.status===LP.stage&&(!LP.fit||String(l.fit||"").indexOf(LP.fit)>=0);});
+ var shown=LP.stage==="new"&&!LP.more?list.slice(0,10):list;
+ var title=LP.stage==="new"?"Top "+shown.length+" new leads":lpStageName(LP.stage)+" ("+list.length+")";
+ var body=shown.length?shown.map(lpCard).join(""):'<div class="emp"><div class="ico">'+ic("funnel","ic18")+'</div><h3>'+(LP.stage==="new"?"No new leads yet":"Nothing in "+lpStageName(LP.stage))+'</h3><p>'+(LP.stage==="new"?"The Lead Finder searches every morning. More sources (an Adzuna key, Google Alerts feeds) mean more leads.":"Move leads here with the stage menu on each lead.")+'</p></div>';
+ return '<div class="wrap">'+head+tabs+'<div class="card" style="margin-top:12px"><div class="card-h"><div><h2>'+esc(title)+'</h2>'+fits+'</div>'+(LP.stage==="new"&&list.length>10?'<button class="btn btn-s btn-g" style="margin-left:auto" data-a="lpmore">'+(LP.more?"Show top 10":"Show all ("+list.length+")")+'</button>':'')+'</div><div class="card-b lps">'+body+'</div></div></div>'; }
+function pipeAct(a,v){
+ if(String(a).indexOf("lp")!==0)return false;
+ var l=lpById(v), g=function(id){var e=document.getElementById(id);return e?e.value:"";};
+ if(a==="lpreload"){lpLoad();return true;}
+ if(a==="lpstage"){LP.stage=v;LP.more=false;LP.open=null;LP.draft=null;LP.call=null;}
+ else if(a==="lpfit"){LP.fit=v||"";}
+ else if(a==="lpmore"){LP.more=!LP.more;}
+ else if(a==="lpset"){LP.setOpen=!LP.setOpen;}
+ else if(a==="lprefresh"){capi("leads.refresh").then(function(){LP.refreshPending=true;toast("Lead search queued","New leads arrive within about 15 minutes","ok");render();}).catch(function(e){toast("Could not queue the search",e.message,"err");});return true;}
+ else if(a==="lpsetsave"){capi("leads.settings",{adzunaId:g("lpazid").trim(),adzunaKey:g("lpazkey").trim(),feeds:g("lpfeeds"),footer:g("lpfoot"),minScore:g("lpmin").trim()}).then(function(){toast("Sources saved","Used from the next lead search","ok");LP.setOpen=false;LP.loaded=false;lpLoad();}).catch(function(e){toast("Not saved",e.message,"err");});return true;}
+ else if(a==="lpopen"&&l){ var was=String(LP.open)===String(l.id); LP.open=was?null:l.id; LP.draft=null;LP.call=null;
+   if(!was)capi("leads.activity",{id:l.id}).then(function(d){LP.act[l.id]=d.items||[];render();}).catch(function(){LP.act[l.id]=[];render();}); }
+ else if(a==="lpdraft"&&l){LP.open=null;LP.call=null;lpGen(l);return true;}
+ else if(a==="lpcall"&&l){LP.open=null;LP.draft=null;LP.call={id:l.id,o:null,note:""};}
+ else if(a==="lpcallo"&&LP.call){LP.call.note=g("lpcallnote");LP.call.o=Number(v);}
+ else if(a==="lpcallsave"&&l&&LP.call&&LP.call.o!=null){ var o=LP_CALL[LP.call.o], note=g("lpcallnote"), ns=(o[1]==="lost"||(o[1]&&lpRank(o[1])>lpRank(l.status)))?o[1]:"";
+   capi("leads.log",{id:l.id,kind:"call",outcome:o[0],body:note,status:ns}).then(function(r){l.status=r.status;l.owner=r.owner;l.last_act={kind:"call",outcome:o[0],at:new Date().toISOString(),by_name:S.data.user.name};LP.call=null;delete LP.act[l.id];toast("Call logged",o[0]+(ns?" · moved to "+lpStageName(ns):""),"ok");render();}).catch(function(e){toast("Not saved",e.message,"err");});return true; }
+ else if(a==="lpclosepane"){LP.draft=null;LP.call=null;}
+ else if(a==="lpmailto"&&l&&LP.draft){ lpReadDraft(); var d=LP.draft; if(!d.to){toast("Add an email address","Type it in the To box, or add it under Details","err");return true;}
+   window.location.href="mailto:"+encodeURIComponent(d.to).replace(/%40/g,"@")+"?subject="+encodeURIComponent(d.subject)+"&body="+encodeURIComponent(d.body);
+   toast("Opening your mail app","When you have sent it, press Mark as emailed","ok");return true; }
+ else if(a==="lpcopy"&&LP.draft){ lpReadDraft(); var d2=LP.draft; try{navigator.clipboard.writeText("Subject: "+d2.subject+"\n\n"+d2.body).then(function(){toast("Copied","Paste it into your email","ok");});}catch(e){toast("Copy failed","Select the text and copy it","err");} return true; }
+ else if(a==="lpsent"&&l&&LP.draft){ lpReadDraft(); var d3=LP.draft;
+   capi("leads.log",{id:l.id,kind:"email",outcome:"Sent to "+(d3.to||"(no address)"),body:"Subject: "+d3.subject+"\n\n"+d3.body,status:l.status==="new"?"contacted":""}).then(function(r){l.status=r.status;l.owner=r.owner;if(d3.to&&!l.email)l.email=d3.to;l.last_act={kind:"email",outcome:"Sent",at:new Date().toISOString(),by_name:S.data.user.name};LP.draft=null;delete LP.act[l.id];toast("Logged as emailed",l.company+" is now in "+lpStageName(l.status),"ok");render();}).catch(function(e){toast("Not saved",e.message,"err");});return true; }
+ else if(a==="lpsave"&&l){ var upd={id:l.id,status:l.status,contact_name:g("lpcn").trim(),contact_role:g("lpcr").trim(),email:g("lpem").trim(),phone:g("lpph").trim(),owner:g("lpow").trim(),notes:g("lpno").trim()};
+   capi("leads.update",upd).then(function(){Object.assign(l,upd);toast("Saved",l.company,"ok");render();}).catch(function(e){toast("Not saved",e.message,"err");});return true; }
+ else if(a==="lpdismiss"&&l){lpSetStage(l,"dismissed");return true;}
+ else if(a==="lpoptout"&&l){ if(!confirm("Stop all contact with "+l.company+"? The lead moves to Lost and the Lead Finder will never add this company again."))return true;
+   capi("leads.optout",{id:l.id}).then(function(){l.status="lost";l.notes=(l.notes?l.notes+" ":"")+"[Do not contact]";LP.open=null;toast("Marked do not contact",l.company,"ok");render();}).catch(function(e){toast("Not saved",e.message,"err");});return true; }
+ else return false;
+ render(); return true; }
+document.addEventListener("change",function(e){ var t=e.target; if(t&&t.getAttribute&&t.getAttribute("data-lp-stage")){ var l=lpById(t.getAttribute("data-lp-stage")); if(l&&t.value!==l.status)lpSetStage(l,t.value); } });
+/* ---- end pipeline ---- */
+
 function view(){
  if(!S.auth)return vPublic();
  if(S.loading||!S.data)return skeleton();
@@ -1245,7 +1399,7 @@ function view(){
  var v=S.route.v,c;
  if(v==="projects")c=vProjects();else if(v==="proj")c=vProject();else if(v==="knowledge")c=vKnowledge();
  else if(v==="agents")c=vAgents();else if(v==="agent")c=vAgent();else if(v==="chat")c=vChat();
- else if(v==="activity")c=vActivity();else if(v==="settings")c=vSettings();else if(v==="rfps")c=vRfps();else c=vDash();
+ else if(v==="activity")c=vActivity();else if(v==="settings")c=vSettings();else if(v==="rfps")c=vRfps();else if(v==="pipeline")c=vPipeline();else c=vDash();
  return '<div class="shell">'+sidebar()+'<div class="main">'+header()+c+'</div></div>'+tabbar()+
  (document.body.getAttribute("data-drawer")==="1"?'<div class="scrim" data-a="drawer"></div>':"")+teamPanel()+modalHtml()+toastsHtml();
 }
@@ -1412,7 +1566,7 @@ document.addEventListener("click",function(ev){
  if(a==="closemodal"&&ev.target.closest("[data-stop]")&&ev.target!==el)return;
  if(a!=="pop"&&S.pop)S.pop=null;
  if(a!=="modelmenu"&&a!=="selmodel"&&a!=="planinfo"&&S.chat.modelOpen)S.chat.modelOpen=false;
- if(collabAct(a,v))return; if(a==="modelmenu"){S.chat.modelOpen=!S.chat.modelOpen;render();return;}
+ if(collabAct(a,v)||pipeAct(a,v))return; if(a==="modelmenu"){S.chat.modelOpen=!S.chat.modelOpen;render();return;}
  if(a==="signup"){doSignup();return;}
  if(a==="adminload"){loadRoster();return;}
  if(a==="approve"){adminAct("approve",v);return;}
