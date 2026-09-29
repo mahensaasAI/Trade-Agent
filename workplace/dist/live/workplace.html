@@ -431,6 +431,17 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
 .lp-acts{margin-top:12px;display:flex;flex-direction:column;gap:8px}
 .lp-a{font-size:12.5px}.lp-ab{white-space:pre-wrap;color:var(--tx2);margin-top:3px;font-size:12.5px;max-height:120px;overflow:auto}
 @media(max-width:700px){.lp-top{flex-wrap:wrap}.lp-act{flex-direction:row;flex-wrap:wrap;width:100%;min-width:0}.lp-act .btn,.lp-stage{flex:1 1 auto}}
+/* odf-resourcing: requests, shortlists, talent pool */
+.rs-q{display:flex;gap:14px;align-items:center;width:100%;text-align:left;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px;font:inherit;color:inherit;cursor:pointer}
+.rs-q:hover{border-color:var(--acl);box-shadow:0 0 0 3px var(--acs)}
+.rs-qs{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
+.rs-c,.rs-t{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px}
+.rs-t{display:flex;gap:14px;align-items:flex-start}
+.rs-c.on{border-color:var(--acl);box-shadow:0 0 0 3px var(--acs)}
+.rs-c.off,.rs-t.off{opacity:.6}
+.rs-ct{display:flex;gap:14px;align-items:flex-start}
+.rs-raw{white-space:pre-wrap;font-size:13px;color:var(--tx2);margin:8px 0 0}
+@media(max-width:700px){.rs-q,.rs-ct,.rs-t{flex-wrap:wrap}.rs-qs{align-items:flex-start}}
 /* odf-brand-v3: OraDayForce brand layer (see oradayforce/brand/workplace-theme.css) */
 :root{--brand-grad:linear-gradient(120deg,#4f46e5 0%,#7c3aed 55%,#db2777 100%);--brand-grad-text:linear-gradient(92deg,#4f46e5,#7c3aed 55%,#db2777)}
 [data-t="dark"]{--brand-grad-text:linear-gradient(92deg,#818cf8,#a78bfa 55%,#f472b6)}
@@ -612,7 +623,7 @@ function parseHash(){
  if(h[0]==="agents")return h[1]?{v:"agent",id:h[1]}:{v:"agents"};
  if(h[0]==="chat")return {v:"chat"};
  if(h[0]==="activity")return {v:"activity"};
- if(h[0]==="settings")return {v:"settings"}; if(h[0]==="rfps")return {v:"rfps"}; if(h[0]==="pipeline")return {v:"pipeline"};
+ if(h[0]==="settings")return {v:"settings"}; if(h[0]==="rfps")return {v:"rfps"}; if(h[0]==="pipeline")return {v:"pipeline"}; if(h[0]==="resourcing")return {v:"resourcing"};
  return {v:"dash"};
 }
 function go(h){location.hash=h;}
@@ -801,9 +812,9 @@ function tabbar(){
 function sidebar(){
  var r=S.route,d=S.data;
  var items=[["dash","home","Home","#/dashboard",""],["projects","folder","Projects","#/projects",String(d.projects.length)],
-  ["knowledge","db","Knowledge Bases","#/knowledge",String(d.documents.length)],["agents","bot","Agents","#/agents",String(d.agents.length)],["rfps","clip","RFPs","#/rfps",R.loaded?String(Math.min(R.items.length,10)):""],["pipeline","funnel","Pipeline","#/pipeline",LP.loaded?String(LP.items.filter(function(l){return l.status==="new"}).length||""):""],
+  ["knowledge","db","Knowledge Bases","#/knowledge",String(d.documents.length)],["agents","bot","Agents","#/agents",String(d.agents.length)],["rfps","clip","RFPs","#/rfps",R.loaded?String(Math.min(R.items.length,10)):""],["resourcing","users","Resourcing","#/resourcing",RS.loaded?String(RS.requests.filter(function(q){return q.status!=="closed"}).length||""):""],["pipeline","funnel","Pipeline","#/pipeline",LP.loaded?String(LP.items.filter(function(l){return l.status==="new"}).length||""):""],
   ["activity","act","Activity","#/activity",""],["settings","cog","Settings","#/settings",""]];
- var on={dash:"dash",projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"activity",settings:"settings",rfps:"rfps",pipeline:"pipeline"}[r.v];
+ var on={dash:"dash",projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"activity",settings:"settings",rfps:"rfps",pipeline:"pipeline",resourcing:"resourcing"}[r.v];
  return '<aside class="sb"><a class="sb-top" href="#/dashboard" style="text-decoration:none;color:inherit" title="Home"><div class="logo">W</div><div class="brand">WorkPlace<span>'+esc(d.organization.name)+'</span></div></a>'+
  '<nav class="sb-nav"><div class="sb-lbl nv-t">WORKSPACE</div>'+
  items.map(function(it){return '<a class="nv'+(on===it[0]?" on":"")+'" href="'+it[3]+'" title="'+attr(it[2])+'">'+ic(it[1],"ic18")+'<span class="nv-t">'+it[2]+'</span>'+(it[4]?'<span class="cnt">'+it[4]+'</span>':'')+'</a>';}).join("")+
@@ -1391,6 +1402,114 @@ function pipeAct(a,v){
  render(); return true; }
 document.addEventListener("change",function(e){ var t=e.target; if(t&&t.getAttribute&&t.getAttribute("data-lp-stage")){ var l=lpById(t.getAttribute("data-lp-stage")); if(l&&t.value!==l.status)lpSetStage(l,t.value); } });
 /* ---- end pipeline ---- */
+/* ---- odf-resourcing: Resourcing. Requests are parsed into roles and shortlisted from the talent pool (resumes sent to innovations@) and from public profiles on the web (n8n WorkPlace Resourcing Worker). ---- */
+var RS={loaded:false,loading:false,requests:[],pool:0,footer:"",err:null,tab:"requests",cur:null,detail:null,dloading:false,newOpen:false,talent:[],tq:"",tloaded:false,tform:null,draft:null,pollT:null};
+var RS_STAGES=[["found","Found"],["contacted","Contacted"],["interested","Interested"],["submitted","Submitted"],["interview","Interview"],["selected","Selected"],["rejected","Not a fit"]];
+function rsLoad(){ if(RS.loading)return; RS.loading=true;
+ capi("rs.list").then(function(d){RS.loading=false;RS.loaded=true;RS.err=null;RS.requests=d.requests||[];RS.pool=d.pool||0;RS.footer=d.footer||"";render();})
+ .catch(function(e){RS.loading=false;RS.loaded=true;RS.err=e.message;render();}); }
+function rsOpen(id,quiet){ RS.cur=Number(id); if(!quiet){RS.detail=null;RS.draft=null;} RS.dloading=true; if(!quiet)render();
+ capi("rs.request",{id:id}).then(function(d){RS.dloading=false;RS.detail=d;render();}).catch(function(e){RS.dloading=false;toast("Could not open the request",e.message,"err");RS.cur=null;render();}); }
+function rsTalent(){ capi("rs.talent.list",{q:RS.tq}).then(function(d){RS.talent=d.items||[];RS.tloaded=true;render();}).catch(function(e){toast("Could not load the talent pool",e.message,"err");}); }
+function rsBusy(q){return q&&(/parsing|matching/.test(q.status)||/queued|searching/.test(q.search_status));}
+function rsStatus(q){ if(/parsing/.test(q.status))return '<span class="bg b-wa">'+ic("sync","spin")+'Reading the request…</span>'; if(/matching/.test(q.status))return '<span class="bg b-wa">'+ic("sync","spin")+'Matching the pool…</span>';
+ var s=q.status==="closed"?'<span class="bg">Closed</span>':'<span class="bg b-ok">Open</span>';
+ if(/queued|searching/.test(q.search_status))s+=' <span class="bg b-wa">'+ic("sync","spin")+'Searching the web…</span>'; else if(q.search_status==="error")s+=' <span class="bg b-wa">Web search failed</span>'; return s; }
+function rsPoll(){ if(RS.pollT)return; var busy=RS.requests.some(rsBusy)||(RS.detail&&rsBusy(RS.detail.request));
+ if(!busy)return; RS.pollT=setTimeout(function(){RS.pollT=null; if(String(location.hash).indexOf("#/resourcing")!==0)return; rsLoad(); if(RS.cur)rsOpen(RS.cur,true);},15000); }
+function rsRoles(q){return (q.roles||[]).map(function(r){return r.count+" × "+r.title;}).join(" · ");}
+function rsHost(u){try{return new URL(u).hostname.replace(/^www[.]/,"");}catch(e){return "";}}
+function rsFirst(n){return String(n||"").trim().split(" ")[0]||"there";}
+function rsFooter(m){ return RS.footer||(m.consent==="public"?"You are receiving this because your professional profile is public. Reply \"no thanks\" and we won't contact you again.":"You are receiving this because you shared your resume with OraDayForce. Reply \"no thanks\" and we won't contact you again."); }
+function rsDraftFor(m,role,q){ var u=S.data.user, skills=(role.skills||[]).join(", ");
+ return {mid:m.match_id,tid:m.talent_id,to:m.email||"",subject:role.title+" opportunity"+(q.location?" ("+q.location+")":"")+" – OraDayForce",
+  body:"Hi "+rsFirst(m.name)+",\n\n"+(m.origin==="search"?"I came across your profile"+(rsHost(m.profile_url)?" on "+rsHost(m.profile_url):"")+" and your experience":"Thank you for sharing your resume with us. Your experience")+(skills?" with "+skills:"")+" stood out. We are staffing "+role.count+" "+role.title+" role"+(role.count>1?"s":"")+(q.domain?" for a "+q.domain+" programme":"")+(q.location?" in "+q.location:"")+".\n\nWould you be open to a short call this week? If you are interested, reply with your latest resume, notice period and expected rate.\n\nBest,\n"+u.name+"\nOraDayForce · innovations@oradayforce.com\n\n--\n"+rsFooter(m)}; }
+function rsReadDraft(){ var d=RS.draft;if(!d)return; var t=document.getElementById("rsto"),s=document.getElementById("rssub"),b=document.getElementById("rsbody"); if(t)d.to=t.value.trim(); if(s)d.subject=s.value; if(b)d.body=b.value; }
+function rsShare(){ var d=RS.detail;if(!d)return ""; var q=d.request, NL="\n", out=["Shortlist: "+(q.title||"Resourcing request")+(q.location?" ("+q.location+")":""),""];
+ (q.roles||[]).forEach(function(r){ var list=d.matches.filter(function(m){return m.role_key===r.key&&m.talent_status!=="do_not_contact";}); var good=list.filter(function(m){return ["interested","submitted","interview","selected"].indexOf(m.stage)>=0;}); var pick=(good.length?good:list.filter(function(m){return m.score>=60;})).slice(0,6);
+  out.push(r.title+" ("+r.count+" needed)"); if(!pick.length)out.push("  Sourcing in progress.");
+  pick.forEach(function(m,i){ var nm=String(m.name||"").trim().split(" "), masked=nm[0]+(nm.length>1?" "+nm[nm.length-1].charAt(0)+".":""); out.push("  "+(i+1)+". "+masked+" – "+[m.headline,m.years?m.years+" yrs":"",m.location,m.availability].filter(Boolean).join("; ")+(m.why?". "+m.why:"")); });
+  out.push(""); });
+ return out.join(NL); }
+function rsCand(m,role,q){ var d=RS.draft&&RS.draft.mid===m.match_id?RS.draft:null, li=/linkedin[.]com/i.test(m.profile_url||"");
+ var h='<div class="rs-c'+(d?" on":"")+(m.talent_status==="do_not_contact"?" off":"")+'"><div class="rs-ct"><span class="lp-score" title="Match score">'+(m.score||0)+'</span><div class="lp-main">'+
+  '<div class="lp-co">'+(m.profile_url?'<a href="'+attr(m.profile_url)+'" target="_blank" rel="noopener">'+esc(m.name||"Unnamed")+'</a>':esc(m.name||"Unnamed"))+(m.years?' <span class="meta">· '+esc(m.years)+' yrs</span>':'')+(m.location?' <span class="meta">· '+esc(m.location)+'</span>':'')+'</div>'+
+  (m.headline?'<div class="meta">'+esc(m.headline)+'</div>':'')+
+  '<div class="row" style="gap:6px;margin:6px 0;flex-wrap:wrap"><span class="bg '+(m.origin==="search"?"":"b-ac")+'">'+(m.origin==="search"?"Web · public profile":(m.source==="mailbox"?"Pool · sent resume":"Pool · added by team"))+'</span>'+(m.availability?'<span class="bg">'+esc(m.availability)+'</span>':'')+(m.talent_status==="do_not_contact"?'<span class="bg b-wa">Do not contact</span>':'')+'</div>'+
+  (m.why?'<p class="lp-why">'+esc(m.why)+'</p>':'')+(m.gaps?'<p class="meta"><b>Gaps:</b> '+esc(m.gaps)+'</p>':'')+
+  '<div class="lp-ct">'+(m.email?'<a href="mailto:'+attr(m.email)+'">'+ic("mail")+esc(m.email)+'</a>':'')+(m.phone?'<a href="tel:'+attr(String(m.phone).replace(/[^0-9+]/g,""))+'">'+ic("phone")+esc(m.phone)+'</a>':'')+(m.profile_url?'<a href="'+attr(m.profile_url)+'" target="_blank" rel="noopener">'+ic("link")+(li?"LinkedIn profile":rsHost(m.profile_url)||"Profile")+'</a>':'')+(!m.email&&!m.phone&&!m.profile_url?'<span class="meta">No contact published.</span>':'')+'</div>'+
+  (m.last_act?'<div class="meta">Last: '+esc(m.last_act.kind)+(m.last_act.outcome?' · '+esc(m.last_act.outcome):'')+' · '+esc(when(m.last_act.at))+(m.last_act.by_name?' · '+esc(m.last_act.by_name):'')+'</div>':'')+'</div>'+
+  '<div class="lp-act">'+(m.talent_status==="do_not_contact"?'':'<button class="btn btn-s btn-p" data-a="rsdraft" data-v="'+m.match_id+'">'+ic("mail")+'Draft email</button>'+(li?'<a class="btn btn-s btn-g" href="'+attr(m.profile_url)+'" target="_blank" rel="noopener" data-a="rsli" data-v="'+m.match_id+'">'+ic("link")+'Message on LinkedIn</a>':''))+
+  '<select class="lp-stage" data-rs-stage="'+m.match_id+'" aria-label="Stage">'+RS_STAGES.map(function(s){return '<option value="'+s[0]+'"'+(m.stage===s[0]?" selected":"")+'>'+s[1]+'</option>';}).join("")+'</select>'+
+  (m.talent_status==="do_not_contact"?'':'<button class="btn btn-s btn-g" data-a="rsoptout" data-v="'+m.talent_id+'" title="Never contact this person again">Do not contact</button>')+'</div></div>';
+ if(d)h+='<div class="lp-pane"><div class="lp-ph"><b>Email to '+esc(m.name||"")+'</b><span class="meta">Opens in your mail app: choose innovations@oradayforce.com as the From address so replies and resumes reach the pool.</span></div>'+
+  '<label class="meta">To</label><input class="inp" id="rsto" value="'+attr(d.to)+'" placeholder="Their email, if you have it"><label class="meta">Subject</label><input class="inp" id="rssub" value="'+attr(d.subject)+'"><label class="meta">Message</label><textarea class="inp" id="rsbody" rows="11">'+esc(d.body)+'</textarea>'+
+  '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-s btn-p" data-a="rsmail">'+ic("send")+'Open in my mail app</button><button class="btn btn-s btn-g" data-a="rscopy">'+ic("copy")+'Copy</button><button class="btn btn-s btn-g" data-a="rssent">'+ic("chk")+'Mark as contacted</button><button class="btn btn-s btn-g" data-a="rsclose">Close</button></div></div>';
+ return h+'</div>'; }
+function rsDetail(){ var d=RS.detail; if(!d)return '<div class="card"><div class="card-b"><div class="sk" style="height:18px;width:50%"></div><div class="sk" style="height:14px;margin-top:10px"></div></div></div>';
+ var q=d.request, det=q.details||{};
+ var h='<div class="card"><div class="card-h"><div><button class="lp-link" data-a="rsback">← All requests</button><h2 style="margin-top:6px">'+esc(q.title||"Resourcing request")+'</h2><div class="meta">'+esc([q.client,q.location,q.domain,det.start&&"Start "+det.start,det.duration,det.rate].filter(Boolean).join(" · "))+'</div></div><div class="row" style="margin-left:auto;gap:8px;flex-wrap:wrap">'+rsStatus(q)+'</div></div>'+
+  '<div class="card-b">'+(q.error?'<p class="meta" style="color:var(--warn)">'+esc(q.error)+'</p>':'')+'<details><summary class="meta">Original request</summary><p class="rs-raw">'+esc(q.raw_text)+'</p></details>'+
+  '<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn btn-s btn-p" data-a="rsshare">'+ic("copy")+'Copy shortlist for the client</button><button class="btn btn-s btn-g" data-a="rsreq" data-v="search"'+(rsBusy(q)?" disabled":"")+'>'+ic("srch")+'Search the web again</button><button class="btn btn-s btn-g" data-a="rsreq" data-v="match"'+(rsBusy(q)?" disabled":"")+'>'+ic("sync")+'Re-match the pool</button>'+(q.error&&!(q.roles||[]).length?'<button class="btn btn-s btn-g" data-a="rsreq" data-v="reparse">Read the request again</button>':'')+'<button class="btn btn-s btn-g" data-a="rsreq" data-v="'+(q.status==="closed"?"reopen":"close")+'">'+(q.status==="closed"?"Reopen":"Close request")+'</button></div></div></div>';
+ (q.roles||[]).forEach(function(r){ var list=d.matches.filter(function(m){return m.role_key===r.key;}), prog=list.filter(function(m){return ["interested","submitted","interview","selected"].indexOf(m.stage)>=0;}).length;
+  h+='<div class="card" style="margin-top:12px"><div class="card-h"><div><h2>'+esc(r.count+" × "+r.title)+'</h2><div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><span class="bg b-ac">'+esc(r.kind)+'</span>'+(r.skills||[]).map(function(s){return '<span class="bg">'+esc(s)+'</span>';}).join("")+(r.must||[]).map(function(s){return '<span class="bg b-wa">'+esc(s)+'</span>';}).join("")+(r.years?'<span class="bg">'+esc(r.years)+' yrs</span>':'')+'</div></div><span class="meta" style="margin-left:auto">'+list.length+' candidates · '+prog+' interested or further</span></div>'+
+   '<div class="card-b lps">'+(list.length?list.map(function(m){return rsCand(m,r,q);}).join(""):'<div class="emp"><h3>No candidates yet</h3><p>'+(rsBusy(q)?"Still looking: the pool match and the web search take a few minutes.":"Nobody in the pool matches yet and the web search found no public profiles. Resumes sent to innovations@oradayforce.com are matched automatically.")+'</p></div>')+'</div></div>'; });
+ return h; }
+function rsTalentView(){ if(!RS.tloaded)setTimeout(rsTalent,0);
+ var f=RS.tform, form=f?'<div class="lp-pane"><div class="lp-ph"><b>'+(f.id?"Edit candidate":"Add a candidate")+'</b><span class="meta">For people who shared their resume with you directly (referrals, partner benches).</span></div><div class="lp-grid">'+
+  lpF("Name","rsn",f.name)+lpF("Email","rse",f.email)+lpF("Phone","rsp",f.phone)+lpF("Location","rsl",f.location,"City, Country")+lpF("Headline","rsh",f.headline,"Oracle OIC Technical Consultant")+lpF("Years of experience","rsy",f.years)+lpF("Availability","rsa",f.availability,"Immediate, 30 days notice…")+lpF("Profile link","rsu",f.profile_url)+'</div>'+
+  '<label class="meta">Skills (comma separated)</label><textarea class="inp" id="rss" rows="2">'+esc(f.skills||"")+'</textarea><label class="meta">Domains</label><input class="inp" id="rsd" value="'+attr(f.domains||"")+'" placeholder="Public Sector, Healthcare"><label class="meta">Notes</label><textarea class="inp" id="rsnt" rows="2">'+esc(f.notes||"")+'</textarea>'+
+  '<div class="row" style="gap:8px;margin-top:8px"><button class="btn btn-s btn-p" data-a="rstsave">Save</button><button class="btn btn-s btn-g" data-a="rstcancel">Cancel</button></div></div>':'';
+ var rows=RS.talent.map(function(t){ return '<div class="rs-t'+(t.status==="do_not_contact"?" off":"")+'"><div class="lp-main"><div class="lp-co">'+(t.profile_url?'<a href="'+attr(t.profile_url)+'" target="_blank" rel="noopener">'+esc(t.name||"Unnamed")+'</a>':esc(t.name||"Unnamed"))+(t.years?' <span class="meta">· '+esc(t.years)+' yrs</span>':'')+(t.location?' <span class="meta">· '+esc(t.location)+'</span>':'')+'</div>'+(t.headline?'<div class="meta">'+esc(t.headline)+'</div>':'')+
+  (t.skills?'<div class="meta" style="margin-top:4px">'+esc(String(t.skills).slice(0,220))+'</div>':'')+'<div class="lp-ct">'+(t.email?'<a href="mailto:'+attr(t.email)+'">'+ic("mail")+esc(t.email)+'</a>':'')+(t.phone?'<a href="tel:'+attr(String(t.phone).replace(/[^0-9+]/g,""))+'">'+ic("phone")+esc(t.phone)+'</a>':'')+'<span class="bg">'+({mailbox:"Sent resume",manual:"Added by team",search:"Public profile"}[t.source]||t.source)+'</span>'+(t.status==="do_not_contact"?'<span class="bg b-wa">Do not contact</span>':'')+'</div></div>'+
+  '<div class="lp-act"><button class="btn btn-s btn-g" data-a="rstedit" data-v="'+t.id+'">'+ic("edit")+'Edit</button>'+(t.status==="do_not_contact"?'':'<button class="btn btn-s btn-g" data-a="rsoptout" data-v="'+t.id+'">Do not contact</button>')+'</div></div>'; }).join("");
+ return '<div class="card" style="margin-top:12px"><div class="card-h"><h2>Talent pool</h2><div class="row" style="margin-left:auto;gap:8px"><input class="inp" id="rsq" placeholder="Search skills, names, locations…" value="'+attr(RS.tq)+'" style="width:260px;height:32px"><button class="btn btn-s btn-g" data-a="rstq">'+ic("srch")+'Search</button><button class="btn btn-s btn-p" data-a="rstadd">'+ic("plus")+'Add candidate</button></div></div>'+
+  '<div class="card-b">'+form+'<div class="lps" style="margin-top:'+(form?"12px":"0")+'">'+(rows||'<div class="emp"><h3>'+(RS.tloaded?"No one yet":"Loading…")+'</h3><p>Resumes emailed to innovations@oradayforce.com appear here automatically, along with people found on the web and anyone you add.</p></div>')+'</div></div></div>'; }
+function vResourcing(){ if(!RS.loaded&&!RS.loading)setTimeout(rsLoad,0); rsPoll();
+ var head='<div class="card"><div class="card-h"><h2>Resourcing</h2><div class="row" style="margin-left:auto;gap:8px"><button class="btn btn-s btn-p" data-a="rsnew">'+ic("plus")+'New request</button></div></div>'+
+  '<div class="card-b"><p class="meta">Paste a staffing request and the AI splits it into roles. Each role gets a shortlist from the talent pool (resumes people send to innovations@oradayforce.com, matched automatically) and from people who publicly list those skills on the web. Contact only what people have published, and send every email yourself.</p>'+
+  (RS.newOpen?'<div class="lp-pane"><label class="meta">Request (paste the email or message as it is)</label><textarea class="inp" id="rstext" rows="5" placeholder="Do you have any OIC/OTBI consultants in India with Public Sector experience? 3 technical and 2 OPAL functional…"></textarea><div class="lp-grid">'+lpF("Client or requester (optional)","rsclient","")+'</div><div class="row" style="gap:8px;margin-top:8px"><button class="btn btn-s btn-p" data-a="rscreate">Find candidates</button><button class="btn btn-s btn-g" data-a="rsnew">Cancel</button></div></div>':'')+'</div></div>'+
+  '<div class="tabs" style="margin-bottom:0"><button class="'+(RS.tab==="requests"?"on":"")+'" data-a="rstab" data-v="requests">Requests <span class="bg">'+RS.requests.filter(function(q){return q.status!=="closed";}).length+'</span></button><button class="'+(RS.tab==="pool"?"on":"")+'" data-a="rstab" data-v="pool">Talent pool <span class="bg">'+RS.pool+'</span></button></div>';
+ if(RS.err)return '<div class="wrap">'+head+'<div class="card"><div class="emp"><h3>Resourcing unavailable</h3><p>'+esc(RS.err)+'</p><button class="btn btn-p" data-a="rsreload">'+ic("sync")+'Retry</button></div></div></div>';
+ if(RS.tab==="pool")return '<div class="wrap">'+head+rsTalentView()+'</div>';
+ if(RS.cur)return '<div class="wrap">'+head+'<div style="margin-top:12px">'+rsDetail()+'</div></div>';
+ var list=RS.requests.map(function(q){ return '<button class="rs-q" data-a="rsopen" data-v="'+q.id+'"><div class="lp-main"><div class="lp-co">'+esc(q.title||"Reading the request…")+'</div><div class="meta">'+esc([q.client,q.location,q.domain,rsRoles(q)].filter(Boolean).join(" · ")||String(q.raw_text||"").slice(0,140))+'</div><div class="meta">'+esc(q.created_by||"")+' · '+esc(when(q.created_at))+'</div></div><div class="rs-qs">'+rsStatus(q)+'<span class="meta">'+q.matches+' candidates · '+q.progressed+' interested+</span></div></button>'; }).join("");
+ return '<div class="wrap">'+head+'<div class="card" style="margin-top:12px"><div class="card-b lps">'+(RS.loaded?(list||'<div class="emp"><h3>No requests yet</h3><p>Press New request and paste the first one.</p></div>'):'<div class="sk" style="height:18px;width:60%"></div>')+'</div></div></div>'; }
+function rsMatch(mid){ var d=RS.detail; return d&&d.matches.filter(function(m){return String(m.match_id)===String(mid);})[0]; }
+function rsAct(a,v){
+ if(String(a).indexOf("rs")!==0)return false;
+ var g=function(id){var e=document.getElementById(id);return e?e.value:"";};
+ if(a==="rsreload"){RS.loaded=false;rsLoad();return true;}
+ if(a==="rsnew"){RS.newOpen=!RS.newOpen;RS.tab="requests";}
+ else if(a==="rstab"){RS.tab=v;RS.draft=null;}
+ else if(a==="rscreate"){ var t=g("rstext").trim(); if(t.length<10){toast("Paste the request first","","err");return true;}
+   capi("rs.create",{text:t,client:g("rsclient").trim()}).then(function(r){RS.newOpen=false;toast("Request added","The AI is reading it now; candidates follow within a few minutes","ok");rsLoad();rsOpen(r.id);}).catch(function(e){toast("Not saved",e.message,"err");});return true; }
+ else if(a==="rsopen"){rsOpen(v);return true;}
+ else if(a==="rsback"){RS.cur=null;RS.detail=null;RS.draft=null;}
+ else if(a==="rsreq"&&RS.cur){ capi("rs.requeue",{id:RS.cur,mode:v}).then(function(){toast({search:"Web search queued",match:"Re-matching the pool",close:"Request closed",reopen:"Request reopened",reparse:"Reading the request again"}[v]||"Done","","ok");rsLoad();rsOpen(RS.cur,true);}).catch(function(e){toast("Not done",e.message,"err");});return true; }
+ else if(a==="rsshare"){ var txt=rsShare(); try{navigator.clipboard.writeText(txt).then(function(){toast("Shortlist copied","Names are shortened and contact details left out; paste it into your reply","ok");});}catch(e){toast("Copy failed","","err");} return true; }
+ else if(a==="rsdraft"){ var m=rsMatch(v), q=RS.detail&&RS.detail.request; if(!m||!q)return true; var role=(q.roles||[]).filter(function(r){return r.key===m.role_key;})[0]||{title:"Consultant",count:1,skills:[]}; RS.draft=rsDraftFor(m,role,q); }
+ else if(a==="rsclose"){RS.draft=null;}
+ else if(a==="rsmail"&&RS.draft){ rsReadDraft(); var d=RS.draft; if(!d.to){toast("No email address","Use their LinkedIn profile, or add an email under Talent pool","err");return true;}
+   window.location.href="mailto:"+encodeURIComponent(d.to).replace(/%40/g,"@")+"?subject="+encodeURIComponent(d.subject)+"&body="+encodeURIComponent(d.body); toast("Opening your mail app","Send it from innovations@, then press Mark as contacted","ok"); return true; }
+ else if(a==="rscopy"&&RS.draft){ rsReadDraft(); var d2=RS.draft; try{navigator.clipboard.writeText("Subject: "+d2.subject+"\n\n"+d2.body).then(function(){toast("Copied","Paste it into your email or LinkedIn message","ok");});}catch(e){} return true; }
+ else if(a==="rssent"&&RS.draft){ rsReadDraft(); var d3=RS.draft, m3=rsMatch(d3.mid);
+   capi("rs.log",{talent_id:d3.tid,id:RS.cur,match_id:d3.mid,kind:"email",outcome:"Sent"+(d3.to?" to "+d3.to:""),body:"Subject: "+d3.subject+"\n\n"+d3.body,stage:m3&&m3.stage==="found"?"contacted":""}).then(function(){RS.draft=null;toast("Logged as contacted","","ok");rsOpen(RS.cur,true);}).catch(function(e){toast("Not saved",e.message,"err");}); return true; }
+ else if(a==="rsli"){ var m4=rsMatch(v); if(m4)capi("rs.log",{talent_id:m4.talent_id,id:RS.cur,match_id:m4.match_id,kind:"linkedin",outcome:"Opened LinkedIn to message",stage:m4.stage==="found"?"contacted":""}).then(function(){rsOpen(RS.cur,true);}).catch(function(){}); return true; }
+ else if(a==="rsoptout"){ if(!confirm("Never contact this person again? They are hidden from future shortlists."))return true;
+   capi("rs.optout",{talent_id:v}).then(function(){toast("Marked do not contact","","ok"); if(RS.cur)rsOpen(RS.cur,true); if(RS.tab==="pool")rsTalent();}).catch(function(e){toast("Not saved",e.message,"err");}); return true; }
+ else if(a==="rstq"){RS.tq=g("rsq").trim();rsTalent();return true;}
+ else if(a==="rstadd"){RS.tform={};}
+ else if(a==="rstedit"){ var t2=RS.talent.filter(function(x){return String(x.id)===String(v);})[0]; RS.tform=t2?Object.assign({},t2):null; }
+ else if(a==="rstcancel"){RS.tform=null;}
+ else if(a==="rstsave"&&RS.tform){ var body={talent_id:RS.tform.id||"",name:g("rsn").trim(),email:g("rse").trim(),phone:g("rsp").trim(),location:g("rsl").trim(),headline:g("rsh").trim(),years:g("rsy").trim(),availability:g("rsa").trim(),profile_url:g("rsu").trim(),skills:g("rss").trim(),domains:g("rsd").trim(),notes:g("rsnt").trim()};
+   capi("rs.talent.save",body).then(function(){RS.tform=null;toast("Saved","Open requests are re-matched within a few minutes","ok");rsTalent();rsLoad();}).catch(function(e){toast("Not saved",e.message,"err");}); return true; }
+ else return false;
+ render(); return true; }
+document.addEventListener("change",function(e){ var t=e.target; if(t&&t.getAttribute&&t.getAttribute("data-rs-stage")){ var mid=t.getAttribute("data-rs-stage"), m=rsMatch(mid);
+ capi("rs.stage",{match_id:mid,stage:t.value}).then(function(){ if(m)m.stage=t.value; toast("Stage updated",(m&&m.name)||"","ok"); render(); }).catch(function(err){toast("Not saved",err.message,"err");render();}); } });
+document.addEventListener("keydown",function(e){ if(e.target&&e.target.id==="rsq"&&e.key==="Enter"){e.preventDefault();RS.tq=e.target.value.trim();rsTalent();} });
+/* ---- end resourcing ---- */
 
 function view(){
  if(!S.auth)return vPublic();
@@ -1399,7 +1518,7 @@ function view(){
  var v=S.route.v,c;
  if(v==="projects")c=vProjects();else if(v==="proj")c=vProject();else if(v==="knowledge")c=vKnowledge();
  else if(v==="agents")c=vAgents();else if(v==="agent")c=vAgent();else if(v==="chat")c=vChat();
- else if(v==="activity")c=vActivity();else if(v==="settings")c=vSettings();else if(v==="rfps")c=vRfps();else if(v==="pipeline")c=vPipeline();else c=vDash();
+ else if(v==="activity")c=vActivity();else if(v==="settings")c=vSettings();else if(v==="rfps")c=vRfps();else if(v==="pipeline")c=vPipeline();else if(v==="resourcing")c=vResourcing();else c=vDash();
  return '<div class="shell">'+sidebar()+'<div class="main">'+header()+c+'</div></div>'+tabbar()+
  (document.body.getAttribute("data-drawer")==="1"?'<div class="scrim" data-a="drawer"></div>':"")+teamPanel()+modalHtml()+toastsHtml();
 }
@@ -1566,7 +1685,7 @@ document.addEventListener("click",function(ev){
  if(a==="closemodal"&&ev.target.closest("[data-stop]")&&ev.target!==el)return;
  if(a!=="pop"&&S.pop)S.pop=null;
  if(a!=="modelmenu"&&a!=="selmodel"&&a!=="planinfo"&&S.chat.modelOpen)S.chat.modelOpen=false;
- if(collabAct(a,v)||pipeAct(a,v))return; if(a==="modelmenu"){S.chat.modelOpen=!S.chat.modelOpen;render();return;}
+ if(collabAct(a,v)||pipeAct(a,v)||rsAct(a,v))return; if(a==="modelmenu"){S.chat.modelOpen=!S.chat.modelOpen;render();return;}
  if(a==="signup"){doSignup();return;}
  if(a==="adminload"){loadRoster();return;}
  if(a==="approve"){adminAct("approve",v);return;}
