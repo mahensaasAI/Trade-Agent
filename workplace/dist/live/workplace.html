@@ -1403,10 +1403,10 @@ function pipeAct(a,v){
 document.addEventListener("change",function(e){ var t=e.target; if(t&&t.getAttribute&&t.getAttribute("data-lp-stage")){ var l=lpById(t.getAttribute("data-lp-stage")); if(l&&t.value!==l.status)lpSetStage(l,t.value); } });
 /* ---- end pipeline ---- */
 /* ---- odf-resourcing: Resourcing. Requests are parsed into roles and shortlisted from the talent pool (resumes sent to innovations@) and from public profiles on the web (n8n WorkPlace Resourcing Worker). ---- */
-var RS={loaded:false,loading:false,requests:[],pool:0,footer:"",err:null,tab:"requests",cur:null,detail:null,dloading:false,newOpen:false,talent:[],tq:"",tloaded:false,tform:null,draft:null,pollT:null};
+var RS={loaded:false,loading:false,requests:[],pool:0,footer:"",err:null,tab:"requests",cur:null,detail:null,dloading:false,newOpen:false,talent:[],tq:"",tloaded:false,tform:null,draft:null,pollT:null,searchKey:false,isAdmin:false,keyOpen:false};
 var RS_STAGES=[["found","Found"],["contacted","Contacted"],["interested","Interested"],["submitted","Submitted"],["interview","Interview"],["selected","Selected"],["rejected","Not a fit"]];
 function rsLoad(){ if(RS.loading)return; RS.loading=true;
- capi("rs.list").then(function(d){RS.loading=false;RS.loaded=true;RS.err=null;RS.requests=d.requests||[];RS.pool=d.pool||0;RS.footer=d.footer||"";render();})
+ capi("rs.list").then(function(d){RS.loading=false;RS.loaded=true;RS.err=null;RS.requests=d.requests||[];RS.pool=d.pool||0;RS.footer=d.footer||"";RS.searchKey=!!d.searchKey;RS.isAdmin=!!d.isAdmin;render();})
  .catch(function(e){RS.loading=false;RS.loaded=true;RS.err=e.message;render();}); }
 function rsOpen(id,quiet){ RS.cur=Number(id); if(!quiet){RS.detail=null;RS.draft=null;} RS.dloading=true; if(!quiet)render();
  capi("rs.request",{id:id}).then(function(d){RS.dloading=false;RS.detail=d;render();}).catch(function(e){RS.dloading=false;toast("Could not open the request",e.message,"err");RS.cur=null;render();}); }
@@ -1466,8 +1466,10 @@ function rsTalentView(){ if(!RS.tloaded)setTimeout(rsTalent,0);
  return '<div class="card" style="margin-top:12px"><div class="card-h"><h2>Talent pool</h2><div class="row" style="margin-left:auto;gap:8px"><input class="inp" id="rsq" placeholder="Search skills, names, locations…" value="'+attr(RS.tq)+'" style="width:260px;height:32px"><button class="btn btn-s btn-g" data-a="rstq">'+ic("srch")+'Search</button><button class="btn btn-s btn-p" data-a="rstadd">'+ic("plus")+'Add candidate</button></div></div>'+
   '<div class="card-b">'+form+'<div class="lps" style="margin-top:'+(form?"12px":"0")+'">'+(rows||'<div class="emp"><h3>'+(RS.tloaded?"No one yet":"Loading…")+'</h3><p>Resumes emailed to innovations@oradayforce.com appear here automatically, along with people found on the web and anyone you add.</p></div>')+'</div></div></div>'; }
 function vResourcing(){ if(!RS.loaded&&!RS.loading)setTimeout(rsLoad,0); rsPoll();
- var head='<div class="card"><div class="card-h"><h2>Resourcing</h2><div class="row" style="margin-left:auto;gap:8px"><button class="btn btn-s btn-p" data-a="rsnew">'+ic("plus")+'New request</button></div></div>'+
+ var head='<div class="card"><div class="card-h"><h2>Resourcing</h2><div class="row" style="margin-left:auto;gap:8px">'+(RS.isAdmin?'<button class="btn btn-s btn-g" data-a="rskey">'+ic("lock")+(RS.searchKey?"Search key set":"Add search key")+'</button>':'')+'<button class="btn btn-s btn-p" data-a="rsnew">'+ic("plus")+'New request</button></div></div>'+
   '<div class="card-b"><p class="meta">Paste a staffing request and the AI splits it into roles. Each role gets a shortlist from the talent pool (resumes people send to innovations@oradayforce.com, matched automatically) and from people who publicly list those skills on the web. Contact only what people have published, and send every email yourself.</p>'+
+  (RS.loaded&&!RS.searchKey?'<p class="meta" style="color:var(--warn)">The web search needs a free Tavily key'+(RS.isAdmin?': press Add search key.':'. Ask an administrator to add it.')+'</p>':'')+
+  (RS.keyOpen?'<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><input id="rskeyin" type="password" class="inp" placeholder="Paste your Tavily API key (tvly-...)" autocomplete="off" style="max-width:380px"><button class="btn btn-s btn-p" data-a="rskeysave">Save key</button><a class="meta" href="https://app.tavily.com" target="_blank" rel="noopener">Get a free key ↗</a></div>':'')+
   (RS.newOpen?'<div class="lp-pane"><label class="meta">Request (paste the email or message as it is)</label><textarea class="inp" id="rstext" rows="5" placeholder="Do you have any OIC/OTBI consultants in India with Public Sector experience? 3 technical and 2 OPAL functional…"></textarea><div class="lp-grid">'+lpF("Client or requester (optional)","rsclient","")+'</div><div class="row" style="gap:8px;margin-top:8px"><button class="btn btn-s btn-p" data-a="rscreate">Find candidates</button><button class="btn btn-s btn-g" data-a="rsnew">Cancel</button></div></div>':'')+'</div></div>'+
   '<div class="tabs" style="margin-bottom:0"><button class="'+(RS.tab==="requests"?"on":"")+'" data-a="rstab" data-v="requests">Requests <span class="bg">'+RS.requests.filter(function(q){return q.status!=="closed";}).length+'</span></button><button class="'+(RS.tab==="pool"?"on":"")+'" data-a="rstab" data-v="pool">Talent pool <span class="bg">'+RS.pool+'</span></button></div>';
  if(RS.err)return '<div class="wrap">'+head+'<div class="card"><div class="emp"><h3>Resourcing unavailable</h3><p>'+esc(RS.err)+'</p><button class="btn btn-p" data-a="rsreload">'+ic("sync")+'Retry</button></div></div></div>';
@@ -1480,7 +1482,9 @@ function rsAct(a,v){
  if(String(a).indexOf("rs")!==0)return false;
  var g=function(id){var e=document.getElementById(id);return e?e.value:"";};
  if(a==="rsreload"){RS.loaded=false;rsLoad();return true;}
- if(a==="rsnew"){RS.newOpen=!RS.newOpen;RS.tab="requests";}
+ if(a==="rskey"){RS.keyOpen=!RS.keyOpen;}
+ else if(a==="rskeysave"){ var kv=g("rskeyin").trim(); capi("rs.searchkey",{key:kv}).then(function(d){RS.searchKey=!!d.configured;RS.keyOpen=false;toast(d.configured?"Search key saved":"Search key removed",d.configured?"Use Search the web again on a request":"","ok");render();}).catch(function(e){toast("Key not saved",e.message,"err");}); return true; }
+ else if(a==="rsnew"){RS.newOpen=!RS.newOpen;RS.tab="requests";}
  else if(a==="rstab"){RS.tab=v;RS.draft=null;}
  else if(a==="rscreate"){ var t=g("rstext").trim(); if(t.length<10){toast("Paste the request first","","err");return true;}
    capi("rs.create",{text:t,client:g("rsclient").trim()}).then(function(r){RS.newOpen=false;toast("Request added","The AI is reading it now; candidates follow within a few minutes","ok");rsLoad();rsOpen(r.id);}).catch(function(e){toast("Not saved",e.message,"err");});return true; }
