@@ -403,6 +403,18 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
 @media(max-width:700px){.rfp{flex-wrap:wrap}.rfp-act{flex-direction:row;width:100%}}
 
 
+
+/* odf-resourcing: requests, shortlists, talent pool */
+.rs-q{display:flex;gap:14px;align-items:center;width:100%;text-align:left;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px;font:inherit;color:inherit;cursor:pointer}
+.rs-q:hover{border-color:var(--acl);box-shadow:0 0 0 3px var(--acs)}
+.rs-qs{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
+.rs-c,.rs-t{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px}
+.rs-t{display:flex;gap:14px;align-items:flex-start}
+.rs-c.on{border-color:var(--acl);box-shadow:0 0 0 3px var(--acs)}
+.rs-c.off,.rs-t.off{opacity:.6}
+.rs-ct{display:flex;gap:14px;align-items:flex-start}
+.rs-raw{white-space:pre-wrap;font-size:13px;color:var(--tx2);margin:8px 0 0}
+@media(max-width:700px){.rs-q,.rs-ct,.rs-t{flex-wrap:wrap}.rs-qs{align-items:flex-start}}
 /* odf-pipeline: lead pipeline */
 .lps{display:flex;flex-direction:column;gap:10px}
 .lp{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px}
@@ -431,17 +443,6 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
 .lp-acts{margin-top:12px;display:flex;flex-direction:column;gap:8px}
 .lp-a{font-size:12.5px}.lp-ab{white-space:pre-wrap;color:var(--tx2);margin-top:3px;font-size:12.5px;max-height:120px;overflow:auto}
 @media(max-width:700px){.lp-top{flex-wrap:wrap}.lp-act{flex-direction:row;flex-wrap:wrap;width:100%;min-width:0}.lp-act .btn,.lp-stage{flex:1 1 auto}}
-/* odf-resourcing: requests, shortlists, talent pool */
-.rs-q{display:flex;gap:14px;align-items:center;width:100%;text-align:left;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px;font:inherit;color:inherit;cursor:pointer}
-.rs-q:hover{border-color:var(--acl);box-shadow:0 0 0 3px var(--acs)}
-.rs-qs{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
-.rs-c,.rs-t{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px}
-.rs-t{display:flex;gap:14px;align-items:flex-start}
-.rs-c.on{border-color:var(--acl);box-shadow:0 0 0 3px var(--acs)}
-.rs-c.off,.rs-t.off{opacity:.6}
-.rs-ct{display:flex;gap:14px;align-items:flex-start}
-.rs-raw{white-space:pre-wrap;font-size:13px;color:var(--tx2);margin:8px 0 0}
-@media(max-width:700px){.rs-q,.rs-ct,.rs-t{flex-wrap:wrap}.rs-qs{align-items:flex-start}}
 /* odf-brand-v3: OraDayForce brand layer (see oradayforce/brand/workplace-theme.css) */
 :root{--brand-grad:linear-gradient(120deg,#4f46e5 0%,#7c3aed 55%,#db2777 100%);--brand-grad-text:linear-gradient(92deg,#4f46e5,#7c3aed 55%,#db2777)}
 [data-t="dark"]{--brand-grad-text:linear-gradient(92deg,#818cf8,#a78bfa 55%,#f472b6)}
@@ -1232,6 +1233,8 @@ function rfpLoad(){ if(R.loading)return; R.loading=true;R.err=null;
  .catch(function(e){R.loading=false;R.loaded=true;R.err=e.message;render();}); }
 function daysLeft(iso){ var d=Math.round((new Date(iso).getTime()-Date.now())/86400000); return isFinite(d)?d:null; }
 function vRfps(){ if(!R.loaded&&!R.loading)setTimeout(rfpLoad,0);
+ // While a refresh is queued, check once a minute so the spinner clears and new RFPs appear without a reload.
+ if(R.refreshPending&&!R.pollT)R.pollT=setTimeout(function(){R.pollT=null;if(String(location.hash).indexOf("#/rfps")===0)rfpLoad();},60000);
  var lr=R.lastRun, head='<div class="card"><div class="card-h"><h2>Open RFPs · AI enablement and Oracle</h2><div class="row" style="margin-left:auto;gap:8px">'+
   (R.isAdmin?'<button class="btn btn-s btn-g" data-a="rfpkey">'+ic("lock")+(R.samConfigured?"SAM.gov key set":"Add SAM.gov key")+'</button><button class="btn btn-s btn-p" data-a="rfprefresh"'+(R.refreshPending?" disabled":"")+'>'+ic("sync",R.refreshPending?"spin":"")+(R.refreshPending?"Refresh queued":"Refresh now")+'</button>':'')+
   '</div></div><div class="card-b"><p class="meta">Publicly released solicitations due in more than 7 days, ranked by fit for AI enablement and Oracle work. Refreshed every morning at 7 AM Central: federal from SAM.gov'+(R.samConfigured?"":" (key not set yet)")+', commercial from a web search for small and mid-size business RFPs.'+
@@ -1353,6 +1356,7 @@ function lpCard(l){
  if(d)h+=lpDraftHtml(l,d); if(c)h+=lpCallHtml(l,c); if(open)h+=lpDetailHtml(l);
  return h+'</div>'; }
 function vPipeline(){ if(!LP.loaded&&!LP.loading)setTimeout(lpLoad,0);
+ if(LP.refreshPending&&!LP.pollT)LP.pollT=setTimeout(function(){LP.pollT=null;if(String(location.hash).indexOf("#/pipeline")===0)lpLoad();},60000);
  var lr=LP.lastRun;
  var head='<div class="card"><div class="card-h"><h2>Lead pipeline</h2><div class="row" style="margin-left:auto;gap:8px">'+(LP.isAdmin?'<button class="btn btn-s btn-g" data-a="lpset">'+ic("cog")+'Sources</button><button class="btn btn-s btn-p" data-a="lprefresh"'+(LP.refreshPending?" disabled":"")+'>'+ic("sync",LP.refreshPending?"spin":"")+(LP.refreshPending?"Search queued":"Find leads now")+'</button>':'')+'</div></div>'+
   '<div class="card-b"><p class="meta">Small and mid-size businesses that show a need for AI enablement, Oracle Cloud ERP, NetSuite, EBS or Google Cloud: companies hiring for these skills, commercial RFPs, Google Alerts and community posts. AI qualifies each one, and only business contacts a company publishes itself are kept. New leads arrive every morning at 6 AM Central.'+(lr?' Last search '+esc(when(lr.started_at))+': '+(lr.fetched||0)+' signals, '+(lr.candidates||0)+' candidates, '+(lr.kept||0)+' qualified, '+(lr.contacts||0)+' with a contact.':'')+'</p>'+
@@ -1402,6 +1406,7 @@ function pipeAct(a,v){
  render(); return true; }
 document.addEventListener("change",function(e){ var t=e.target; if(t&&t.getAttribute&&t.getAttribute("data-lp-stage")){ var l=lpById(t.getAttribute("data-lp-stage")); if(l&&t.value!==l.status)lpSetStage(l,t.value); } });
 /* ---- end pipeline ---- */
+
 /* ---- odf-resourcing: Resourcing. Requests are parsed into roles and shortlisted from the talent pool (resumes sent to innovations@) and from public profiles on the web (n8n WorkPlace Resourcing Worker). ---- */
 var RS={loaded:false,loading:false,requests:[],pool:0,footer:"",err:null,tab:"requests",cur:null,detail:null,dloading:false,newOpen:false,talent:[],tq:"",tloaded:false,tform:null,draft:null,pollT:null,searchKey:false,isAdmin:false,keyOpen:false};
 var RS_STAGES=[["found","Found"],["contacted","Contacted"],["interested","Interested"],["submitted","Submitted"],["interview","Interview"],["selected","Selected"],["rejected","Not a fit"]];
