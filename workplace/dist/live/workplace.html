@@ -1181,7 +1181,7 @@ function skeleton(){
 /* ---- OraDayForce collaboration: Internal Agent (team chat + @agent) and RFPs. Talks to WorkPlace Collaboration API (/svc/collab). ---- */
 var T={open:false,conv:"team",people:[],convs:[],unread:0,msgs:{},last:{},draft:"",sending:false,agentBusy:false,me:null,lastPoll:0,polling:false,err:null,stick:true};
 var R={loaded:false,loading:false,items:[],more:false,lastRun:null,samConfigured:false,refreshPending:false,isAdmin:false,err:null,keyOpen:false,tab:"federal"};
-var SEG={federal:{label:"Federal",sub:"US federal solicitations from SAM.gov"},commercial:{label:"Commercial",sub:"Private-sector RFPs from small and mid-size businesses, found by a daily web search"}};
+var SEG={federal:{label:"Federal",sub:"US federal solicitations from SAM.gov"},commercial:{label:"Commercial",sub:"Non-federal RFPs from RFP listing sites and company pages: private-sector buyers first, state and local tagged"}};
 function segOf(r){return r.source==="SAM.gov"?"federal":"commercial";}
 function capi(action,payload){ var h={"Content-Type":"application/json"}; if(S.token)h.Authorization="Bearer "+S.token;
  return fetch(API+"/collab",{method:"POST",headers:h,body:JSON.stringify({action:action,payload:payload||{}})}).then(function(r){return r.json().catch(function(){throw new Error("HTTP "+r.status);});})
@@ -1237,7 +1237,7 @@ function vRfps(){ if(!R.loaded&&!R.loading)setTimeout(rfpLoad,0);
  if(R.refreshPending&&!R.pollT)R.pollT=setTimeout(function(){R.pollT=null;if(String(location.hash).indexOf("#/rfps")===0)rfpLoad();},60000);
  var lr=R.lastRun, head='<div class="card"><div class="card-h"><h2>Open RFPs · AI enablement and Oracle</h2><div class="row" style="margin-left:auto;gap:8px">'+
   (R.isAdmin?'<button class="btn btn-s btn-g" data-a="rfpkey">'+ic("lock")+(R.samConfigured?"SAM.gov key set":"Add SAM.gov key")+'</button><button class="btn btn-s btn-p" data-a="rfprefresh"'+(R.refreshPending?" disabled":"")+'>'+ic("sync",R.refreshPending?"spin":"")+(R.refreshPending?"Refresh queued":"Refresh now")+'</button>':'')+
-  '</div></div><div class="card-b"><p class="meta">Publicly released solicitations due in more than 7 days, ranked by fit for AI enablement and Oracle work. Refreshed every morning at 7 AM Central: federal from SAM.gov'+(R.samConfigured?"":" (key not set yet)")+', commercial from a web search for small and mid-size business RFPs.'+
+  '</div></div><div class="card-b"><p class="meta">Publicly released solicitations due in more than 7 days, ranked by fit for AI enablement and Oracle work. Refreshed every morning at 7 AM Central: federal from SAM.gov'+(R.samConfigured?"":" (key not set yet)")+', commercial from a daily search of RFP listing sites and company RFP pages.'+
   (lr?' Last refresh '+esc(when(lr.started_at))+': '+(lr.sam_fetched||0)+' federal and '+(lr.web_fetched||0)+' commercial notices checked, '+(lr.kept||0)+' matched.':'')+'</p>'+
   (lr&&lr.error?'<p class="meta" style="color:var(--warn)">Last refresh note: '+esc(lr.error)+'</p>':'')+
   (R.keyOpen?'<div class="row" style="gap:8px;margin-top:10px"><input id="samkey" type="password" class="inp" placeholder="Paste SAM.gov public API key" autocomplete="off" style="max-width:360px"><button class="btn btn-s btn-p" data-a="rfpkeysave">Save key</button><a class="meta" href="https://sam.gov/profile/details" target="_blank" rel="noopener">Get a key on sam.gov ↗</a></div>':'')+
