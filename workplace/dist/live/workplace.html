@@ -474,6 +474,14 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
 .tl-txt{white-space:pre-wrap;font-size:13.5px;color:var(--tx2);margin-top:6px}
 .tl-up{margin-top:10px}
 .tl-done{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--oks);display:grid;gap:6px}
+.tl-rev{display:grid;gap:8px}
+.tl-ck{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);cursor:pointer}
+.tl-ck input{margin:0}
+.tl-rvout{border:1px solid var(--acl);border-radius:12px;padding:12px;background:var(--panel);display:grid;gap:8px}
+.tl-rvout ul{margin:0;padding-left:18px;font-size:13px}
+.tl-doc{margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--panel2);max-height:420px;overflow:auto;font-size:13px}
+.tl-doc h3{margin:0 0 2px}.tl-doc h4{margin:12px 0 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2)}
+.tl-doc p{margin:0}.tl-de{margin-top:6px}.tl-de ul{margin:4px 0 0;padding-left:18px}
 @media(max-width:700px){.tl-ph,.tl-rh{flex-wrap:wrap}.tl-best{margin-left:0}}
 /* odf-brand-v3: OraDayForce brand layer (see oradayforce/brand/workplace-theme.css) */
 :root{--brand-grad:linear-gradient(120deg,#4f46e5 0%,#7c3aed 55%,#db2777 100%);--brand-grad-text:linear-gradient(92deg,#4f46e5,#7c3aed 55%,#db2777)}
@@ -1213,7 +1221,7 @@ function skeleton(){
 /* ---- OraDayForce collaboration: Internal Agent (team chat + @agent) and RFPs. Talks to WorkPlace Collaboration API (/svc/collab). ---- */
 var T={open:false,conv:"team",people:[],convs:[],unread:0,msgs:{},last:{},draft:"",sending:false,agentBusy:false,me:null,lastPoll:0,polling:false,err:null,stick:true};
 var R={loaded:false,loading:false,items:[],more:false,lastRun:null,samConfigured:false,refreshPending:false,isAdmin:false,err:null,keyOpen:false,tab:"federal"};
-var SEG={federal:{label:"Federal",sub:"US federal solicitations from SAM.gov"},commercial:{label:"Commercial",sub:"Non-federal RFPs from RFP listing sites and company pages: private-sector buyers first, state and local tagged"}};
+var SEG={federal:{label:"Federal",sub:"US federal solicitations from SAM.gov"},commercial:{label:"Commercial",sub:"Texas RFPs only, so we can serve local buyers in person: private-sector first, state and local tagged"}};
 function segOf(r){return r.source==="SAM.gov"?"federal":"commercial";}
 function capi(action,payload){ var h={"Content-Type":"application/json"}; if(S.token)h.Authorization="Bearer "+S.token;
  return fetch(API+"/collab",{method:"POST",headers:h,body:JSON.stringify({action:action,payload:payload||{}})}).then(function(r){return r.json().catch(function(){throw new Error("HTTP "+r.status);});})
@@ -1269,7 +1277,7 @@ function vRfps(){ if(!R.loaded&&!R.loading)setTimeout(rfpLoad,0);
  if(R.refreshPending&&!R.pollT)R.pollT=setTimeout(function(){R.pollT=null;if(String(location.hash).indexOf("#/rfps")===0)rfpLoad();},60000);
  var lr=R.lastRun, head='<div class="card"><div class="card-h"><h2>Open RFPs · AI enablement and Oracle</h2><div class="row" style="margin-left:auto;gap:8px">'+
   (R.isAdmin?'<button class="btn btn-s btn-g" data-a="rfpkey">'+ic("lock")+(R.samConfigured?"SAM.gov key set":"Add SAM.gov key")+'</button><button class="btn btn-s btn-p" data-a="rfprefresh"'+(R.refreshPending?" disabled":"")+'>'+ic("sync",R.refreshPending?"spin":"")+(R.refreshPending?"Refresh queued":"Refresh now")+'</button>':'')+
-  '</div></div><div class="card-b"><p class="meta">Publicly released solicitations due in more than 7 days, ranked by fit for AI enablement and Oracle work. Refreshed every morning at 7 AM Central: federal from SAM.gov'+(R.samConfigured?"":" (key not set yet)")+', commercial from a daily search of RFP listing sites and company RFP pages.'+
+  '</div></div><div class="card-b"><p class="meta">Publicly released solicitations due in more than 7 days, ranked by fit for AI enablement and Oracle work. Refreshed every morning at 7 AM Central: federal from SAM.gov'+(R.samConfigured?"":" (key not set yet)")+', commercial (Texas only) from a daily search of RFP listing sites and Texas company RFP pages.'+
   (lr?' Last refresh '+esc(when(lr.started_at))+': '+(lr.sam_fetched||0)+' federal and '+(lr.web_fetched||0)+' commercial notices checked, '+(lr.kept||0)+' matched.':'')+'</p>'+
   (lr&&lr.error?'<p class="meta" style="color:var(--warn)">Last refresh note: '+esc(lr.error)+'</p>':'')+
   (R.keyOpen?'<div class="row" style="gap:8px;margin-top:10px"><input id="samkey" type="password" class="inp" placeholder="Paste SAM.gov public API key" autocomplete="off" style="max-width:360px"><button class="btn btn-s btn-p" data-a="rfpkeysave">Save key</button><a class="meta" href="https://sam.gov/profile/details" target="_blank" rel="noopener">Get a key on sam.gov ↗</a></div>':'')+
@@ -1553,7 +1561,7 @@ document.addEventListener("change",function(e){ var t=e.target; if(t&&t.getAttri
 document.addEventListener("keydown",function(e){ if(e.target&&e.target.id==="rsq"&&e.key==="Enter"){e.preventDefault();RS.tq=e.target.value.trim();rsTalent();} });
 /* ---- end resourcing ---- */
 /* ---- odf-talent: Resourcing > Open positions (urgent AI contract roles, 0-5 years) and Resumes, resume-to-position match with a tailored summary, and Settings > Add a user. Talks to WorkPlace Talent API (/svc/talent). ---- */
-var TL={loaded:false,loading:false,positions:[],resumes:[],lastRun:null,refreshPending:false,isAdmin:false,err:null,more:false,open:null,res:{},hist:{},busy:null,up:null,upBusy:false,pollT:null,forPos:null,user:{name:"",email:"",role:"",pw:"",admin:false,busy:false,done:null}};
+var TL={loaded:false,loading:false,positions:[],resumes:[],lastRun:null,refreshPending:false,isAdmin:false,err:null,more:false,open:null,res:{},hist:{},busy:null,up:null,upBusy:false,pollT:null,forPos:null,rv:{},rvBusy:null,user:{name:"",email:"",role:"",pw:"",admin:false,busy:false,done:null}};
 function tapi(action,payload){ var h={"Content-Type":"application/json"}; if(S.token)h.Authorization="Bearer "+S.token;
  return fetch(API+"/talent",{method:"POST",headers:h,body:JSON.stringify({action:action,payload:payload||{}})}).then(function(r){return r.json().catch(function(){throw new Error("HTTP "+r.status);});})
   .then(function(j){ if(!j||j.success===false)throw new Error((j&&j.error&&j.error.message)||"Request failed"); return j.data; }); }
@@ -1573,7 +1581,7 @@ function tlPositions(){ if(!TL.loaded&&!TL.loading)setTimeout(tlLoad,0); tlPoll(
  var lr=TL.lastRun;
  var head='<div class="card" style="margin-top:12px"><div class="card-h"><div><h2>Urgent AI contract positions</h2><div class="meta">0 to 5 years of experience · contract only (C2C, W2, 1099, contract-to-hire)</div></div>'+
   '<button class="btn btn-s btn-p" style="margin-left:auto" data-a="tlrefresh"'+(TL.refreshPending?" disabled":"")+'>'+ic("sync",TL.refreshPending?"spin":"")+(TL.refreshPending?"Refresh queued":"Refresh now")+'</button></div>'+
-  '<div class="card-b"><p class="meta">Found on job boards and staffing-firm sites every morning at 6 AM Central, ranked by urgency, recency and detail. Pick a position, check a resume against it for a match score and a tailored summary, apply on the posting, then mark it submitted.'+
+  '<div class="card-b"><p class="meta">Found every morning at 6 AM Central on job boards and on staffing and consulting firms\' own sites (Randstad, The Judge Group, Apex, Experis, Robert Half, TEKsystems, Insight Global and others). Each posting page is opened to confirm it is still taking applications and was posted in the last three weeks; closed ones drop off. Check a resume against a position for a match score, revise it for the role, apply on the posting, then mark it submitted.'+
   (lr?' Last search '+esc(when(lr.started_at))+': '+(lr.fetched||0)+' postings checked, '+(lr.kept||0)+' kept.':'')+(lr&&lr.error?' <span style="color:var(--warn)">'+esc(lr.error)+'</span>':'')+'</p></div></div>';
  if(TL.err)return head+'<div class="card"><div class="emp"><h3>Positions unavailable</h3><p>'+esc(TL.err)+'</p><button class="btn btn-p" data-a="tlreload">'+ic("sync")+'Retry</button></div></div>';
  if(!TL.loaded)return head+'<div class="card"><div class="emp"><p>'+ic("sync","spin")+' Loading positions…</p></div></div>';
@@ -1582,7 +1590,8 @@ function tlPositions(){ if(!TL.loaded&&!TL.loading)setTimeout(tlLoad,0); tlPoll(
  var rows=items.map(function(p){
   var meta=[p.company,p.location,p.work_mode].filter(Boolean).join(" · ");
   var badges=(p.urgent?'<span class="bg b-wa">Urgent</span>':'')+'<span class="bg b-ac">'+esc(p.contract_type||"Contract")+'</span>'+(p.experience?'<span class="bg">'+esc(p.experience)+'</span>':'')+(p.duration?'<span class="bg">'+esc(p.duration)+'</span>':'')+(p.rate?'<span class="bg">'+esc(p.rate)+'</span>':'')+
-   '<span class="bg b-mu">'+esc(p.source||"")+(p.posted_at?' · '+esc(tlWhen(p.posted_at)):'')+'</span>'+(p.status==="applied"?'<span class="bg b-ok">Applied'+(p.status_by?' · '+esc(p.status_by):'')+'</span>':'')+(p.submitted?'<span class="bg b-ok">'+p.submitted+' submitted</span>':'');
+   (p.verified_at?'<span class="bg b-ok" title="The posting page was checked and is still taking applications">Open · checked '+esc(tlWhen(p.verified_at))+'</span>':'')+
+   '<span class="bg b-mu">'+esc(p.source||"")+(p.posted_at?' · posted '+esc(tlWhen(p.posted_at)):'')+'</span>'+(p.status==="applied"?'<span class="bg b-ok">Applied'+(p.status_by?' · '+esc(p.status_by):'')+'</span>':'')+(p.submitted?'<span class="bg b-ok">'+p.submitted+' submitted</span>':'');
   var sk=String(p.skills||"").split(",").map(function(s){return s.trim();}).filter(Boolean);
   var on=TL.open===p.id;
   return '<div class="tl-p'+(on?' on':'')+'"><div class="tl-ph"><div class="lp-main"><a class="tl-t" href="'+attr(p.url)+'" target="_blank" rel="noopener">'+esc(p.title)+'</a><div class="meta">'+esc(meta||"Company not listed")+'</div></div>'+
@@ -1611,10 +1620,51 @@ function tlResult(m,p){ var r=m.result||{};
   copy("Tailored summary","tailored_summary",r.tailored_summary)+
   ((r.tailored_bullets||[]).length?'<div class="tl-blk"><div class="row"><b>Tailored bullets</b><button class="btn btn-s btn-g" style="margin-left:auto" data-a="tlcopy" data-v="'+m.id+':tailored_bullets">'+ic("file")+'Copy</button></div>'+bullets+'</div>':'')+
   ((r.improvements||[]).length?'<div class="tl-blk"><b>Improve the resume for this role</b><ul>'+r.improvements.map(function(b){return '<li>'+esc(b)+'</li>';}).join("")+'</ul></div>':'')+
-  copy("Submission note","submission_note",r.submission_note)+
+  copy("Submission note","submission_note",r.submission_note)+tlRevise(m,p)+
   '<p class="meta">Suggestions only use what the resume already says. Confirm anything you change with the candidate before submitting.</p>'+
   '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-s btn-g" data-a="tldl" data-v="'+m.resume_id+'">'+ic("file")+'Download resume</button><a class="btn btn-s btn-g" href="'+attr(p.url)+'" target="_blank" rel="noopener">Apply on the posting ↗</a>'+
   (m.status==="submitted"?'<span class="bg b-ok">Submitted'+(m.submitted_by?' by '+esc(m.submitted_by):'')+'</span>':'<button class="btn btn-s btn-p" data-a="tlsubmit" data-v="'+p.id+':'+m.id+'">'+ic("chk")+'Mark submitted</button>')+'</div></div>'; }
+
+// ---------- Revise for a role (target 90%) ----------
+function tlRevise(m,p){ var r=m.result||{}, rv=m.revised, st=TL.rv[m.id]||(TL.rv[m.id]={sk:{},other:"",note:""}), busy=TL.rvBusy===m.id, miss=r.missing||[];
+ var h='<div class="tl-blk tl-rev"><div class="row"><b>Revise the resume for this role</b><span class="bg b-ac" style="margin-left:auto">Target 90%</span></div>'+
+  '<p class="meta">Employers, job titles, dates, projects and education stay exactly as they are; only the summary, skills and descriptions are rewritten for this role. Tick only the missing skills the candidate has confirmed they have, because they will be written into the resume.</p>'+
+  (miss.length?'<div class="tl-sk">'+miss.map(function(s){return '<label class="tl-ck"><input type="checkbox" data-tl-sk="'+m.id+'" value="'+attr(s)+'"'+(st.sk[s]?" checked":"")+'> '+esc(s)+'</label>';}).join("")+'</div>':'')+
+  '<div class="lp-grid"><div class="f"><label class="meta">Other skills the candidate has (comma separated)</label><input class="inp" data-tl-rv="other" data-m="'+m.id+'" value="'+attr(st.other)+'"></div>'+
+  '<div class="f"><label class="meta">Where they used them (optional)</label><input class="inp" data-tl-rv="note" data-m="'+m.id+'" value="'+attr(st.note)+'" placeholder="Vertex AI on the RAG project at Example Analytics"></div></div>'+
+  '<div class="row" style="gap:8px;margin-top:8px"><button class="btn btn-s btn-p" data-a="tlrevise" data-v="'+p.id+':'+m.id+'"'+(busy?" disabled":"")+'>'+(busy?ic("sync","spin")+"Revising… about 30 s":ic("chk")+(rv?"Revise again":"Revise resume"))+'</button></div>';
+ if(rv){ var res=rv.resume||{};
+  h+='<div class="tl-rvout"><div class="tl-rh">'+tlPct(rv.pct)+'<div><h3>Revised resume · '+(rv.pct>=90?'meets the 90% target':'about '+rv.pct+'%')+'</h3>'+
+   '<div class="meta">Writer estimate '+rv.est+'%'+(rv.overlap_of?' · skills in the posting now shown: '+(rv.overlap_hit||[]).length+' of '+rv.overlap_of:'')+((rv.confirmed||[]).length?' · added after confirmation: '+esc(rv.confirmed.join(", ")):'')+'</div>'+
+   (rv.pct<90?'<p class="meta">To go higher, confirm more of the missing skills with the candidate and revise again.</p>':'')+'</div></div>'+
+   ((rv.changes||[]).length?'<ul>'+rv.changes.map(function(c){return '<li>'+esc(c)+'</li>';}).join("")+'</ul>':'')+
+   '<details><summary class="meta">Preview the revised resume</summary><div class="tl-doc">'+tlResumeHtml(res)+'</div></details>'+
+   '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn btn-s btn-p" data-a="tldocx" data-v="'+m.id+'">'+ic("file")+'Download revised (Word)</button><button class="btn btn-s btn-g" data-a="tltxt" data-v="'+m.id+'">'+ic("file")+'Download as text</button></div></div>'; }
+ return h+'</div>'; }
+function tlResumeHtml(r){ var h='<h3>'+esc(r.name||"")+'</h3>'+(r.headline?'<div><b>'+esc(r.headline)+'</b></div>':'')+(r.contact?'<div class="meta">'+esc(r.contact)+'</div>':'');
+ if(r.summary)h+='<h4>Summary</h4><p>'+esc(r.summary)+'</p>';
+ if((r.skills||[]).length)h+='<h4>Skills</h4><p>'+esc(r.skills.join(" · "))+'</p>';
+ (r.sections||[]).forEach(function(s){ h+='<h4>'+esc(s.heading||"")+'</h4>'; (s.entries||[]).forEach(function(e){ h+='<div class="tl-de"><b>'+esc([e.title,e.org].filter(Boolean).join(" — "))+'</b>'+((e.dates||e.location)?' <span class="meta">'+esc([e.dates,e.location].filter(Boolean).join(" · "))+'</span>':'')+((e.bullets||[]).length?'<ul>'+e.bullets.map(function(b){return '<li>'+esc(b)+'</li>';}).join("")+'</ul>':'')+'</div>'; }); });
+ return h; }
+function tlResumeText(r){ var L=[r.name||"",r.headline||"",r.contact||"",""];
+ if(r.summary)L.push("SUMMARY",r.summary,"");
+ if((r.skills||[]).length)L.push("SKILLS",r.skills.join(" · "),"");
+ (r.sections||[]).forEach(function(s){ L.push(String(s.heading||"").toUpperCase()); (s.entries||[]).forEach(function(e){ L.push([e.title,e.org].filter(Boolean).join(" — ")+((e.dates||e.location)?"   ("+[e.dates,e.location].filter(Boolean).join(" · ")+")":"")); (e.bullets||[]).forEach(function(b){L.push("  • "+b);}); }); L.push(""); });
+ return L.join("\n"); }
+function tlSaveBlob(blob,name){ var url=URL.createObjectURL(blob),el=document.createElement("a"); el.href=url; el.download=name; document.body.appendChild(el); el.click(); setTimeout(function(){URL.revokeObjectURL(url);el.remove();},1000); }
+function tlFindMatch(mid){ var f=null; Object.keys(TL.res).forEach(function(k){if(TL.res[k]&&TL.res[k].id===mid)f=TL.res[k];}); Object.keys(TL.hist).forEach(function(k){(TL.hist[k]||[]).forEach(function(x){if(!f&&x.id===mid)f=x;});}); return f; }
+function tlRevName(m,ext){ var p=TL.positions.filter(function(x){return x.id===m.position_id;})[0]; var n=((m.revised&&m.revised.resume&&m.revised.resume.name)||m.resume_name||"Resume")+(p?" - "+p.title:"")+" (revised)"; return n.replace(/[^A-Za-z0-9 ()._-]+/g," ").replace(/\s+/g," ").trim().slice(0,90)+"."+ext; }
+function tlDocx(r,name){ return tlLib("https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js").then(function(){ var D=window.docx,P=D.Paragraph,R=D.TextRun;
+ var kids=[new P({children:[new R({text:r.name||"",bold:true,size:36})]})];
+ if(r.headline)kids.push(new P({children:[new R({text:r.headline,size:24,color:"444444"})]}));
+ if(r.contact)kids.push(new P({children:[new R({text:r.contact,size:20,color:"666666"})]}));
+ var head=function(t){kids.push(new P({heading:D.HeadingLevel.HEADING_2,spacing:{before:240,after:80},children:[new R({text:t})]}));};
+ if(r.summary){head("Summary");kids.push(new P({children:[new R(r.summary)]}));}
+ if((r.skills||[]).length){head("Skills");kids.push(new P({children:[new R(r.skills.join(" · "))]}));}
+ (r.sections||[]).forEach(function(s){ head(s.heading||""); (s.entries||[]).forEach(function(e){ var meta=[e.dates,e.location].filter(Boolean).join(" · ");
+  kids.push(new P({spacing:{before:120},children:[new R({text:[e.title,e.org].filter(Boolean).join(" — "),bold:true})].concat(meta?[new R({text:"   "+meta,italics:true,color:"666666"})]:[])}));
+  (e.bullets||[]).forEach(function(b){kids.push(new P({text:b,bullet:{level:0}}));}); }); });
+ return D.Packer.toBlob(new D.Document({creator:"OraDayForce WorkPlace",title:r.name||"Resume",sections:[{properties:{},children:kids}]})); }).then(function(blob){tlSaveBlob(blob,name);}); }
 
 // ---------- Resumes ----------
 function tlResumes(){ if(!TL.loaded&&!TL.loading)setTimeout(tlLoad,0);
@@ -1667,8 +1717,10 @@ function tlUserCard(){ var u=TL.user;
 function tlSha(s){ return crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return ("0"+x.toString(16)).slice(-2);}).join("");}); }
 function tlCopy(t){ if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){toast("Copied","","ok");},function(){toast("Copy failed","Select the text and copy it","err");}); }
 
-document.addEventListener("input",function(e){ var t=e.target; if(!t||!t.getAttribute)return; var k=t.getAttribute("data-tl-f"); if(k&&TL.up)TL.up[k]=t.value; k=t.getAttribute("data-tl-u"); if(k&&k!=="admin")TL.user[k]=t.value; });
-document.addEventListener("change",function(e){ var t=e.target; if(!t)return; if(t.id==="tlfile"){var fl=t.files&&t.files[0];t.value="";tlPicked(fl);} if(t.getAttribute&&t.getAttribute("data-tl-u")==="admin")TL.user.admin=!!t.checked; });
+document.addEventListener("input",function(e){ var t=e.target; if(!t||!t.getAttribute)return; var k=t.getAttribute("data-tl-f"); if(k&&TL.up)TL.up[k]=t.value; k=t.getAttribute("data-tl-u"); if(k&&k!=="admin")TL.user[k]=t.value;
+ k=t.getAttribute("data-tl-rv"); if(k){var mi=Number(t.getAttribute("data-m"));(TL.rv[mi]||(TL.rv[mi]={sk:{},other:"",note:""}))[k]=t.value;} });
+document.addEventListener("change",function(e){ var t=e.target; if(!t)return; if(t.id==="tlfile"){var fl=t.files&&t.files[0];t.value="";tlPicked(fl);} if(t.getAttribute&&t.getAttribute("data-tl-u")==="admin")TL.user.admin=!!t.checked;
+ if(t.getAttribute&&t.getAttribute("data-tl-sk")){var mi=Number(t.getAttribute("data-tl-sk"));var st=TL.rv[mi]||(TL.rv[mi]={sk:{},other:"",note:""});if(t.checked)st.sk[t.value]=true;else delete st.sk[t.value];} });
 
 function tlAct(a,v){
  if(String(a).indexOf("tl")!==0)return false;
@@ -1684,6 +1736,15 @@ function tlAct(a,v){
      TL.hist[pid]=(TL.hist[pid]||[]).filter(function(x){return x.id!==m.id;}).concat([m]).sort(function(x,y){return y.pct-x.pct;});
      TL.positions.forEach(function(p){if(p.id===pid)p.best=Math.max(p.best||0,m.pct);}); render(); })
    .catch(function(e){TL.busy=null;toast("Match failed",e.message,"err");render();}); }
+ else if(a==="tlrevise"){ pid=Number(sp[0]); mid=Number(sp[1]); var rs=TL.rv[mid]||{sk:{},other:"",note:""};
+   TL.rvBusy=mid; render();
+   tapi("match.revise",{matchId:mid,confirmed:Object.keys(rs.sk||{}),other:rs.other||"",note:rs.note||""}).then(function(d){ TL.rvBusy=null; var nm=d.match||{}, cur=tlFindMatch(mid);
+     if(cur){cur.revised=nm.revised;} (TL.hist[pid]||[]).forEach(function(x){if(x.id===mid)x.revised=nm.revised;});
+     var rp=nm.revised&&nm.revised.pct; toast("Resume revised",rp?"About "+rp+"% for this role"+(rp>=90?"":" — confirm more skills to go higher"):"","ok"); render(); })
+   .catch(function(e){TL.rvBusy=null;toast("Revision failed",e.message,"err");render();}); return true; }
+ else if(a==="tldocx"||a==="tltxt"){ var mm=tlFindMatch(Number(v)); if(!mm||!mm.revised){toast("Revise the resume first","","err");return true;}
+   if(a==="tltxt"){tlSaveBlob(new Blob([tlResumeText(mm.revised.resume||{})],{type:"text/plain"}),tlRevName(mm,"txt"));return true;}
+   toast("Preparing the Word file","",""); tlDocx(mm.revised.resume||{},tlRevName(mm,"docx")).catch(function(e){toast("Could not build the Word file",e.message+" — use Download as text","err");}); return true; }
  else if(a==="tlshow"){ pid=Number(sp[0]); mid=Number(sp[1]); TL.res[pid]=(TL.hist[pid]||[]).filter(function(m){return m.id===mid;})[0]||TL.res[pid]; }
  else if(a==="tlcopy"){ mid=Number(sp[0]); var m=null; Object.keys(TL.res).forEach(function(k){if(TL.res[k]&&TL.res[k].id===mid)m=TL.res[k];}); if(!m)return true; var val=(m.result||{})[sp[1]]; tlCopy(Array.isArray(val)?val.map(function(b){return "• "+b;}).join("\n"):String(val||"")); return true; }
  else if(a==="tlsubmit"){ pid=Number(sp[0]); mid=Number(sp[1]); tapi("match.submit",{id:mid}).then(function(d){ var m=TL.res[pid]; if(m&&m.id===mid){m.status="submitted";m.submitted_by=d.submitted_by;} (TL.hist[pid]||[]).forEach(function(x){if(x.id===mid)x.status="submitted";}); TL.positions.forEach(function(p){if(p.id===pid){p.submitted=(p.submitted||0)+1;if(p.status==="open")p.status="applied";}}); toast("Marked submitted","The position is now marked applied","ok"); render(); }).catch(function(e){toast("Not saved",e.message,"err");}); return true; }
