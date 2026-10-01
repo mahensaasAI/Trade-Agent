@@ -507,6 +507,40 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
 .iq-lt{display:flex;justify-content:space-between;gap:10px;font-size:12.8px;margin-bottom:5px}
 .iq-lt span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:860px){.iq-split{grid-template-columns:1fr}.iq-qh,.iq-note{flex-wrap:wrap}.iq-qh select.iq-st{width:100%}.iq-note .btn{margin-left:auto}}
+/* odf-admin: Admin page (overview, users and access, projects, agents, log) */
+.am-tabs{display:flex;gap:4px;padding:0 14px;border-top:1px solid var(--line);overflow-x:auto}
+.am-tabs button{border:0;background:none;padding:11px 12px;font-size:13px;font-weight:580;color:var(--tx2);cursor:pointer;display:flex;align-items:center;gap:7px;border-bottom:2px solid transparent;white-space:nowrap}
+.am-tabs button.on{color:var(--tx);border-bottom-color:var(--ac)}
+.am-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.am-kv{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.am-kv:last-child{border-bottom:0}
+.am-log{display:grid;grid-template-columns:120px 1fr;gap:10px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line)}
+.am-log:last-child{border-bottom:0}
+.am-list{display:grid;gap:10px}
+.am-u{border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.am-u.open{border-color:var(--acl);box-shadow:0 0 0 3px var(--acs)}
+.am-uh{display:flex;gap:12px;align-items:center;padding:12px 14px}
+.am-uh .lp-co .bg{margin-left:4px;vertical-align:middle}
+.am-dot{width:12px;height:12px;border-radius:4px;flex:none}
+.am-ai{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#fff;flex:none}
+.am-ed{border-top:1px solid var(--line);padding:14px}
+.am-ed-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.am-checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px}
+.am-ck{display:flex;align-items:flex-start;gap:8px;border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-size:12.8px;cursor:pointer;background:var(--panel2);flex-wrap:wrap}
+.am-ck.on{border-color:var(--acl);background:var(--acs)}
+.am-ck.dis{opacity:.6;cursor:default}
+.am-ck small{display:block;width:100%;padding-left:22px;color:var(--tx3);font-size:11.5px}
+.am-danger{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+.am-red{color:var(--err)!important;border-color:var(--err)!important}
+.am-sw{display:flex;gap:8px;flex-wrap:wrap}
+.am-sw button{width:26px;height:26px;border-radius:8px;border:2px solid transparent;cursor:pointer}
+.am-sw button.on{border-color:var(--tx);box-shadow:0 0 0 2px var(--panel) inset}
+.am-icons{display:flex;gap:6px;flex-wrap:wrap}
+.am-icons button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);display:grid;place-items:center;cursor:pointer;color:var(--tx2)}
+.am-icons button.on{border-color:var(--ac);background:var(--acs);color:var(--ac)}
+.am-add .card{box-shadow:none;border:0;margin:0}
+.am-form .fld{margin-bottom:12px}
+@media(max-width:860px){.am-two,.am-ed-grid,.am-danger{grid-template-columns:1fr}.am-uh{flex-wrap:wrap}.am-log{grid-template-columns:1fr;gap:2px}.am-tabs{padding:0 6px}}
 /* odf-brand-v3: OraDayForce brand layer (see oradayforce/brand/workplace-theme.css) */
 :root{--brand-grad:linear-gradient(120deg,#4f46e5 0%,#7c3aed 55%,#db2777 100%);--brand-grad-text:linear-gradient(92deg,#4f46e5,#7c3aed 55%,#db2777)}
 [data-t="dark"]{--brand-grad-text:linear-gradient(92deg,#818cf8,#a78bfa 55%,#f472b6)}
@@ -688,7 +722,7 @@ function parseHash(){
  if(h[0]==="agents")return h[1]?{v:"agent",id:h[1]}:{v:"agents"};
  if(h[0]==="chat")return {v:"chat"};
  if(h[0]==="activity")return {v:"activity"};
- if(h[0]==="settings")return {v:"settings"}; if(h[0]==="rfps")return {v:"rfps"}; if(h[0]==="pipeline")return {v:"pipeline"}; if(h[0]==="resourcing")return {v:"resourcing"}; if(h[0]==="inquiries")return {v:"inquiries"};
+ if(h[0]==="settings")return {v:"settings"}; if(h[0]==="rfps")return {v:"rfps"}; if(h[0]==="pipeline")return {v:"pipeline"}; if(h[0]==="resourcing")return {v:"resourcing"}; if(h[0]==="inquiries")return {v:"inquiries"}; if(h[0]==="admin")return {v:"admin",id:h[1]||""};
  return {v:"dash"};
 }
 function go(h){location.hash=h;}
@@ -878,13 +912,13 @@ function sidebar(){
  var r=S.route,d=S.data;
  var items=[["dash","home","Home","#/dashboard",""],["projects","folder","Projects","#/projects",String(d.projects.length)],
   ["knowledge","db","Knowledge Bases","#/knowledge",String(d.documents.length)],["agents","bot","Agents","#/agents",String(d.agents.length)],["rfps","clip","RFPs","#/rfps",R.loaded?String(Math.min(R.items.length,10)):""],["resourcing","users","Resourcing","#/resourcing",RS.loaded?String(RS.requests.filter(function(q){return q.status!=="closed"}).length||""):""],["pipeline","funnel","Pipeline","#/pipeline",LP.loaded?String(LP.items.filter(function(l){return l.status==="new"}).length||""):""],
-  ["activity","act","Activity","#/activity",""],["settings","cog","Settings","#/settings",""]]; if(isAdmin()){iqCountSoon();items.splice(items.length-2,0,["inquiries","send","Inquiries","#/inquiries",IQ.newCount?String(IQ.newCount):""]);}
- var on={dash:"dash",projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"activity",settings:"settings",rfps:"rfps",pipeline:"pipeline",resourcing:"resourcing",inquiries:"inquiries"}[r.v];
+  ["activity","act","Activity","#/activity",""],["settings","cog","Settings","#/settings",""]]; if(isAdmin()){iqCountSoon();items.splice(items.length-2,0,["inquiries","send","Inquiries","#/inquiries",IQ.newCount?String(IQ.newCount):""]);} items=items.filter(function(it){return it[0]!=="inquiries"&&amAllowed(AM_VIEW[it[0]]);});
+ var on={dash:"dash",projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"activity",settings:"settings",rfps:"rfps",pipeline:"pipeline",resourcing:"resourcing",inquiries:"inquiries",admin:"admin"}[r.v];
  return '<aside class="sb"><a class="sb-top" href="#/dashboard" style="text-decoration:none;color:inherit" title="Home"><div class="logo">W</div><div class="brand">WorkPlace<span>'+esc(d.organization.name)+'</span></div></a>'+
  '<nav class="sb-nav"><div class="sb-lbl nv-t">WORKSPACE</div>'+
  items.map(function(it){return '<a class="nv'+(on===it[0]?" on":"")+'" href="'+it[3]+'" title="'+attr(it[2])+'">'+ic(it[1],"ic18")+'<span class="nv-t">'+it[2]+'</span>'+(it[4]?'<span class="cnt">'+it[4]+'</span>':'')+'</a>';}).join("")+
  
- '</nav><div class="sb-bot">'+(planKnown()||isAdmin()?'<div class="sb-plan">'+(planKnown()?'<span class="planchip'+(isPremium()?' pro':'')+'">'+ic(isPremium()?'shield':'lock')+(isPremium()?'PREMIUM':'FREE PLAN')+'</span>':'<span></span>')+(isAdmin()?'<span class="meta">Admin</span>':'')+'</div>':'')+
+ amNav(on)+'</nav><div class="sb-bot">'+(planKnown()||isAdmin()?'<div class="sb-plan">'+(planKnown()?'<span class="planchip'+(isPremium()?' pro':'')+'">'+ic(isPremium()?'shield':'lock')+(isPremium()?'PREMIUM':'FREE PLAN')+'</span>':'<span></span>')+(isAdmin()?'<span class="meta">Admin</span>':'')+'</div>':'')+
  '<a class="u-row" href="https://oradayforce.com/" title="Back to the OraDayForce website" style="color:var(--tx3);text-decoration:none">'+ic("back","ic18")+'<span class="u-meta"><b style="font-size:12.5px;font-weight:560">oradayforce.com</b></span></a>'+'<button class="u-row" data-a="nav" data-v="#/settings"><div class="av">'+esc(d.user.initials)+'</div><div class="u-meta"><b>'+esc(d.user.name)+'</b><small>'+esc(d.user.role)+'</small></div></button>'+
  '<button class="u-row" data-a="signout" style="color:var(--tx3)">'+ic("out","ic18")+'<span class="u-meta"><b style="font-size:12.5px;font-weight:560">Sign out</b></span></button>'+
  '</div></aside>';
@@ -1182,7 +1216,7 @@ function vSettings(){
  models().map(function(m){var can=modelAllowed(m);return '<tr><td>'+esc(m.name)+'</td><td><span class="bg '+(tierOf(m)==='premium'?'b-ac':'b-mu')+'">'+tierOf(m)+'</span></td><td>'+(can?ic("chk")+'Yes':ic("lock")+'Needs premium')+'</td></tr>';}).join("")+'</table>'+
  (isPremium()?'':'<div class="meta" style="margin-top:10px">'+(isAdmin()?'As an administrator you can move the organisation to premium to unlock Claude and ChatGPT.':'Ask an administrator to upgrade to unlock Claude and ChatGPT.')+'</div>')+
  '</div></div>':'')+
- (isAdmin()?adminCard()+tlUserCard():'')+
+ (isAdmin()?amSettingsCard():'')+
  '<div class="card"><div class="card-h">'+ic("cog")+'<h2>General</h2></div><div class="card-b">'+
  '<div class="fld"><label class="fl" for="s_org">Organisation</label><input class="inp" id="s_org" value="'+attr(S.data.organization.name)+'" disabled></div>'+
  '<div class="fld"><label class="fl" for="s_tz">Default timezone</label><select class="inp" id="s_tz">'+["America/Chicago","America/New_York","America/Los_Angeles","Europe/London","Asia/Kolkata","Asia/Singapore"].map(function(t){return '<option'+(st.tz===t?" selected":"")+'>'+t+'</option>';}).join("")+'</select></div></div></div>'+
@@ -1958,6 +1992,215 @@ function iqAct(a,v){
 document.addEventListener("input",function(e){ var t=e.target; if(t&&t.getAttribute&&t.getAttribute("data-iq-note"))IQ.notes[t.getAttribute("data-iq-note")]=t.value; });
 document.addEventListener("change",function(e){ var t=e.target; if(t&&t.getAttribute&&t.getAttribute("data-iq-status")){ var id=t.getAttribute("data-iq-status"), q=iqById(id); if(q&&t.value!==q.status)iqSave(id,{status:t.value},"Marked "+t.value); } });
 /* ---- end insights ---- */
+/* ---- odf-admin: Admin (administrators). Overview, users and access rights (Admin / Power user / Member, sections, project assignment, deactivate, password reset), projects, agents and the admin log. Also limits the sidebar for everyone by their access. Talks to WorkPlace Admin API (/svc/manage). ---- */
+var AM={me:null,forUser:null,meBusy:false,tab:"overview",ov:null,users:null,uProjects:[],pl:null,log:null,busy:{},err:{},edit:null,ue:null,pe:null,ae:null,saving:false,showAdd:false,pendSig:""};
+var AM_SECS=[["projects","Projects","folder"],["knowledge","Knowledge Bases","db"],["agents","Agents","bot"],["rfps","RFPs","clip"],["resourcing","Resourcing","users"],["pipeline","Pipeline","funnel"],["activity","Activity","act"]];
+var AM_VIEW={projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"activity",rfps:"rfps",pipeline:"pipeline",resourcing:"resourcing",inquiries:"inquiries",admin:"admin"};
+var AM_ROLES={admin:["Admin","b-ac","Everything, including Admin and Inquiries."],power:["Power user","b-ok","Every workspace section and every project."],member:["Member","b-mu","Only the sections and projects you tick."]};
+var AM_COLORS=["#4f46e5","#0e7490","#7c3aed","#0d8a5f","#b45309","#c0392b","#0369a1","#6d28d9"];
+var AM_ICONS=["bot","brain","spark","db","list","edit","link","shield","sync","users","file","srch","grid","act"];
+var AM_TYPES=["Domain Specialist","Technical Specialist","General Purpose","Live Data Agent"];
+function mapi(action,payload){ var h={"Content-Type":"application/json"}; if(S.token)h.Authorization="Bearer "+S.token;
+ return fetch(API+"/manage",{method:"POST",headers:h,body:JSON.stringify({action:action,payload:payload||{}})}).then(function(r){return r.json().catch(function(){throw new Error("HTTP "+r.status);});})
+  .then(function(j){ if(!j||j.success===false)throw new Error((j&&j.error&&j.error.message)||"Request failed"); return j.data; }); }
+// Who am I, live from the database: role, sections and project scope. Until it loads (or if it fails) WorkPlace behaves as before.
+function amMeSoon(){ if(!S.token||!S.data||!S.data.user)return; var uid=S.data.user.id; if(AM.forUser===uid||AM.meBusy)return; AM.meBusy=true; if(AM.me&&AM.me.id!==uid)AM.me=null;
+ setTimeout(function(){ mapi("me").then(function(d){AM.meBusy=false;AM.forUser=uid;AM.me=d.me;render();}).catch(function(){AM.meBusy=false;AM.forUser=uid;}); },0); }
+setInterval(function(){ if(AM.forUser&&S.token){AM.forUser=null;amMeSoon();} },300000);
+function amIsAdmin(){ return AM.me?!!AM.me.is_admin:isAdmin(); }
+function amAllowed(sec){ if(!sec)return true; if(sec==="admin"||sec==="inquiries")return amIsAdmin();
+ var m=AM.me; if(!m||m.is_admin||m.role==="admin"||m.role==="power"||!Array.isArray(m.sections))return true; return m.sections.indexOf(sec)>=0; }
+// Members limited to assigned projects only see those projects and their documents.
+function amScope(){ var m=AM.me; if(!m||!S.data||S.data.__amScoped)return; S.data.__amScoped=true;
+ if(m.is_admin||m.role!=="member"||m.projects_mode!=="assigned")return;
+ var keep=m.project_ids||[]; S.data.projects=(S.data.projects||[]).filter(function(p){return keep.indexOf(p.id)>=0;});
+ S.data.documents=(S.data.documents||[]).filter(function(d){return keep.indexOf(d.projectId)>=0;});
+ if(S.data.projects.length&&!proj(S.chat.projectId))S.chat.projectId=S.data.projects[0].id; }
+function amNav(on){ amMeSoon(); amScope(); if(!amIsAdmin())return "";
+ var n=function(k,icn,lab,href,cnt){return '<a class="nv'+(on===k?" on":"")+'" href="'+href+'" title="'+attr(lab)+'">'+ic(icn,"ic18")+'<span class="nv-t">'+lab+'</span>'+(cnt?'<span class="cnt">'+cnt+'</span>':'')+'</a>';};
+ var pend=(AM.ov&&AM.ov.users&&AM.ov.users.pending)||0;
+ return '<div class="sb-lbl nv-t" style="margin-top:10px">ADMIN</div>'+n("admin","shield","Admin","#/admin",pend?String(pend):"")+n("inquiries","send","Inquiries","#/inquiries",(typeof IQ!=="undefined"&&IQ.newCount)?String(IQ.newCount):""); }
+function amDenied(v){ if(v==="chat")return '<div class="card"><div class="emp"><h3>No project assigned yet</h3><p>Ask an administrator to assign you to a project, then you can chat with its agents.</p></div></div>';
+ return '<div class="card"><div class="emp"><h3>You don’t have access to this section</h3><p>Ask an administrator if you need it.</p></div></div>'; }
+function amGuard(v,c){ if(!amAllowed(AM_VIEW[v]))return amDenied(); if(v==="chat"&&S.data&&!(S.data.projects||[]).length)return amDenied("chat"); return c; }
+function amSettingsCard(){ if(!amIsAdmin())return ""; return '<div class="card"><div class="card-h">'+ic("shield")+'<h2>Administration</h2></div><div class="card-b"><p class="meta" style="margin-bottom:12px">Access requests, users and roles, projects and agents are managed in Admin.</p><button class="btn btn-p" data-a="nav" data-v="#/admin/users">'+ic("users")+'Open Admin</button></div></div>'; }
+function amLoad(kind){ var act={ov:"overview",users:"users.list",pl:"projects.list",log:"log.list"}[kind]; if(AM.busy[kind])return; AM.busy[kind]=true;
+ mapi(act).then(function(d){ AM.busy[kind]=false; AM.err[kind]=null; if(kind==="users"){AM.users=d.users||[];AM.uProjects=d.projects||[];} else AM[kind]=d; render(); })
+ .catch(function(e){ AM.busy[kind]=false; AM.err[kind]=e.message; render(); }); }
+function amWhen(t){ return t?when(t):"never"; }
+function amRoleBadge(r){ var x=AM_ROLES[r]||AM_ROLES.member; return '<span class="bg '+x[1]+'">'+x[0]+'</span>'; }
+function amStatusBadge(s){ return s==="active"?'<span class="bg b-ok">Active</span>':s==="pending"?'<span class="bg b-wa">Waiting</span>':s==="disabled"?'<span class="bg b-mu">Deactivated</span>':'<span class="bg b-mu">Declined</span>'; }
+function amLoading(kind){ return AM.err[kind]?'<div class="card"><div class="emp"><h3>Could not load</h3><p>'+esc(AM.err[kind])+'</p><button class="btn btn-g" data-a="amreload" data-v="'+kind+'">'+ic("sync")+'Try again</button></div></div>':'<div class="card"><div class="emp"><p>'+ic("sync","spin")+' Loading…</p></div></div>'; }
+function amChecks(list,sel,attrName,disabled){ return '<div class="am-checks">'+list.map(function(x){ var on=sel.indexOf(x[0])>=0; return '<label class="am-ck'+(on?" on":"")+(disabled?" dis":"")+'"><input type="checkbox" '+attrName+'="'+attr(x[0])+'"'+(on?" checked":"")+(disabled?" disabled":"")+'><span>'+esc(x[1])+'</span>'+(x[2]?'<small>'+esc(x[2])+'</small>':'')+'</label>'; }).join("")+'</div>'; }
+function amFld(lab,html){ return '<div class="fld"><label class="fl">'+lab+'</label>'+html+'</div>'; }
+function amIn(group,k,v,ph){ return '<input class="inp" data-'+group+'="'+k+'" value="'+attr(v||"")+'"'+(ph?' placeholder="'+attr(ph)+'"':'')+' autocomplete="off">'; }
+function amTa(group,k,v,ph,rows){ return '<textarea class="inp" data-'+group+'="'+k+'" rows="'+(rows||3)+'"'+(ph?' placeholder="'+attr(ph)+'"':'')+'>'+esc(v||"")+'</textarea>'; }
+function amSel(group,k,v,opts){ return '<select class="inp" data-'+group+'="'+k+'">'+opts.map(function(o){return '<option value="'+attr(o[0])+'"'+(String(v)===String(o[0])?" selected":"")+'>'+esc(o[1])+'</option>';}).join("")+'</select>'; }
+
+function vAdmin(){
+ if(!amIsAdmin())return amDenied();
+ var r=S.route||{}; var tab=r.id||AM.tab; if(["overview","users","projects","agents","log"].indexOf(tab)<0)tab="overview"; AM.tab=tab;
+ var tabs=[["overview","Overview","home"],["users","Users & access","users"],["projects","Projects","folder"],["agents","Agents","bot"],["log","Activity log","act"]];
+ var head='<div class="card"><div class="card-h"><div><h2>Admin</h2><div class="meta">Run the workspace: who can sign in, what each person can see, projects, agents and a record of every change.</div></div></div>'+
+  '<div class="am-tabs">'+tabs.map(function(t){return '<button class="'+(t[0]===tab?"on":"")+'" data-a="nav" data-v="#/admin/'+t[0]+'">'+ic(t[2])+t[1]+'</button>';}).join("")+'</div></div>';
+ var body=tab==="overview"?amOverview():tab==="users"?amUsers():tab==="projects"?amProjects():tab==="agents"?amAgents():amLog();
+ return head+body;
+}
+function amOverview(){ if(!AM.ov&&!AM.busy.ov&&!AM.err.ov)setTimeout(function(){amLoad("ov");},0); if(!AM.ov)return amLoading("ov");
+ var d=AM.ov,u=d.users||{},pj=d.projects||{},ag=d.agents||{};
+ var k=[["Active users",u.active||0,"users",(u.seen7||0)+" seen in the last 7 days"],["Access requests",u.pending||0,"clk",u.pending?"Waiting for you":"None waiting"],["Active projects",pj.active||0,"folder",(Object.keys(pj).reduce(function(a,s){return a+Number(pj[s]||0);},0))+" in total"],["Active agents",ag.active||0,"bot",(ag.total||0)+" in total"]];
+ var kp='<div class="grid g4" style="margin:12px 0 16px">'+k.map(function(x){return '<div class="card kpi"><div class="top"><span class="ico">'+ic(x[2])+'</span>'+x[0].toUpperCase()+'</div><div class="val">'+esc(String(x[1]))+'</div><div class="fo">'+esc(x[3])+'</div></div>';}).join("")+'</div>';
+ var row=function(l,v,act){return '<div class="am-kv"><span>'+l+'</span><b>'+esc(String(v))+'</b>'+(act||'')+'</div>';};
+ var roles='<div class="card"><div class="card-h"><h2>People</h2><button class="btn btn-s btn-g" style="margin-left:auto" data-a="nav" data-v="#/admin/users">Manage'+ic("chev")+'</button></div><div class="card-b">'+
+  row(amRoleBadge("admin"),u.admins||0)+row(amRoleBadge("power"),u.power||0)+row(amRoleBadge("member"),u.members||0)+row('<span class="bg b-mu">Deactivated</span>',u.disabled||0)+row('<span class="bg b-wa">Waiting for approval</span>',u.pending||0)+'</div></div>';
+ var ws='<div class="card"><div class="card-h"><h2>Workspace</h2></div><div class="card-b">'+
+  row("Organisation",(d.org&&d.org.name)||"")+row("Plan",String((d.org&&d.org.plan)||"free").toUpperCase())+
+  ["planning","active","onhold","completed","archived"].filter(function(s){return pj[s];}).map(function(s){return row("Projects · "+({onhold:"on hold"}[s]||s),pj[s]);}).join("")+
+  row("Documents",d.documents||0)+row("Conversations",d.conversations||0)+row("Messages in the last 7 days",d.messages7||0)+
+  row("New website enquiries",d.new_inquiries||0,d.new_inquiries?' <button class="btn btn-s btn-g" data-a="nav" data-v="#/inquiries">Open</button>':'')+'</div></div>';
+ var rec=(d.recent||[]).length?(d.recent||[]).map(function(x){return '<div class="am-log"><span class="meta">'+esc(when(x.at))+'</span><span><b>'+esc(x.actor||"")+'</b> '+esc(String(x.action||"").toLowerCase())+' <b>'+esc(x.target||"")+'</b></span></div>';}).join(""):'<p class="meta">No admin changes yet. Every change made here is recorded.</p>';
+ return kp+'<div class="am-two">'+roles+ws+'</div><div class="card" style="margin-top:16px"><div class="card-h"><h2>Recent admin changes</h2><button class="btn btn-s btn-g" style="margin-left:auto" data-a="nav" data-v="#/admin/log">Full log'+ic("chev")+'</button></div><div class="card-b">'+rec+'</div></div>';
+}
+function amPending(){ var A=S.admin; if(!A.loaded&&!A.busy)setTimeout(loadRoster,0);
+ var pend=(A.users||[]).filter(function(u){return u.status==="pending";});
+ var sig=pend.map(function(u){return u.id;}).join(","); if(A.loaded&&sig!==AM.pendSig){ if(AM.pendSig!==""||AM.users)setTimeout(function(){amLoad("users");if(AM.ov)amLoad("ov");},0); AM.pendSig=sig; }
+ if(!A.loaded)return '';
+ if(!pend.length)return '';
+ return '<div class="card" style="margin-top:12px"><div class="card-h">'+ic("clk")+'<h2>Access requests</h2><span class="bg b-ac" style="margin-left:auto">'+pend.length+' WAITING</span></div><div class="card-b">'+
+  pend.map(function(u){ var rej=(A.rejecting===u.id);
+   return '<div class="aq-row"><div class="aq-av">'+esc(u.initials||"?")+'</div><div class="aq-m"><b>'+esc(u.name)+'</b> <span class="meta">'+esc(u.role||"")+'</span><div class="meta">'+esc(u.email)+' · asked '+esc(when(u.requestedAt))+'</div>'+(u.note?'<div class="aq-note">'+esc(u.note)+'</div>':'')+
+    (rej?'<div class="aq-rej"><input class="inp" id="aq_r" placeholder="Reason (optional, shown to them)"><button class="btn btn-s" data-a="rejectgo" data-v="'+attr(u.id)+'"'+(A.busy?" disabled":"")+'>Confirm</button><button class="btn btn-s" data-a="rejectno">Cancel</button></div>':'')+'</div>'+
+    (rej?'':'<div class="aq-act"><button class="btn btn-p btn-s" data-a="approve" data-v="'+attr(u.id)+'"'+(A.busy?" disabled":"")+'>'+ic("chk")+'Approve</button><button class="btn btn-s" data-a="reject" data-v="'+attr(u.id)+'"'+(A.busy?" disabled":"")+'>Decline</button></div>')+'</div>'; }).join("")+
+  '<p class="meta" style="margin-top:8px">Approved people start as Members with today’s default access; adjust them below.</p></div></div>'; }
+function amUserEditor(u){ var e=AM.ue, me=S.data&&S.data.user&&S.data.user.id===u.id;
+ var roleOpts=[["admin","Admin"],["power","Power user"],["member","Member"]];
+ var lim=e.role==="member";
+ var secs=amChecks(AM_SECS.map(function(s){return [s[0],s[1]];}),lim?e.sections:AM_SECS.map(function(s){return s[0];}),"data-am-sec",!lim);
+ var projs=AM.uProjects.map(function(p){return [p.id,p.name,p.client+(p.status==="archived"?" · archived":"")];});
+ var pw=AM.pw||"";
+ return '<div class="am-ed">'+
+  '<div class="am-ed-grid"><div>'+amFld("Access role",amSel("am-u","role",e.role,roleOpts)+'<div class="meta" style="margin-top:6px">'+esc(AM_ROLES[e.role][2])+(me?' You can’t remove your own Admin role.':'')+'</div>')+
+  amFld("Job title",amIn("am-u","title",e.title,"e.g. Solution Architect"))+'</div>'+
+  '<div>'+amFld("Sections they can open"+(lim?'':' <span class="meta">(all, by role)</span>'),secs)+'</div></div>'+
+  (lim?amFld("Projects",amSel("am-u","projectsMode",e.projectsMode,[["all","All projects"],["assigned","Only assigned projects"]])+(e.projectsMode==="assigned"?(projs.length?amChecks(projs,e.projectIds,"data-am-up"):'<p class="meta">No projects yet.</p>'):'')):'')+
+  '<div class="row" style="gap:8px;margin-top:4px"><button class="btn btn-p" data-a="amusave" data-v="'+attr(u.id)+'"'+(AM.saving?" disabled":"")+'>'+(AM.saving?ic("sync","spin")+"Saving…":ic("chk")+"Save access")+'</button><button class="btn btn-g" data-a="amucancel">Cancel</button></div>'+
+  '<div class="am-danger"><div><b>Reset password</b><div class="row" style="gap:8px;margin-top:6px"><input class="inp" data-am-u="pw" value="'+attr(pw)+'" placeholder="New password, 8+ characters" autocomplete="new-password"><button class="btn btn-s btn-g" data-a="amugen">Generate</button><button class="btn btn-s" data-a="amupw" data-v="'+attr(u.id)+'"'+(AM.saving?" disabled":"")+'>Set password</button></div><div class="meta" style="margin-top:4px">Share it privately; they can sign in with it straight away.</div></div>'+
+  (me?'':'<div><b>'+(u.status==="disabled"?"Reactivate":"Deactivate")+'</b>'+(u.status==="disabled"?'<div class="meta" style="margin:6px 0">They can sign in again once reactivated.</div><button class="btn btn-s btn-p" data-a="amustatus" data-v="'+attr(u.id)+'|active">Reactivate</button>':
+   '<div class="row" style="gap:8px;margin-top:6px"><input class="inp" data-am-u="reason" value="'+attr(e.reason||"")+'" placeholder="Reason (optional, shown at sign-in)"><button class="btn btn-s am-red" data-a="amustatus" data-v="'+attr(u.id)+'|disabled">Deactivate</button></div><div class="meta" style="margin-top:4px">Blocks sign-in. A session already open ends within 12 hours.</div>')+'</div>')+
+  '</div></div>'; }
+function amUsers(){ if(!AM.users&&!AM.busy.users&&!AM.err.users)setTimeout(function(){amLoad("users");},0);
+ if(TL.user.done&&TL.user.done!==AM.lastAdded){AM.lastAdded=TL.user.done;setTimeout(function(){amLoad("users");},0);}
+ var add='<div class="card" style="margin-top:12px"><div class="card-h"><div><h2>People</h2><div class="meta">Roles: Admin (everything), Power user (every section and project), Member (only what you tick).</div></div><div class="row" style="margin-left:auto;gap:8px"><button class="btn btn-s btn-g" data-a="amreload" data-v="users">'+ic("sync")+'Refresh</button><button class="btn btn-s btn-p" data-a="amadd">'+ic("plus")+(AM.showAdd?"Close":"Add a user")+'</button></div></div>'+
+  (AM.showAdd?'<div class="card-b am-add">'+tlUserCard()+'</div>':'');
+ if(!AM.users)return amPending()+add+'</div>'+amLoading("users");
+ var rows=AM.users.map(function(u){ var open=AM.edit===u.id; var editable=u.status==="active"||u.status==="disabled";
+  var secs=u.access_role!=="member"?"All sections":(Array.isArray(u.sections)?(u.sections.length?u.sections.map(function(s){var x=AM_SECS.filter(function(y){return y[0]===s;})[0];return x?x[1]:s;}).join(", "):"No sections"):"All sections (default)");
+  var pr=u.access_role==="member"&&u.projects_mode==="assigned"?((u.project_ids||[]).length+" assigned project"+((u.project_ids||[]).length===1?"":"s")):"All projects";
+  return '<div class="am-u'+(open?" open":"")+'"><div class="am-uh"><div class="aq-av">'+esc(u.initials||"?")+'</div><div class="lp-main"><div class="lp-co">'+esc(u.name)+' '+amRoleBadge(u.access_role)+' '+amStatusBadge(u.status)+'</div>'+
+   '<div class="meta">'+esc([u.email,u.title].filter(Boolean).join(" · "))+'</div><div class="meta">'+esc(secs+" · "+pr+" · last seen "+amWhen(u.last_seen))+'</div></div>'+
+   (editable?'<button class="btn btn-s '+(open?"btn-p":"btn-g")+'" data-a="amuedit" data-v="'+attr(u.id)+'">'+ic("edit")+(open?"Editing":"Edit")+'</button>':'<span class="meta">'+(u.status==="pending"?"Approve above":"Declined")+'</span>')+'</div>'+
+   (open?amUserEditor(u):'')+'</div>'; }).join("");
+ return amPending()+add+'<div class="card-b"><div class="am-list">'+rows+'</div></div></div>'; }
+function amProjEditor(){ var e=AM.pe, pl=AM.pl||{};
+ var agents=(pl.agents||[]).map(function(a){return [a.id,a.name,a.status==="active"?a.title:"inactive"];});
+ var people=(pl.people||[]).map(function(p){return [p.id,p.name,p.email];});
+ return '<div class="card am-form" style="margin-top:12px"><div class="card-h"><h2>'+(e.id?"Edit project":"New project")+'</h2></div><div class="card-b"><div class="am-ed-grid"><div>'+
+  amFld("Project name",amIn("am-p","name",e.name,"Conversational Commerce Assistant"))+amFld("Client",amIn("am-p","client",e.client,"Northwind Retail Group"))+
+  amFld("Description",amTa("am-p","description",e.description,"Scope, goals and what the agents should know.",4))+
+  '<div class="row" style="gap:10px"><div style="flex:1">'+amFld("Status",amSel("am-p","status",e.status,[["planning","Planning"],["active","Active"],["onhold","On hold"],["completed","Completed"],["archived","Archived"]]))+'</div>'+
+  '<div style="flex:1">'+amFld("Go-live",amIn("am-p","goLive",e.goLive,"Q2 2027"))+'</div></div>'+
+  amFld("Manager",amSel("am-p","manager",e.manager,[["","Choose…"]].concat((pl.people||[]).map(function(p){return [p.name,p.name];})).concat(e.manager&&!(pl.people||[]).some(function(p){return p.name===e.manager;})?[[e.manager,e.manager]]:[])))+
+  amFld("Colour",'<div class="am-sw">'+AM_COLORS.map(function(c){return '<button class="'+(e.color===c?"on":"")+'" style="background:'+c+'" data-a="ampcolor" data-v="'+c+'" aria-label="'+c+'"></button>';}).join("")+'</div>')+'</div>'+
+  '<div>'+amFld("Agents on this project",agents.length?amChecks(agents,e.agentIds,"data-am-pa"):'<p class="meta">No agents yet.</p>')+amFld("Team members (assigned)",people.length?amChecks(people,e.memberIds,"data-am-pm"):'<p class="meta">No users yet.</p>')+'</div></div>'+
+  '<div class="row" style="gap:8px"><button class="btn btn-p" data-a="ampsave"'+(AM.saving?" disabled":"")+'>'+(AM.saving?ic("sync","spin")+"Saving…":ic("chk")+(e.id?"Save project":"Create project"))+'</button><button class="btn btn-g" data-a="ampcancel">Cancel</button></div>'+
+  '<p class="meta" style="margin-top:8px">Members set to “Only assigned projects” see a project when they are ticked here. Archive a project instead of deleting it; its documents are kept.</p></div></div>'; }
+function amProjects(){ if(!AM.pl&&!AM.busy.pl&&!AM.err.pl)setTimeout(function(){amLoad("pl");},0); if(!AM.pl)return amLoading("pl");
+ var pl=AM.pl, an={}; (pl.agents||[]).forEach(function(a){an[a.id]=a.name;}); var pn={}; (pl.people||[]).forEach(function(p){pn[p.id]=p.name;});
+ var list='<div class="card" style="margin-top:12px"><div class="card-h"><h2>Projects</h2><button class="btn btn-s btn-p" style="margin-left:auto" data-a="ampnew">'+ic("plus")+'New project</button></div><div class="card-b"><div class="am-list">'+
+  (pl.projects||[]).map(function(p){ return '<div class="am-u"><div class="am-uh"><span class="am-dot" style="background:'+attr(p.color||"#4f46e5")+'"></span><div class="lp-main"><div class="lp-co">'+esc(p.name)+' '+stBadge(p.status)+'</div>'+
+   '<div class="meta">'+esc([p.client,p.manager?"Manager: "+p.manager:"",p.goLive?"Go-live "+p.goLive:""].filter(Boolean).join(" · "))+'</div>'+
+   '<div class="meta">'+esc((p.agentIds||[]).map(function(i){return an[i]||i;}).join(", ")||"No agents")+' · '+esc((p.memberIds||[]).length?(p.memberIds||[]).map(function(i){return pn[i]||"former user";}).join(", "):"No one assigned")+' · '+p.docCount+' doc'+(p.docCount===1?"":"s")+'</div></div>'+
+   '<button class="btn btn-s btn-g" data-a="ampedit" data-v="'+attr(p.id)+'">'+ic("edit")+'Edit</button></div></div>'; }).join("")+'</div></div></div>';
+ return (AM.pe?amProjEditor():'')+list; }
+function amAgentEditor(){ var e=AM.ae, pl=AM.pl||{};
+ var projs=(pl.projects||[]).map(function(p){return [p.id,p.name,p.client];});
+ return '<div class="card am-form" style="margin-top:12px"><div class="card-h"><h2>'+(e.id?"Edit agent":"New agent")+'</h2></div><div class="card-b"><div class="am-ed-grid"><div>'+
+  amFld("Agent name",amIn("am-a","name",e.name,"Proposal Builder Agent"))+amFld("Title",amIn("am-a","title",e.title,"RFP & Bid Response Specialist"))+
+  '<div class="row" style="gap:10px"><div style="flex:1">'+amFld("Type",amSel("am-a","type",e.type,AM_TYPES.map(function(t){return [t,t];})))+'</div><div style="flex:1">'+amFld("Status",amSel("am-a","status",e.status,[["active","Active"],["inactive","Inactive"]]))+'</div></div>'+
+  amFld("What it does",amTa("am-a","description",e.description,"Shown on the agent card and in chat.",3))+amFld("Purpose",amTa("am-a","purpose",e.purpose,"Why the team uses it.",2))+
+  amFld("Capabilities (comma separated)",amIn("am-a","capabilities",e.capabilities,"RFP Response Drafting, Compliance Matrix"))+
+  amFld("Starter questions (one per line)",amTa("am-a","starters",e.starters,"Draft an executive summary for this RFP.",3))+'</div><div>'+
+  amFld("Icon",'<div class="am-icons">'+AM_ICONS.map(function(i){return '<button class="'+(e.icon===i?"on":"")+'" data-a="amaicon" data-v="'+i+'" title="'+i+'">'+ic(i)+'</button>';}).join("")+'</div>')+
+  amFld("Colour",'<div class="am-sw">'+AM_COLORS.map(function(c){return '<button class="'+(e.color===c?"on":"")+'" style="background:'+c+'" data-a="amacolor" data-v="'+c+'" aria-label="'+c+'"></button>';}).join("")+'</div>')+
+  amFld("Projects it works on",projs.length?amChecks(projs,e.projectIds,"data-am-ap"):'<p class="meta">No projects yet.</p>')+'</div></div>'+
+  '<div class="row" style="gap:8px"><button class="btn btn-p" data-a="amasave"'+(AM.saving?" disabled":"")+'>'+(AM.saving?ic("sync","spin")+"Saving…":ic("chk")+(e.id?"Save agent":"Create agent"))+'</button><button class="btn btn-g" data-a="amacancel">Cancel</button></div>'+
+  '<p class="meta" style="margin-top:8px">An agent answers from the documents of the projects it works on. Set it to Inactive to retire it without losing its history.</p></div></div>'; }
+function amAgents(){ if(!AM.pl&&!AM.busy.pl&&!AM.err.pl)setTimeout(function(){amLoad("pl");},0); if(!AM.pl)return amLoading("pl");
+ var pl=AM.pl, pn={}; (pl.projects||[]).forEach(function(p){pn[p.id]=p.name;});
+ var list='<div class="card" style="margin-top:12px"><div class="card-h"><h2>Agents</h2><button class="btn btn-s btn-p" style="margin-left:auto" data-a="amanew">'+ic("plus")+'New agent</button></div><div class="card-b"><div class="am-list">'+
+  (pl.agents||[]).map(function(a){ return '<div class="am-u"><div class="am-uh"><span class="am-ai" style="background:'+attr(a.color||"#4f46e5")+'">'+ic(a.icon||"bot")+'</span><div class="lp-main"><div class="lp-co">'+esc(a.name)+' '+(a.status==="active"?'<span class="bg b-ok">Active</span>':'<span class="bg b-mu">Inactive</span>')+'</div>'+
+   '<div class="meta">'+esc([a.title,a.type,(a.conversations||0)+" conversations"].filter(Boolean).join(" · "))+'</div><div class="meta">'+esc((a.projectIds||[]).map(function(i){return pn[i]||i;}).join(", ")||"Not on any project")+'</div></div>'+
+   '<button class="btn btn-s btn-g" data-a="amaedit" data-v="'+attr(a.id)+'">'+ic("edit")+'Edit</button></div></div>'; }).join("")+'</div></div></div>';
+ return (AM.ae?amAgentEditor():'')+list; }
+function amDetail(d){ if(!d)return ""; var out=[]; Object.keys(d).forEach(function(k){ var v=d[k]; if(v==null||v==="")return; if(Array.isArray(v))v=v.length?v.join(", "):"none"; out.push(k+": "+v); }); return out.join(" · "); }
+function amLog(){ if(!AM.log&&!AM.busy.log&&!AM.err.log)setTimeout(function(){amLoad("log");},0); if(!AM.log)return amLoading("log");
+ var d=AM.log;
+ var adm=(d.admin||[]).length?'<table class="t"><tr><th>When</th><th>Who</th><th>What</th></tr>'+(d.admin||[]).map(function(x){return '<tr><td class="meta" style="white-space:nowrap">'+esc(when(x.at))+'</td><td>'+esc(x.actor||"")+'</td><td><b>'+esc(x.action||"")+'</b> '+esc(x.target||"")+(x.detail?'<div class="meta">'+esc(amDetail(x.detail))+'</div>':'')+'</td></tr>';}).join("")+'</table>':'<p class="meta">No admin changes yet.</p>';
+ var seen=(d.seen||[]).length?(d.seen||[]).map(function(x){return '<div class="am-kv"><span>'+esc(x.name)+' <span class="meta">'+esc(x.email)+'</span></span><b class="meta">'+esc(when(x.last_seen))+'</b></div>';}).join(""):'<p class="meta">Nobody yet.</p>';
+ var ws=(d.workspace||[]).length?(d.workspace||[]).slice(0,60).map(function(x){return '<div class="am-log"><span class="meta">'+esc(when(x.at))+'</span><span><b>'+esc(x.actor||"")+'</b> '+esc(x.action||"")+' '+esc(x.target||"")+(x.project?' <span class="meta">· '+esc(x.project)+'</span>':'')+'</span></div>';}).join(""):'<p class="meta">No workspace activity yet.</p>';
+ return '<div class="card" style="margin-top:12px"><div class="card-h"><h2>Admin changes</h2><button class="btn btn-s btn-g" style="margin-left:auto" data-a="amreload" data-v="log">'+ic("sync")+'Refresh</button></div><div class="card-b" style="overflow-x:auto">'+adm+'</div></div>'+
+  '<div class="am-two" style="margin-top:16px"><div class="card"><div class="card-h"><h2>Workspace activity</h2></div><div class="card-b">'+ws+'</div></div><div class="card"><div class="card-h"><h2>Last seen</h2></div><div class="card-b">'+seen+'<p class="meta" style="margin-top:8px">From team chat, RFPs, Resourcing and Admin sign-in checks.</p></div></div></div>'; }
+function amRefreshWorkspace(){ api("/bootstrap",{}).then(function(r){ if(r&&r.success){S.data=r.data;render();} }).catch(function(){}); }
+function amGenPw(){ var a="abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",s="",r=new Uint32Array(12); crypto.getRandomValues(r); for(var i=0;i<12;i++)s+=a.charAt(r[i]%a.length); return s; }
+function amAct(a,v){
+ if(a==="amreload"){AM.err[v]=null;if(v==="users")AM.users=null;else AM[v]=null;amLoad(v);render();return true;}
+ if(a==="amadd"){AM.showAdd=!AM.showAdd;render();return true;}
+ if(a==="amuedit"){ if(AM.edit===v){AM.edit=null;AM.ue=null;render();return true;} var u=(AM.users||[]).filter(function(x){return x.id===v;})[0]; if(!u)return true;
+  AM.edit=v; AM.pw=""; AM.ue={role:u.access_role,title:u.title||"",sections:Array.isArray(u.sections)?u.sections.slice():AM_SECS.map(function(s){return s[0];}),projectsMode:u.projects_mode||"all",projectIds:(u.project_ids||[]).slice(),reason:""}; render(); return true; }
+ if(a==="amucancel"){AM.edit=null;AM.ue=null;render();return true;}
+ if(a==="amugen"){AM.pw=amGenPw();render();return true;}
+ if(a==="amusave"){ var u=(AM.users||[]).filter(function(x){return x.id===v;})[0], e=AM.ue; if(!u||!e)return true; AM.saving=true; render();
+  mapi("users.update",{id:v,name:u.name,role:e.role,title:e.title,sections:e.sections,projectsMode:e.projectsMode,projectIds:e.projectsMode==="assigned"?e.projectIds:[]}).then(function(){ AM.saving=false; AM.edit=null; AM.ue=null; toast("Access saved",u.name+" · "+AM_ROLES[e.role][0]+". It applies the next time they open WorkPlace.","ok"); amLoad("users"); if(AM.ov)amLoad("ov"); AM.log=null; })
+  .catch(function(err){ AM.saving=false; toast("Not saved",err.message,"err"); render(); }); return true; }
+ if(a==="amupw"){ var u2=(AM.users||[]).filter(function(x){return x.id===v;})[0]; var pw=String(AM.pw||""); if(!u2)return true; if(pw.length<8){toast("Password too short","Use at least 8 characters","err");return true;}
+  AM.saving=true; render(); tlSha(pw+":"+String(u2.email).toLowerCase().trim()).then(function(h){ return mapi("users.password",{id:v,passwordHash:h}); })
+  .then(function(){ AM.saving=false; toast("Password set",u2.name+" can sign in with the new password.","ok"); AM.log=null; render(); }).catch(function(err){ AM.saving=false; toast("Not saved",err.message,"err"); render(); }); return true; }
+ if(a==="amustatus"){ var sp=String(v).split("|"), u3=(AM.users||[]).filter(function(x){return x.id===sp[0];})[0]; if(!u3)return true; AM.saving=true; render();
+  mapi("users.status",{id:sp[0],status:sp[1],reason:(AM.ue&&AM.ue.reason)||""}).then(function(){ AM.saving=false; AM.edit=null; AM.ue=null; toast(sp[1]==="active"?"Reactivated":"Deactivated",u3.name,sp[1]==="active"?"ok":""); amLoad("users"); if(AM.ov)amLoad("ov"); AM.log=null; })
+  .catch(function(err){ AM.saving=false; toast("Not saved",err.message,"err"); render(); }); return true; }
+ if(a==="ampnew"){AM.pe={id:"",name:"",client:"",description:"",status:"planning",goLive:"",manager:(S.data&&S.data.user&&S.data.user.name)||"",color:AM_COLORS[0],agentIds:[],memberIds:[]};render();return true;}
+ if(a==="ampedit"){ var p=((AM.pl&&AM.pl.projects)||[]).filter(function(x){return x.id===v;})[0]; if(!p)return true;
+  AM.pe={id:p.id,name:p.name,client:p.client,description:p.description||"",status:p.status||"planning",goLive:p.goLive||"",manager:p.manager||"",color:p.color||AM_COLORS[0],agentIds:(p.agentIds||[]).slice(),memberIds:(p.memberIds||[]).slice()}; render(); window.scrollTo(0,0); return true; }
+ if(a==="ampcancel"){AM.pe=null;render();return true;}
+ if(a==="ampcolor"){if(AM.pe){AM.pe.color=v;render();}return true;}
+ if(a==="ampsave"){ var e2=AM.pe; if(!e2)return true; if(!e2.name.trim()||!e2.client.trim()){toast("Missing details","A project needs a name and a client","err");return true;} AM.saving=true; render();
+  mapi("projects.save",e2).then(function(){ AM.saving=false; toast(e2.id?"Project saved":"Project created",e2.name,"ok"); AM.pe=null; amLoad("pl"); AM.log=null; if(AM.ov)amLoad("ov"); amRefreshWorkspace(); })
+  .catch(function(err){ AM.saving=false; toast("Not saved",err.message,"err"); render(); }); return true; }
+ if(a==="amanew"){AM.ae={id:"",name:"",title:"",type:AM_TYPES[0],status:"active",description:"",purpose:"",capabilities:"",starters:"",icon:"bot",color:AM_COLORS[0],projectIds:[]};render();return true;}
+ if(a==="amaedit"){ var g=((AM.pl&&AM.pl.agents)||[]).filter(function(x){return x.id===v;})[0]; if(!g)return true;
+  AM.ae={id:g.id,name:g.name,title:g.title||"",type:g.type||AM_TYPES[0],status:g.status==="active"?"active":"inactive",description:g.description||"",purpose:g.purpose||"",capabilities:(g.capabilities||[]).join(", "),starters:(g.starters||[]).join("\n"),icon:g.icon||"bot",color:g.color||AM_COLORS[0],projectIds:(g.projectIds||[]).slice()}; render(); window.scrollTo(0,0); return true; }
+ if(a==="amacancel"){AM.ae=null;render();return true;}
+ if(a==="amaicon"){if(AM.ae){AM.ae.icon=v;render();}return true;}
+ if(a==="amacolor"){if(AM.ae){AM.ae.color=v;render();}return true;}
+ if(a==="amasave"){ var e3=AM.ae; if(!e3)return true; if(!e3.name.trim()){toast("Missing details","An agent needs a name","err");return true;} AM.saving=true; render();
+  mapi("agents.save",e3).then(function(){ AM.saving=false; toast(e3.id?"Agent saved":"Agent created",e3.name,"ok"); AM.ae=null; amLoad("pl"); AM.log=null; if(AM.ov)amLoad("ov"); amRefreshWorkspace(); })
+  .catch(function(err){ AM.saving=false; toast("Not saved",err.message,"err"); render(); }); return true; }
+ return false;
+}
+document.addEventListener("input",function(e){ var t=e.target; if(!t||!t.getAttribute)return; var k;
+ if((k=t.getAttribute("data-am-u"))){ if(k==="pw")AM.pw=t.value; else if(AM.ue&&t.tagName!=="SELECT")AM.ue[k]=t.value; }
+ if((k=t.getAttribute("data-am-p"))&&AM.pe&&t.tagName!=="SELECT")AM.pe[k]=t.value;
+ if((k=t.getAttribute("data-am-a"))&&AM.ae&&t.tagName!=="SELECT")AM.ae[k]=t.value; });
+document.addEventListener("change",function(e){ var t=e.target; if(!t||!t.getAttribute)return; var k,tg=function(arr,id,on){var i=arr.indexOf(id); if(on&&i<0)arr.push(id); if(!on&&i>=0)arr.splice(i,1);};
+ if((k=t.getAttribute("data-am-u"))&&AM.ue&&t.tagName==="SELECT"){AM.ue[k]=t.value;render();}
+ if((k=t.getAttribute("data-am-p"))&&AM.pe&&t.tagName==="SELECT"){AM.pe[k]=t.value;}
+ if((k=t.getAttribute("data-am-a"))&&AM.ae&&t.tagName==="SELECT"){AM.ae[k]=t.value;}
+ if((k=t.getAttribute("data-am-sec"))&&AM.ue){tg(AM.ue.sections,k,t.checked);render();}
+ if((k=t.getAttribute("data-am-up"))&&AM.ue){tg(AM.ue.projectIds,k,t.checked);render();}
+ if((k=t.getAttribute("data-am-pa"))&&AM.pe){tg(AM.pe.agentIds,k,t.checked);render();}
+ if((k=t.getAttribute("data-am-pm"))&&AM.pe){tg(AM.pe.memberIds,k,t.checked);render();}
+ if((k=t.getAttribute("data-am-ap"))&&AM.ae){tg(AM.ae.projectIds,k,t.checked);render();} });
+/* ---- end admin ---- */
 
 
 function view(){
@@ -1967,7 +2210,7 @@ function view(){
  var v=S.route.v,c;
  if(v==="projects")c=vProjects();else if(v==="proj")c=vProject();else if(v==="knowledge")c=vKnowledge();
  else if(v==="agents")c=vAgents();else if(v==="agent")c=vAgent();else if(v==="chat")c=vChat();
- else if(v==="activity")c=vActivity();else if(v==="settings")c=vSettings();else if(v==="rfps")c=vRfps();else if(v==="pipeline")c=vPipeline();else if(v==="resourcing")c=vResourcing();else if(v==="inquiries")c=vInquiries();else c=vDash();
+ else if(v==="activity")c=vActivity();else if(v==="settings")c=vSettings();else if(v==="rfps")c=vRfps();else if(v==="pipeline")c=vPipeline();else if(v==="resourcing")c=vResourcing();else if(v==="inquiries")c=vInquiries();else if(v==="admin")c=vAdmin();else c=vDash(); c=amGuard(v,c);
  return '<div class="shell">'+sidebar()+'<div class="main">'+header()+c+'</div></div>'+tabbar()+
  (document.body.getAttribute("data-drawer")==="1"?'<div class="scrim" data-a="drawer"></div>':"")+teamPanel()+modalHtml()+toastsHtml();
 }
@@ -2134,7 +2377,7 @@ document.addEventListener("click",function(ev){
  if(a==="closemodal"&&ev.target.closest("[data-stop]")&&ev.target!==el)return;
  if(a!=="pop"&&S.pop)S.pop=null;
  if(a!=="modelmenu"&&a!=="selmodel"&&a!=="planinfo"&&S.chat.modelOpen)S.chat.modelOpen=false;
- if(collabAct(a,v)||pipeAct(a,v)||rsAct(a,v)||tlAct(a,v)||iqAct(a,v))return; if(a==="modelmenu"){S.chat.modelOpen=!S.chat.modelOpen;render();return;}
+ if(collabAct(a,v)||pipeAct(a,v)||rsAct(a,v)||tlAct(a,v)||iqAct(a,v)||amAct(a,v))return; if(a==="modelmenu"){S.chat.modelOpen=!S.chat.modelOpen;render();return;}
  if(a==="signup"){doSignup();return;}
  if(a==="adminload"){loadRoster();return;}
  if(a==="approve"){adminAct("approve",v);return;}
