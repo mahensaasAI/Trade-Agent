@@ -482,6 +482,11 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
 .tl-doc{margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--panel2);max-height:420px;overflow:auto;font-size:13px}
 .tl-doc h3{margin:0 0 2px}.tl-doc h4{margin:12px 0 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2)}
 .tl-doc p{margin:0}.tl-de{margin-top:6px}.tl-de ul{margin:4px 0 0;padding-left:18px}
+.tl-prep{display:grid;gap:12px}
+.tl-prep p{margin:0}
+.tl-q{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-top:8px;background:var(--panel)}
+.tl-q summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.tl-q[open] summary{margin-bottom:6px}
 @media(max-width:700px){.tl-ph,.tl-rh{flex-wrap:wrap}.tl-best{margin-left:0}}
 /* odf-brand-v3: OraDayForce brand layer (see oradayforce/brand/workplace-theme.css) */
 :root{--brand-grad:linear-gradient(120deg,#4f46e5 0%,#7c3aed 55%,#db2777 100%);--brand-grad-text:linear-gradient(92deg,#4f46e5,#7c3aed 55%,#db2777)}
@@ -1515,10 +1520,12 @@ function vResourcing(){ if(!RS.loaded&&!RS.loading)setTimeout(rsLoad,0); rsPoll(
   (RS.loaded&&!RS.searchKey?'<p class="meta" style="color:var(--warn)">The web search needs a free Tavily key'+(RS.isAdmin?': press Add search key.':'. Ask an administrator to add it.')+'</p>':'')+
   (RS.keyOpen?'<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><input id="rskeyin" type="password" class="inp" placeholder="Paste your Tavily API key (tvly-...)" autocomplete="off" style="max-width:380px"><button class="btn btn-s btn-p" data-a="rskeysave">Save key</button><a class="meta" href="https://app.tavily.com" target="_blank" rel="noopener">Get a free key ↗</a></div>':'')+
   (RS.newOpen?'<div class="lp-pane"><label class="meta">Request (paste the email or message as it is)</label><textarea class="inp" id="rstext" rows="5" placeholder="Do you have any OIC/OTBI consultants in India with Public Sector experience? 3 technical and 2 OPAL functional…"></textarea><div class="lp-grid">'+lpF("Client or requester (optional)","rsclient","")+'</div><div class="row" style="gap:8px;margin-top:8px"><button class="btn btn-s btn-p" data-a="rscreate">Find candidates</button><button class="btn btn-s btn-g" data-a="rsnew">Cancel</button></div></div>':'')+'</div></div>'+
-  '<div class="tabs" style="margin-bottom:0"><button class="'+(RS.tab==="requests"?"on":"")+'" data-a="rstab" data-v="requests">Requests <span class="bg">'+RS.requests.filter(function(q){return q.status!=="closed";}).length+'</span></button><button class="'+(RS.tab==="pool"?"on":"")+'" data-a="rstab" data-v="pool">Talent pool <span class="bg">'+RS.pool+'</span></button><button class="'+(RS.tab==="positions"?"on":"")+'" data-a="rstab" data-v="positions">Open positions <span class="bg">'+(TL.loaded?Math.min(tlOpenCount(),10):"")+'</span></button><button class="'+(RS.tab==="resumes"?"on":"")+'" data-a="rstab" data-v="resumes">Resumes <span class="bg">'+(TL.loaded?TL.resumes.length:"")+'</span></button></div>';
+  '<div class="tabs" style="margin-bottom:0"><button class="'+(RS.tab==="requests"?"on":"")+'" data-a="rstab" data-v="requests">Requests <span class="bg">'+RS.requests.filter(function(q){return q.status!=="closed";}).length+'</span></button><button class="'+(RS.tab==="pool"?"on":"")+'" data-a="rstab" data-v="pool">Talent pool <span class="bg">'+RS.pool+'</span></button><button class="'+(RS.tab==="positions"?"on":"")+'" data-a="rstab" data-v="positions">Open positions <span class="bg">'+(TL.loaded?Math.min(tlOpenCount(),10):"")+'</span></button><button class="'+(RS.tab==="resumes"?"on":"")+'" data-a="rstab" data-v="resumes">Resumes <span class="bg">'+(TL.loaded?TL.resumes.length:"")+'</span></button><button class="'+(RS.tab==="prep"?"on":"")+'" data-a="rstab" data-v="prep">Interview prep</button><button class="'+(RS.tab==="writer"?"on":"")+'" data-a="rstab" data-v="writer">Resume writer</button></div>';
  if(RS.err)return '<div class="wrap">'+head+'<div class="card"><div class="emp"><h3>Resourcing unavailable</h3><p>'+esc(RS.err)+'</p><button class="btn btn-p" data-a="rsreload">'+ic("sync")+'Retry</button></div></div></div>';
  if(RS.tab==="positions")return '<div class="wrap">'+head+tlPositions()+'</div>';
  if(RS.tab==="resumes")return '<div class="wrap">'+head+tlResumes()+'</div>';
+ if(RS.tab==="prep")return '<div class="wrap">'+head+tlPrepView()+'</div>';
+ if(RS.tab==="writer")return '<div class="wrap">'+head+tlWriterView()+'</div>';
  if(RS.tab==="pool")return '<div class="wrap">'+head+rsTalentView()+'</div>';
  if(RS.cur)return '<div class="wrap">'+head+'<div style="margin-top:12px">'+rsDetail()+'</div></div>';
  var list=RS.requests.map(function(q){ return '<button class="rs-q" data-a="rsopen" data-v="'+q.id+'"><div class="lp-main"><div class="lp-co">'+esc(q.title||"Reading the request…")+'</div><div class="meta">'+esc([q.client,q.location,q.domain,rsRoles(q)].filter(Boolean).join(" · ")||String(q.raw_text||"").slice(0,140))+'</div><div class="meta">'+esc(q.created_by||"")+' · '+esc(when(q.created_at))+'</div></div><div class="rs-qs">'+rsStatus(q)+'<span class="meta">'+q.matches+' candidates · '+q.progressed+' interested+</span></div></button>'; }).join("");
@@ -1561,10 +1568,11 @@ document.addEventListener("change",function(e){ var t=e.target; if(t&&t.getAttri
 document.addEventListener("keydown",function(e){ if(e.target&&e.target.id==="rsq"&&e.key==="Enter"){e.preventDefault();RS.tq=e.target.value.trim();rsTalent();} });
 /* ---- end resourcing ---- */
 /* ---- odf-talent: Resourcing > Open positions (urgent AI contract roles, 0-5 years) and Resumes, resume-to-position match with a tailored summary, and Settings > Add a user. Talks to WorkPlace Talent API (/svc/talent). ---- */
-var TL={loaded:false,loading:false,positions:[],resumes:[],lastRun:null,refreshPending:false,isAdmin:false,err:null,more:false,open:null,res:{},hist:{},busy:null,up:null,upBusy:false,pollT:null,forPos:null,rv:{},rvBusy:null,user:{name:"",email:"",role:"",pw:"",admin:false,busy:false,done:null}};
+var TL={loaded:false,loading:false,positions:[],resumes:[],lastRun:null,refreshPending:false,isAdmin:false,err:null,more:false,open:null,res:{},hist:{},busy:null,up:null,upBusy:false,pollT:null,forPos:null,rv:{},rvBusy:null,prep:{resumeId:"",positionId:"",role:"",jd:"",busy:false,cur:null,list:null,loaded:false,loading:false},wr:{resumeId:"",target:"",notes:"",name:"",email:"",phone:"",city:"",busy:false,out:null,saving:false},user:{name:"",email:"",role:"",pw:"",admin:false,busy:false,done:null}};
 function tapi(action,payload){ var h={"Content-Type":"application/json"}; if(S.token)h.Authorization="Bearer "+S.token;
  return fetch(API+"/talent",{method:"POST",headers:h,body:JSON.stringify({action:action,payload:payload||{}})}).then(function(r){return r.json().catch(function(){throw new Error("HTTP "+r.status);});})
   .then(function(j){ if(!j||j.success===false)throw new Error((j&&j.error&&j.error.message)||"Request failed"); return j.data; }); }
+function tapiAi(action,payload){ return tapi(action,payload).catch(function(e){ if(!/busy|rate|limit|try again/i.test(e.message))throw e; toast("The free AI is busy","Trying again in 20 seconds",""); return new Promise(function(ok){setTimeout(ok,20000);}).then(function(){return tapi(action,payload);}); }); }
 function tlLoad(){ if(TL.loading)return; TL.loading=true;
  tapi("pos.list").then(function(d){TL.loading=false;TL.loaded=true;TL.err=null;TL.positions=d.positions||[];TL.resumes=d.resumes||[];TL.lastRun=d.lastRun;TL.refreshPending=!!d.refreshPending;TL.isAdmin=!!d.isAdmin;render();})
  .catch(function(e){TL.loading=false;TL.loaded=true;TL.err=e.message;render();}); }
@@ -1623,6 +1631,7 @@ function tlResult(m,p){ var r=m.result||{};
   copy("Submission note","submission_note",r.submission_note)+tlRevise(m,p)+
   '<p class="meta">Suggestions only use what the resume already says. Confirm anything you change with the candidate before submitting.</p>'+
   '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-s btn-g" data-a="tldl" data-v="'+m.resume_id+'">'+ic("file")+'Download resume</button><a class="btn btn-s btn-g" href="'+attr(p.url)+'" target="_blank" rel="noopener">Apply on the posting ↗</a>'+
+  '<button class="btn btn-s btn-g" data-a="tlpreprole" data-v="'+p.id+':'+m.resume_id+'">'+ic("users")+'Interview prep</button>'+
   (m.status==="submitted"?'<span class="bg b-ok">Submitted'+(m.submitted_by?' by '+esc(m.submitted_by):'')+'</span>':'<button class="btn btn-s btn-p" data-a="tlsubmit" data-v="'+p.id+':'+m.id+'">'+ic("chk")+'Mark submitted</button>')+'</div></div>'; }
 
 // ---------- Revise for a role (target 90%) ----------
@@ -1654,7 +1663,8 @@ function tlResumeText(r){ var L=[r.name||"",r.headline||"",r.contact||"",""];
 function tlSaveBlob(blob,name){ var url=URL.createObjectURL(blob),el=document.createElement("a"); el.href=url; el.download=name; document.body.appendChild(el); el.click(); setTimeout(function(){URL.revokeObjectURL(url);el.remove();},1000); }
 function tlFindMatch(mid){ var f=null; Object.keys(TL.res).forEach(function(k){if(TL.res[k]&&TL.res[k].id===mid)f=TL.res[k];}); Object.keys(TL.hist).forEach(function(k){(TL.hist[k]||[]).forEach(function(x){if(!f&&x.id===mid)f=x;});}); return f; }
 function tlRevName(m,ext){ var p=TL.positions.filter(function(x){return x.id===m.position_id;})[0]; var n=((m.revised&&m.revised.resume&&m.revised.resume.name)||m.resume_name||"Resume")+(p?" - "+p.title:"")+" (revised)"; return n.replace(/[^A-Za-z0-9 ()._-]+/g," ").replace(/\s+/g," ").trim().slice(0,90)+"."+ext; }
-function tlDocx(r,name){ return tlLib("https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js").then(function(){ var D=window.docx,P=D.Paragraph,R=D.TextRun;
+function tlDocx(r,name){ return tlDocxBlob(r).then(function(blob){tlSaveBlob(blob,name);}); }
+function tlDocxBlob(r){ return tlLib("https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js").then(function(){ var D=window.docx,P=D.Paragraph,R=D.TextRun;
  var kids=[new P({children:[new R({text:r.name||"",bold:true,size:36})]})];
  if(r.headline)kids.push(new P({children:[new R({text:r.headline,size:24,color:"444444"})]}));
  if(r.contact)kids.push(new P({children:[new R({text:r.contact,size:20,color:"666666"})]}));
@@ -1664,7 +1674,66 @@ function tlDocx(r,name){ return tlLib("https://cdn.jsdelivr.net/npm/docx@8.5.0/b
  (r.sections||[]).forEach(function(s){ head(s.heading||""); (s.entries||[]).forEach(function(e){ var meta=[e.dates,e.location].filter(Boolean).join(" · ");
   kids.push(new P({spacing:{before:120},children:[new R({text:[e.title,e.org].filter(Boolean).join(" — "),bold:true})].concat(meta?[new R({text:"   "+meta,italics:true,color:"666666"})]:[])}));
   (e.bullets||[]).forEach(function(b){kids.push(new P({text:b,bullet:{level:0}}));}); }); });
- return D.Packer.toBlob(new D.Document({creator:"OraDayForce WorkPlace",title:r.name||"Resume",sections:[{properties:{},children:kids}]})); }).then(function(blob){tlSaveBlob(blob,name);}); }
+ return D.Packer.toBlob(new D.Document({creator:"OraDayForce WorkPlace",title:r.name||"Resume",sections:[{properties:{},children:kids}]})); }); }
+
+// ---------- Interview prep ----------
+function tlOpts(list,val,lab,empty){ return (empty?'<option value="">'+esc(empty)+'</option>':'')+list.map(function(x){return '<option value="'+x.id+'"'+(String(val)===String(x.id)?" selected":"")+'>'+esc(lab(x))+'</option>';}).join(""); }
+function tlPrepView(){ if(!TL.loaded&&!TL.loading)setTimeout(tlLoad,0); var P=TL.prep;
+ if(!P.loaded&&!P.loading){P.loading=true;tapi("prep.list").then(function(d){P.loading=false;P.loaded=true;P.list=d.items||[];render();}).catch(function(){P.loading=false;P.loaded=true;P.list=[];});}
+ var open=TL.positions.filter(function(p){return p.status!=="dismissed";});
+ var h='<div class="card" style="margin-top:12px"><div class="card-h"><div><h2>Interview prep</h2><div class="meta">Likely questions with talking points from the candidate\'s own resume, honest ways to handle gaps, questions to ask, and a prep checklist.</div></div></div><div class="card-b">'+
+  (!TL.resumes.length?'<p class="meta">Upload the candidate\'s resume under Resumes first.</p>':
+  '<div class="lp-grid"><div class="f"><label class="meta">Candidate</label><select class="inp" data-tl-p="resumeId">'+tlOpts(TL.resumes,P.resumeId,function(r){return r.name+(r.headline?" · "+r.headline:"");},"Pick a resume")+'</select></div>'+
+  '<div class="f"><label class="meta">Interview for</label><select class="inp" data-tl-p="positionId">'+tlOpts(open,P.positionId,function(p){return p.title+(p.company?" · "+p.company:"");},"A role not in the list (paste the job description)")+'</select></div></div>'+
+  (P.positionId?'':'<div class="lp-grid"><div class="f"><label class="meta">Role title</label><input class="inp" data-tl-p="role" value="'+attr(P.role)+'" placeholder="Oracle Fusion Financials Consultant"></div></div><div class="f"><label class="meta">Job description</label><textarea class="inp" rows="5" data-tl-p="jd" placeholder="Paste the job description or the client\'s requirements">'+esc(P.jd)+'</textarea></div>')+
+  '<div class="row" style="gap:8px;margin-top:8px"><button class="btn btn-s btn-p" data-a="tlprep"'+(P.busy?" disabled":"")+'>'+(P.busy?ic("sync","spin")+"Preparing… about 30 s":ic("chk")+"Prepare interview")+'</button></div>')+'</div></div>';
+ if(P.cur)h+=tlPrepOut(P.cur);
+ if(P.list&&P.list.length)h+='<div class="card"><div class="card-h"><h2>Earlier preps</h2></div><div class="card-b tl-list">'+P.list.map(function(x){return '<button class="rs-q" data-a="tlprepshow" data-v="'+x.id+'"><div class="lp-main"><div class="lp-co">'+esc(x.resume_name)+' · '+esc(x.role_title||"")+'</div><div class="meta">'+esc((x.created_by?x.created_by+" · ":"")+tlWhen(x.created_at))+'</div></div></button>';}).join("")+'</div></div>';
+ return h; }
+function tlPrepOut(x){ var r=x.result||{}, cats={}; (r.questions||[]).forEach(function(q){(cats[q.category]=cats[q.category]||[]).push(q);});
+ var li=function(a){return '<ul>'+a.map(function(t){return '<li>'+esc(t)+'</li>';}).join("")+'</ul>';};
+ return '<div class="card"><div class="card-h"><div><h2>'+esc(r.role||x.role_title||"Interview prep")+'</h2><div class="meta">'+esc((x.resume_name||"")+(x.created_at?" · "+tlWhen(x.created_at):""))+'</div></div>'+
+  '<div class="row" style="margin-left:auto;gap:6px"><button class="btn btn-s btn-p" data-a="tlprepdocx" data-v="'+x.id+'">'+ic("file")+'Word</button><button class="btn btn-s btn-g" data-a="tlpreptxt" data-v="'+x.id+'">'+ic("file")+'Text</button></div></div><div class="card-b tl-prep">'+
+  (r.role_summary?'<p>'+esc(r.role_summary)+'</p>':'')+((r.focus_areas||[]).length?'<div class="tl-sk"><span class="meta">Be ready for</span>'+tlChips(r.focus_areas)+'</div>':'')+
+  Object.keys(cats).map(function(c){return '<div class="tl-blk"><b>'+esc(c)+' questions</b>'+cats[c].map(function(q,i){return '<details class="tl-q"'+(i===0?" open":"")+'><summary>'+esc(q.question)+'</summary>'+(q.why?'<div class="meta">They are checking: '+esc(q.why)+'</div>':'')+'<div class="tl-txt">'+esc(q.answer)+'</div></details>';}).join("")+'</div>';}).join("")+
+  ((r.gaps||[]).length?'<div class="tl-blk"><b>Gaps to prepare for honestly</b><ul>'+r.gaps.map(function(g){return '<li><b>'+esc(g.topic)+'</b>: '+esc(g.how)+'</li>';}).join("")+'</ul></div>':'')+
+  ((r.ask_them||[]).length?'<div class="tl-blk"><b>Questions to ask the interviewer</b>'+li(r.ask_them)+'</div>':'')+
+  ((r.checklist||[]).length?'<div class="tl-blk"><b>Prep checklist</b>'+li(r.checklist)+'</div>':'')+
+  '<p class="meta">Talking points come only from the resume. Rehearse them with the candidate in their own words.</p></div></div>'; }
+function tlPrepText(x){ var r=x.result||{},L=[(r.role||x.role_title||"Interview prep")+" — "+(x.resume_name||""),""];
+ if(r.role_summary)L.push(r.role_summary,""); if((r.focus_areas||[]).length)L.push("BE READY FOR: "+r.focus_areas.join(" · "),"");
+ (r.questions||[]).forEach(function(q,i){L.push((i+1)+". ["+q.category+"] "+q.question); if(q.why)L.push("   They are checking: "+q.why); L.push("   Talking points: "+q.answer,"");});
+ if((r.gaps||[]).length){L.push("GAPS TO PREPARE FOR");r.gaps.forEach(function(g){L.push("  • "+g.topic+": "+g.how);});L.push("");}
+ if((r.ask_them||[]).length){L.push("QUESTIONS TO ASK");r.ask_them.forEach(function(t){L.push("  • "+t);});L.push("");}
+ if((r.checklist||[]).length){L.push("CHECKLIST");r.checklist.forEach(function(t){L.push("  • "+t);});}
+ return L.join("\n"); }
+function tlPrepDocx(x){ var r=x.result||{}; return tlLib("https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js").then(function(){ var D=window.docx,P=D.Paragraph,R=D.TextRun,kids=[];
+ var head=function(t,l){kids.push(new P({heading:l||D.HeadingLevel.HEADING_2,spacing:{before:200,after:80},children:[new R({text:t})]}));};
+ head((r.role||x.role_title||"Interview prep")+" — "+(x.resume_name||""),D.HeadingLevel.HEADING_1);
+ if(r.role_summary)kids.push(new P({children:[new R(r.role_summary)]}));
+ if((r.focus_areas||[]).length){head("Be ready for");r.focus_areas.forEach(function(t){kids.push(new P({text:t,bullet:{level:0}}));});}
+ head("Questions");(r.questions||[]).forEach(function(q,i){ kids.push(new P({spacing:{before:160},children:[new R({text:(i+1)+". "+q.question,bold:true}),new R({text:"   ["+q.category+"]",italics:true,color:"666666"})]}));
+  if(q.why)kids.push(new P({children:[new R({text:"They are checking: "+q.why,italics:true,color:"555555"})]})); kids.push(new P({children:[new R({text:"Talking points: ",bold:true}),new R(q.answer||"")]})); });
+ if((r.gaps||[]).length){head("Gaps to prepare for honestly");r.gaps.forEach(function(g){kids.push(new P({bullet:{level:0},children:[new R({text:g.topic+": ",bold:true}),new R(g.how||"")]}));});}
+ if((r.ask_them||[]).length){head("Questions to ask the interviewer");r.ask_them.forEach(function(t){kids.push(new P({text:t,bullet:{level:0}}));});}
+ if((r.checklist||[]).length){head("Prep checklist");r.checklist.forEach(function(t){kids.push(new P({text:t,bullet:{level:0}}));});}
+ return D.Packer.toBlob(new D.Document({creator:"OraDayForce WorkPlace",sections:[{properties:{},children:kids}]})); }); }
+function tlPrepFind(id){ var P=TL.prep; if(P.cur&&P.cur.id===id)return P.cur; return (P.list||[]).filter(function(x){return x.id===id;})[0]; }
+function tlPrepName(x,ext){ var r=x.result||{}; return ("Interview prep - "+(x.resume_name||"")+" - "+(r.role||x.role_title||"")).replace(/[^A-Za-z0-9 ()._-]+/g," ").replace(/\s+/g," ").trim().slice(0,100)+"."+ext; }
+
+// ---------- Resume writer ----------
+function tlWriterView(){ if(!TL.loaded&&!TL.loading)setTimeout(tlLoad,0); var W=TL.wr;
+ var f=function(lab,k,ph){return '<div class="f"><label class="meta">'+lab+'</label><input class="inp" data-tl-w="'+k+'" value="'+attr(W[k]||"")+'"'+(ph?' placeholder="'+attr(ph)+'"':'')+'></div>';};
+ var h='<div class="card" style="margin-top:12px"><div class="card-h"><div><h2>Resume writer</h2><div class="meta">A clean, ATS-friendly resume from an existing resume and/or the candidate\'s details. Only the facts you give are used: no invented employers, dates, skills or numbers.</div></div></div><div class="card-b">'+
+  '<div class="lp-grid"><div class="f"><label class="meta">Start from</label><select class="inp" data-tl-w="resumeId">'+tlOpts(TL.resumes,W.resumeId,function(r){return r.name+(r.headline?" · "+r.headline:"");},"No resume: use the details below")+'</select></div>'+f("Target role","target","AI/ML Engineer (contract)")+'</div>'+
+  '<div class="lp-grid">'+f("Name (optional)","name")+f("Email (optional)","email")+f("Phone (optional)","phone")+f("City (optional)","city","Dallas, TX")+'</div>'+
+  '<div class="f"><label class="meta">Candidate details (experience, projects, tools, education, certifications: facts only)</label><textarea class="inp" rows="6" data-tl-w="notes" placeholder="2023-present ML Engineer at Example Analytics, Dallas: built a RAG assistant with LangChain and Pinecone…">'+esc(W.notes||"")+'</textarea></div>'+
+  '<div class="row" style="gap:8px;margin-top:8px"><button class="btn btn-s btn-p" data-a="tlwrite"'+(W.busy?" disabled":"")+'>'+(W.busy?ic("sync","spin")+"Writing… about 30 s":ic("chk")+"Write resume")+'</button></div></div></div>';
+ if(W.out){ var o=W.out;
+  h+='<div class="card"><div class="card-h"><div><h2>'+esc(o.name||"Resume")+'</h2><div class="meta">'+esc(o.headline||"")+'</div></div><div class="row" style="margin-left:auto;gap:6px;flex-wrap:wrap"><button class="btn btn-s btn-p" data-a="tlwdocx">'+ic("file")+'Word</button><button class="btn btn-s btn-g" data-a="tlwtxt">'+ic("file")+'Text</button><button class="btn btn-s btn-g" data-a="tlwsave"'+(W.saving?" disabled":"")+'>'+(W.saving?ic("sync","spin")+"Saving…":ic("plus")+"Save to Resumes")+'</button></div></div><div class="card-b">'+
+   ((o.changes||[]).length?'<ul class="meta">'+o.changes.map(function(c){return '<li>'+esc(c)+'</li>';}).join("")+'</ul>':'')+
+   '<div class="tl-doc" style="max-height:none">'+tlResumeHtml(o)+'</div><p class="meta">Check every line with the candidate before sending it anywhere.</p></div></div>'; }
+ return h; }
 
 // ---------- Resumes ----------
 function tlResumes(){ if(!TL.loaded&&!TL.loading)setTimeout(tlLoad,0);
@@ -1718,8 +1787,11 @@ function tlSha(s){ return crypto.subtle.digest("SHA-256",new TextEncoder().encod
 function tlCopy(t){ if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){toast("Copied","","ok");},function(){toast("Copy failed","Select the text and copy it","err");}); }
 
 document.addEventListener("input",function(e){ var t=e.target; if(!t||!t.getAttribute)return; var k=t.getAttribute("data-tl-f"); if(k&&TL.up)TL.up[k]=t.value; k=t.getAttribute("data-tl-u"); if(k&&k!=="admin")TL.user[k]=t.value;
+ k=t.getAttribute("data-tl-p"); if(k&&k!=="positionId"&&k!=="resumeId")TL.prep[k]=t.value; k=t.getAttribute("data-tl-w"); if(k&&k!=="resumeId")TL.wr[k]=t.value;
  k=t.getAttribute("data-tl-rv"); if(k){var mi=Number(t.getAttribute("data-m"));(TL.rv[mi]||(TL.rv[mi]={sk:{},other:"",note:""}))[k]=t.value;} });
 document.addEventListener("change",function(e){ var t=e.target; if(!t)return; if(t.id==="tlfile"){var fl=t.files&&t.files[0];t.value="";tlPicked(fl);} if(t.getAttribute&&t.getAttribute("data-tl-u")==="admin")TL.user.admin=!!t.checked;
+ if(t.getAttribute&&(t.getAttribute("data-tl-p")==="positionId"||t.getAttribute("data-tl-p")==="resumeId")){TL.prep[t.getAttribute("data-tl-p")]=t.value;render();}
+ if(t.getAttribute&&t.getAttribute("data-tl-w")==="resumeId"){TL.wr.resumeId=t.value;var rr=TL.resumes.filter(function(x){return String(x.id)===t.value;})[0];if(rr){TL.wr.name=TL.wr.name||rr.name||"";TL.wr.email=TL.wr.email||rr.email||"";TL.wr.phone=TL.wr.phone||rr.phone||"";}render();}
  if(t.getAttribute&&t.getAttribute("data-tl-sk")){var mi=Number(t.getAttribute("data-tl-sk"));var st=TL.rv[mi]||(TL.rv[mi]={sk:{},other:"",note:""});if(t.checked)st.sk[t.value]=true;else delete st.sk[t.value];} });
 
 function tlAct(a,v){
@@ -1738,13 +1810,35 @@ function tlAct(a,v){
    .catch(function(e){TL.busy=null;toast("Match failed",e.message,"err");render();}); }
  else if(a==="tlrevise"){ pid=Number(sp[0]); mid=Number(sp[1]); var rs=TL.rv[mid]||{sk:{},other:"",note:""};
    TL.rvBusy=mid; render();
-   tapi("match.revise",{matchId:mid,confirmed:Object.keys(rs.sk||{}),other:rs.other||"",note:rs.note||""}).then(function(d){ TL.rvBusy=null; var nm=d.match||{}, cur=tlFindMatch(mid);
+   tapiAi("match.revise",{matchId:mid,confirmed:Object.keys(rs.sk||{}),other:rs.other||"",note:rs.note||""}).then(function(d){ TL.rvBusy=null; var nm=d.match||{}, cur=tlFindMatch(mid);
      if(cur){cur.revised=nm.revised;} (TL.hist[pid]||[]).forEach(function(x){if(x.id===mid)x.revised=nm.revised;});
      var rp=nm.revised&&nm.revised.pct; toast("Resume revised",rp?"About "+rp+"% for this role"+(rp>=90?"":" — confirm more skills to go higher"):"","ok"); render(); })
    .catch(function(e){TL.rvBusy=null;toast("Revision failed",e.message,"err");render();}); return true; }
  else if(a==="tldocx"||a==="tltxt"){ var mm=tlFindMatch(Number(v)); if(!mm||!mm.revised){toast("Revise the resume first","","err");return true;}
    if(a==="tltxt"){tlSaveBlob(new Blob([tlResumeText(mm.revised.resume||{})],{type:"text/plain"}),tlRevName(mm,"txt"));return true;}
    toast("Preparing the Word file","",""); tlDocx(mm.revised.resume||{},tlRevName(mm,"docx")).catch(function(e){toast("Could not build the Word file",e.message+" — use Download as text","err");}); return true; }
+ else if(a==="tlpreprole"){ TL.prep.positionId=sp[0]; TL.prep.resumeId=sp[1]; TL.prep.cur=null; RS.tab="prep"; window.scrollTo(0,0); }
+ else if(a==="tlprep"){ var P=TL.prep; if(!P.resumeId){toast("Pick the candidate's resume","","err");return true;}
+   P.busy=true; render();
+   tapiAi("prep.run",{resumeId:P.resumeId,positionId:P.positionId,roleTitle:P.role,jd:P.jd}).then(function(d){ P.busy=false; var x=d.prep||{}, rr=TL.resumes.filter(function(r){return String(r.id)===String(x.resume_id);})[0]; x.resume_name=rr?rr.name:""; P.cur=x; P.list=[x].concat((P.list||[]).filter(function(y){return y.id!==x.id;})); toast("Interview prep ready",((x.result||{}).questions||[]).length+" questions","ok"); render(); })
+   .catch(function(e){P.busy=false;toast("Interview prep failed",e.message,"err");render();}); return true; }
+ else if(a==="tlprepshow"){ TL.prep.cur=tlPrepFind(Number(v)); window.scrollTo(0,0); }
+ else if(a==="tlpreptxt"||a==="tlprepdocx"){ var px=tlPrepFind(Number(v)); if(!px)return true;
+   if(a==="tlpreptxt"){tlSaveBlob(new Blob([tlPrepText(px)],{type:"text/plain"}),tlPrepName(px,"txt"));return true;}
+   toast("Preparing the Word file","",""); tlPrepDocx(px).then(function(b){tlSaveBlob(b,tlPrepName(px,"docx"));}).catch(function(e){toast("Could not build the Word file",e.message,"err");}); return true; }
+ else if(a==="tlwrite"){ var Wr=TL.wr; if(!Wr.resumeId&&String(Wr.notes||"").trim().length<80){toast("Add the candidate's details","Pick a resume to start from, or paste a few lines of real experience","err");return true;}
+   Wr.busy=true; render();
+   tapiAi("write.run",{resumeId:Wr.resumeId,targetRole:Wr.target,notes:Wr.notes,name:Wr.name,email:Wr.email,phone:Wr.phone,city:Wr.city}).then(function(d){Wr.busy=false;Wr.out=d.resume;toast("Resume written","Review it, then download or save it","ok");render();})
+   .catch(function(e){Wr.busy=false;toast("Resume not written",e.message,"err");render();}); return true; }
+ else if(a==="tlwtxt"||a==="tlwdocx"){ var o=TL.wr.out; if(!o)return true; var nm=((o.name||"Resume")+(TL.wr.target?" - "+TL.wr.target:"")).replace(/[^A-Za-z0-9 ()._-]+/g," ").replace(/\s+/g," ").trim().slice(0,90);
+   if(a==="tlwtxt"){tlSaveBlob(new Blob([tlResumeText(o)],{type:"text/plain"}),nm+".txt");return true;}
+   toast("Preparing the Word file","",""); tlDocx(o,nm+".docx").catch(function(e){toast("Could not build the Word file",e.message,"err");}); return true; }
+ else if(a==="tlwsave"){ var ow=TL.wr.out; if(!ow)return true; TL.wr.saving=true; render();
+   var fname=((ow.name||"Resume")+" (written).docx").replace(/[^A-Za-z0-9 ()._-]+/g," ").trim();
+   tlDocxBlob(ow).then(function(blob){ return tlB64(blob); }, function(){ return ""; })
+   .then(function(b64){ return tapi("res.upload",{name:ow.name||TL.wr.name||"Candidate",email:TL.wr.email,phone:TL.wr.phone,headline:ow.headline,filename:fname,mime:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",fileB64:b64,text:tlResumeText(ow)}); })
+   .then(function(d){ TL.wr.saving=false; var r=d.resume||{}; TL.resumes.unshift({id:r.id,name:r.name,headline:r.headline,filename:r.filename,email:TL.wr.email,phone:TL.wr.phone,created_at:r.created_at,uploaded_by_name:(S.data&&S.data.user&&S.data.user.name)||"",has_file:true,matches:0}); toast("Saved to Resumes","You can now check it against open positions","ok"); render(); })
+   .catch(function(e){TL.wr.saving=false;toast("Not saved",e.message,"err");render();}); return true; }
  else if(a==="tlshow"){ pid=Number(sp[0]); mid=Number(sp[1]); TL.res[pid]=(TL.hist[pid]||[]).filter(function(m){return m.id===mid;})[0]||TL.res[pid]; }
  else if(a==="tlcopy"){ mid=Number(sp[0]); var m=null; Object.keys(TL.res).forEach(function(k){if(TL.res[k]&&TL.res[k].id===mid)m=TL.res[k];}); if(!m)return true; var val=(m.result||{})[sp[1]]; tlCopy(Array.isArray(val)?val.map(function(b){return "• "+b;}).join("\n"):String(val||"")); return true; }
  else if(a==="tlsubmit"){ pid=Number(sp[0]); mid=Number(sp[1]); tapi("match.submit",{id:mid}).then(function(d){ var m=TL.res[pid]; if(m&&m.id===mid){m.status="submitted";m.submitted_by=d.submitted_by;} (TL.hist[pid]||[]).forEach(function(x){if(x.id===mid)x.status="submitted";}); TL.positions.forEach(function(p){if(p.id===pid){p.submitted=(p.submitted||0)+1;if(p.status==="open")p.status="applied";}}); toast("Marked submitted","The position is now marked applied","ok"); render(); }).catch(function(e){toast("Not saved",e.message,"err");}); return true; }
