@@ -488,6 +488,25 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
 .tl-q summary{cursor:pointer;font-weight:600;font-size:13.5px}
 .tl-q[open] summary{margin-bottom:6px}
 @media(max-width:700px){.tl-ph,.tl-rh{flex-wrap:wrap}.tl-best{margin-left:0}}
+/* odf-insights: Inquiries page (enquiries, website traffic) */
+.iq-list{display:grid;gap:12px}
+.iq-q{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px}
+.iq-q.new{border-color:var(--acl);box-shadow:0 0 0 3px var(--acs)}
+.iq-qh{display:flex;gap:12px;align-items:flex-start}
+.iq-qh select.iq-st{width:140px;flex:none}
+.iq-msg{margin-top:10px;font-size:13.4px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+.iq-note{display:flex;gap:8px;align-items:flex-start;margin-top:10px}
+.iq-note textarea{flex:1;min-height:38px;resize:vertical}
+.iq-chart{display:flex;align-items:flex-end;gap:3px;height:150px;padding-top:6px;border-bottom:1px solid var(--line)}
+.iq-b{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0}
+.iq-b span{display:block;width:100%;border-radius:4px 4px 0 0;background:var(--brand-grad,linear-gradient(180deg,var(--ac),var(--ac2)))}
+.iq-b:hover span{opacity:.75}
+.iq-ax{display:flex;justify-content:space-between;font-size:11.5px;color:var(--tx3);margin-top:6px}
+.iq-split{grid-template-columns:1fr 1fr;margin-top:16px}
+.iq-li{margin-bottom:12px}
+.iq-lt{display:flex;justify-content:space-between;gap:10px;font-size:12.8px;margin-bottom:5px}
+.iq-lt span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:860px){.iq-split{grid-template-columns:1fr}.iq-qh,.iq-note{flex-wrap:wrap}.iq-qh select.iq-st{width:100%}.iq-note .btn{margin-left:auto}}
 /* odf-brand-v3: OraDayForce brand layer (see oradayforce/brand/workplace-theme.css) */
 :root{--brand-grad:linear-gradient(120deg,#4f46e5 0%,#7c3aed 55%,#db2777 100%);--brand-grad-text:linear-gradient(92deg,#4f46e5,#7c3aed 55%,#db2777)}
 [data-t="dark"]{--brand-grad-text:linear-gradient(92deg,#818cf8,#a78bfa 55%,#f472b6)}
@@ -669,7 +688,7 @@ function parseHash(){
  if(h[0]==="agents")return h[1]?{v:"agent",id:h[1]}:{v:"agents"};
  if(h[0]==="chat")return {v:"chat"};
  if(h[0]==="activity")return {v:"activity"};
- if(h[0]==="settings")return {v:"settings"}; if(h[0]==="rfps")return {v:"rfps"}; if(h[0]==="pipeline")return {v:"pipeline"}; if(h[0]==="resourcing")return {v:"resourcing"};
+ if(h[0]==="settings")return {v:"settings"}; if(h[0]==="rfps")return {v:"rfps"}; if(h[0]==="pipeline")return {v:"pipeline"}; if(h[0]==="resourcing")return {v:"resourcing"}; if(h[0]==="inquiries")return {v:"inquiries"};
  return {v:"dash"};
 }
 function go(h){location.hash=h;}
@@ -859,8 +878,8 @@ function sidebar(){
  var r=S.route,d=S.data;
  var items=[["dash","home","Home","#/dashboard",""],["projects","folder","Projects","#/projects",String(d.projects.length)],
   ["knowledge","db","Knowledge Bases","#/knowledge",String(d.documents.length)],["agents","bot","Agents","#/agents",String(d.agents.length)],["rfps","clip","RFPs","#/rfps",R.loaded?String(Math.min(R.items.length,10)):""],["resourcing","users","Resourcing","#/resourcing",RS.loaded?String(RS.requests.filter(function(q){return q.status!=="closed"}).length||""):""],["pipeline","funnel","Pipeline","#/pipeline",LP.loaded?String(LP.items.filter(function(l){return l.status==="new"}).length||""):""],
-  ["activity","act","Activity","#/activity",""],["settings","cog","Settings","#/settings",""]];
- var on={dash:"dash",projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"activity",settings:"settings",rfps:"rfps",pipeline:"pipeline",resourcing:"resourcing"}[r.v];
+  ["activity","act","Activity","#/activity",""],["settings","cog","Settings","#/settings",""]]; if(isAdmin()){iqCountSoon();items.splice(items.length-2,0,["inquiries","send","Inquiries","#/inquiries",IQ.newCount?String(IQ.newCount):""]);}
+ var on={dash:"dash",projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"activity",settings:"settings",rfps:"rfps",pipeline:"pipeline",resourcing:"resourcing",inquiries:"inquiries"}[r.v];
  return '<aside class="sb"><a class="sb-top" href="#/dashboard" style="text-decoration:none;color:inherit" title="Home"><div class="logo">W</div><div class="brand">WorkPlace<span>'+esc(d.organization.name)+'</span></div></a>'+
  '<nav class="sb-nav"><div class="sb-lbl nv-t">WORKSPACE</div>'+
  items.map(function(it){return '<a class="nv'+(on===it[0]?" on":"")+'" href="'+it[3]+'" title="'+attr(it[2])+'">'+ic(it[1],"ic18")+'<span class="nv-t">'+it[2]+'</span>'+(it[4]?'<span class="cnt">'+it[4]+'</span>':'')+'</a>';}).join("")+
@@ -1864,6 +1883,81 @@ function tlAct(a,v){
  render(); return true;
 }
 /* ---- end talent ---- */
+/* ---- odf-insights: Inquiries (administrators). Website traffic for oradayforce.com and trade.oradayforce.com, and the enquiries people leave with the site's chat agent. Talks to WorkPlace Insights API (/svc/insights). ---- */
+var IQ={loaded:false,loading:false,err:null,d:null,newCount:0,counted:false,counting:false,filter:"open",notes:{},busy:null};
+function iapi(action,payload){ var h={"Content-Type":"application/json"}; if(S.token)h.Authorization="Bearer "+S.token;
+ return fetch(API+"/insights",{method:"POST",headers:h,body:JSON.stringify({action:action,payload:payload||{}})}).then(function(r){return r.json().catch(function(){throw new Error("HTTP "+r.status);});})
+  .then(function(j){ if(!j||j.success===false)throw new Error((j&&j.error&&j.error.message)||"Request failed"); return j.data; }); }
+// The sidebar badge: new enquiries, checked once after sign-in and every 5 minutes.
+function iqCountSoon(){ if(IQ.counted||IQ.counting||IQ.loading||!S.token)return; IQ.counting=true;
+ setTimeout(function(){ iapi("inq.count").then(function(d){IQ.counting=false;IQ.counted=true;var n=d.newCount||0;if(n!==IQ.newCount){IQ.newCount=n;render();}}).catch(function(){IQ.counting=false;IQ.counted=true;}); },0); }
+setInterval(function(){ if(IQ.counted&&S.data&&isAdmin()){IQ.counted=false;iqCountSoon();} },300000);
+function iqLoad(){ if(IQ.loading)return; IQ.loading=true;
+ iapi("web.summary").then(function(d){IQ.loading=false;IQ.loaded=true;IQ.err=null;IQ.d=d;IQ.newCount=d.new_count||0;IQ.counted=true;render();})
+ .catch(function(e){IQ.loading=false;IQ.loaded=true;IQ.err=e.message;render();}); }
+function iqById(id){ var l=(IQ.d&&IQ.d.inquiries)||[]; for(var i=0;i<l.length;i++)if(String(l[i].id)===String(id))return l[i]; return null; }
+function iqPhone(m){ var x=/Phone:\s*([+0-9][0-9\s().-]{6,24})/.exec(String(m||"")); return x?x[1].trim():""; }
+function iqNum(n){ return Number(n||0).toLocaleString(); }
+function iqDay(s){ var d=new Date(s+"T12:00:00"); return isNaN(d)?s:d.toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
+function iqChart(series){
+ var max=1; series.forEach(function(p){if(p.views>max)max=p.views;});
+ var bars=series.map(function(p){ var h=p.views?Math.max(4,Math.round(p.views/max*100)):0;
+  return '<div class="iq-b" title="'+attr(iqDay(p.day)+": "+p.views+" page view"+(p.views===1?"":"s")+", "+p.visitors+" visitor"+(p.visitors===1?"":"s"))+'"><span style="height:'+h+'%"></span></div>'; }).join("");
+ return '<div class="iq-chart">'+bars+'</div><div class="iq-ax"><span>'+esc(series.length?iqDay(series[0].day):"")+'</span><span>Peak '+iqNum(max)+' / day</span><span>'+esc(series.length?iqDay(series[series.length-1].day):"")+'</span></div>';
+}
+function iqList(rows,label,key){
+ if(!rows||!rows.length)return '<p class="meta">No visits yet.</p>';
+ var max=1; rows.forEach(function(r){if(r.views>max)max=r.views;});
+ return rows.map(function(r){ return '<div class="iq-li"><div class="iq-lt"><span>'+esc(label(r))+'</span><b>'+iqNum(r.views)+'</b></div><div class="bar"><i style="width:'+Math.max(3,Math.round(r.views/max*100))+'%"></i></div></div>'; }).join("");
+}
+function iqCard(q){
+ var phone=iqPhone(q.message), msg=String(q.message||"").replace(/\n?Phone:\s*[+0-9][0-9\s().-]{6,24}\s*$/,"");
+ var note=IQ.notes.hasOwnProperty(q.id)?IQ.notes[q.id]:(q.note||"");
+ var links=(q.email?'<a class="btn btn-s btn-g" href="mailto:'+attr(q.email)+'?subject='+encodeURIComponent("Your enquiry to OraDayForce")+'">'+ic("send")+esc(q.email)+'</a>':'')+
+  (phone?'<a class="btn btn-s btn-g" href="tel:'+attr(phone.replace(/[^+0-9]/g,""))+'">'+esc(phone)+'</a>':'');
+ return '<div class="iq-q'+(q.status==="new"?" new":"")+'"><div class="iq-qh"><div class="lp-main"><div class="lp-co">'+esc(q.name||"Website visitor")+(q.company?' <span class="meta">· '+esc(q.company)+'</span>':'')+'</div>'+
+  '<div class="meta">'+esc([q.topic,"received "+when(q.created_at)].filter(Boolean).join(" · "))+'</div></div>'+
+  '<select class="inp iq-st" data-iq-status="'+q.id+'"'+(IQ.busy===String(q.id)?' disabled':'')+'>'+["new","contacted","closed"].map(function(s){return '<option value="'+s+'"'+(q.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>';}).join("")+'</select></div>'+
+  '<div class="iq-msg">'+esc(msg)+'</div>'+
+  (links?'<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:10px">'+links+'</div>':'')+
+  '<div class="iq-note"><textarea class="inp" id="iqn-'+q.id+'" data-iq-note="'+q.id+'" rows="2" placeholder="Note for the team, e.g. called on Tuesday, sending a proposal">'+esc(note)+'</textarea>'+
+  '<button class="btn btn-s btn-g" data-a="iqnote" data-v="'+q.id+'"'+(IQ.busy===String(q.id)?' disabled':'')+'>Save note</button></div>'+
+  (q.handled_by?'<div class="meta" style="margin-top:6px">Updated by '+esc(q.handled_by)+' '+esc(when(q.updated_at))+'</div>':'')+'</div>';
+}
+function vInquiries(){
+ if(!isAdmin())return '<div class="card"><div class="emp"><h3>Administrators only</h3><p>Ask an administrator about website enquiries.</p></div></div>';
+ if(!IQ.loaded&&!IQ.loading)setTimeout(iqLoad,0);
+ var head='<div class="card"><div class="card-h"><div><h2>Inquiries</h2><div class="meta">Enquiries left with the chat agent on oradayforce.com, and visits to oradayforce.com and trade.oradayforce.com. Reply from your own mailbox or phone.</div></div>'+
+  '<button class="btn btn-s btn-g" style="margin-left:auto" data-a="iqrefresh"'+(IQ.loading?' disabled':'')+'>'+ic("sync",IQ.loading?"spin":"")+'Refresh</button></div></div>';
+ if(!IQ.loaded)return head+'<div class="card"><div class="emp"><p>'+ic("sync","spin")+' Loading…</p></div></div>';
+ if(IQ.err||!IQ.d)return head+'<div class="card"><div class="emp"><h3>Could not load</h3><p>'+esc(IQ.err||"")+'</p></div></div>';
+ var d=IQ.d, all=d.inquiries||[];
+ var k=[["Today",iqNum(d.today),"clk",iqNum(d.today_visitors)+" visitor"+(d.today_visitors===1?"":"s")],["Last 7 days",iqNum(d.d7),"act",iqNum(d.d7_visitors)+" visitors"],["Last 30 days",iqNum(d.d30),"grid",iqNum(d.d30_visitors)+" visitors"],["New enquiries",iqNum(IQ.newCount),"send",all.length+" in total"]];
+ var kpis='<div class="grid g4" style="margin:12px 0 16px">'+k.map(function(x){return '<div class="card kpi"><div class="top"><span class="ico">'+ic(x[2])+'</span>'+x[0].toUpperCase()+'</div><div class="val">'+esc(x[1])+'</div><div class="fo">'+esc(x[3])+'</div></div>';}).join("")+'</div>';
+ var chart='<div class="card"><div class="card-h"><h2>Page views, last 30 days</h2></div><div class="card-b">'+iqChart(d.series||[])+
+  '<p class="meta" style="margin-top:10px">Each page load counts once. Visitors are counted by a one-way hash of the network address, never the address itself. '+(d.bots30?iqNum(d.bots30)+' visits from bots and link previews in the last 30 days are left out.':'Bots and link previews are left out.')+'</p></div></div>';
+ var SITE={site:"oradayforce.com",trade:"trade.oradayforce.com"};
+ var side='<div class="split iq-split"><div class="card"><div class="card-h"><h2>Where visitors came from</h2></div><div class="card-b">'+iqList(d.referrers,function(r){return r.source;})+'</div></div>'+
+  '<div class="card"><div class="card-h"><h2>Pages</h2></div><div class="card-b">'+iqList(d.sites,function(r){return (SITE[r.site]||r.site)+" · "+r.visitors+" visitor"+(r.visitors===1?"":"s");})+'</div></div></div>';
+ var f=IQ.filter, list=all.filter(function(q){return f==="all"||(f==="new"?q.status==="new":q.status!=="closed");});
+ var seg='<div class="seg" style="margin-left:auto">'+[["open","Open"],["new","New"],["all","All"]].map(function(x){return '<button class="'+(f===x[0]?"on":"")+'" data-a="iqf" data-v="'+x[0]+'">'+x[1]+'</button>';}).join("")+'</div>';
+ var inq='<div class="card" style="margin-top:12px"><div class="card-h"><div><h2>Enquiries</h2><div class="meta">Set a status as you follow up so the team knows who has been answered.</div></div>'+seg+'</div>'+
+  '<div class="card-b">'+(list.length?'<div class="iq-list">'+list.map(iqCard).join("")+'</div>':'<div class="emp"><h3>Nothing here</h3><p>'+(all.length?'No enquiries match this filter.':'Enquiries from the chat agent on oradayforce.com appear here.')+'</p></div>')+'</div></div>';
+ return head+inq+kpis+chart+side;
+}
+function iqSave(id,patch,msg){ IQ.busy=String(id); render();
+ iapi("inq.update",Object.assign({id:Number(id)},patch)).then(function(d){ IQ.busy=null; var l=IQ.d.inquiries; for(var i=0;i<l.length;i++)if(String(l[i].id)===String(id))l[i]=d.inquiry;
+  delete IQ.notes[id]; IQ.newCount=l.filter(function(q){return q.status==="new";}).length; toast(msg,d.inquiry.name||"","ok"); render(); })
+ .catch(function(e){ IQ.busy=null; toast("Not saved",e.message,"err"); render(); }); }
+function iqAct(a,v){
+ if(a==="iqrefresh"){iqLoad();render();return true;}
+ if(a==="iqf"){IQ.filter=v;render();return true;}
+ if(a==="iqnote"){ var q=iqById(v); if(!q)return true; iqSave(v,{note:IQ.notes.hasOwnProperty(v)?IQ.notes[v]:(q.note||"")},"Note saved"); return true; }
+ return false;
+}
+document.addEventListener("input",function(e){ var t=e.target; if(t&&t.getAttribute&&t.getAttribute("data-iq-note"))IQ.notes[t.getAttribute("data-iq-note")]=t.value; });
+document.addEventListener("change",function(e){ var t=e.target; if(t&&t.getAttribute&&t.getAttribute("data-iq-status")){ var id=t.getAttribute("data-iq-status"), q=iqById(id); if(q&&t.value!==q.status)iqSave(id,{status:t.value},"Marked "+t.value); } });
+/* ---- end insights ---- */
 
 
 function view(){
@@ -1873,7 +1967,7 @@ function view(){
  var v=S.route.v,c;
  if(v==="projects")c=vProjects();else if(v==="proj")c=vProject();else if(v==="knowledge")c=vKnowledge();
  else if(v==="agents")c=vAgents();else if(v==="agent")c=vAgent();else if(v==="chat")c=vChat();
- else if(v==="activity")c=vActivity();else if(v==="settings")c=vSettings();else if(v==="rfps")c=vRfps();else if(v==="pipeline")c=vPipeline();else if(v==="resourcing")c=vResourcing();else c=vDash();
+ else if(v==="activity")c=vActivity();else if(v==="settings")c=vSettings();else if(v==="rfps")c=vRfps();else if(v==="pipeline")c=vPipeline();else if(v==="resourcing")c=vResourcing();else if(v==="inquiries")c=vInquiries();else c=vDash();
  return '<div class="shell">'+sidebar()+'<div class="main">'+header()+c+'</div></div>'+tabbar()+
  (document.body.getAttribute("data-drawer")==="1"?'<div class="scrim" data-a="drawer"></div>':"")+teamPanel()+modalHtml()+toastsHtml();
 }
@@ -2040,7 +2134,7 @@ document.addEventListener("click",function(ev){
  if(a==="closemodal"&&ev.target.closest("[data-stop]")&&ev.target!==el)return;
  if(a!=="pop"&&S.pop)S.pop=null;
  if(a!=="modelmenu"&&a!=="selmodel"&&a!=="planinfo"&&S.chat.modelOpen)S.chat.modelOpen=false;
- if(collabAct(a,v)||pipeAct(a,v)||rsAct(a,v)||tlAct(a,v))return; if(a==="modelmenu"){S.chat.modelOpen=!S.chat.modelOpen;render();return;}
+ if(collabAct(a,v)||pipeAct(a,v)||rsAct(a,v)||tlAct(a,v)||iqAct(a,v))return; if(a==="modelmenu"){S.chat.modelOpen=!S.chat.modelOpen;render();return;}
  if(a==="signup"){doSignup();return;}
  if(a==="adminload"){loadRoster();return;}
  if(a==="approve"){adminAct("approve",v);return;}
