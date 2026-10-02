@@ -541,6 +541,42 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
 .am-add .card{box-shadow:none;border:0;margin:0}
 .am-form .fld{margin-bottom:12px}
 @media(max-width:860px){.am-two,.am-ed-grid,.am-danger{grid-template-columns:1fr}.am-uh{flex-wrap:wrap}.am-log{grid-template-columns:1fr;gap:2px}.am-tabs{padding:0 6px}}
+/* odf-buddy: My Buddy helper (floating button and panel) */
+.bd-fab{position:fixed;right:22px;bottom:22px;z-index:85;display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 18px 0 14px;border:0;border-radius:999px;background:var(--brand-grad,linear-gradient(135deg,#4f46e5,#7c3aed));color:#fff;font:inherit;font-weight:650;font-size:14px;box-shadow:0 10px 26px rgba(79,70,229,.35);cursor:pointer}
+.bd-fab[hidden]{display:none}
+.bd-fab:hover{filter:brightness(1.07)}.bd-fab:focus-visible{outline:3px solid var(--acl);outline-offset:2px}
+.bd-fab svg{width:20px;height:20px}
+body.bd-open .bd-fab{display:none}
+body.bd-chat .bd-fab{top:70px;bottom:auto;height:40px;padding:0 14px 0 11px;font-size:13px}
+.bd-p{position:fixed;right:22px;bottom:22px;z-index:86;width:380px;max-width:calc(100vw - 24px);height:min(560px,calc(100vh - 110px));display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 48px rgba(15,23,42,.24);overflow:hidden}
+.bd-p[hidden]{display:none}
+body.bd-chat .bd-p{top:66px;bottom:auto}
+.bd-h{display:flex;align-items:center;gap:10px;padding:12px 10px 12px 14px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,rgba(79,70,229,.09),rgba(124,58,237,.06))}
+.bd-logo{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#fff;background:var(--brand-grad,linear-gradient(135deg,#4f46e5,#7c3aed));flex:none}
+.bd-logo svg{width:18px;height:18px}
+.bd-tt{display:grid;flex:1;min-width:0}.bd-tt b{font-size:14.5px}.bd-tt small{color:var(--tx3);font-size:12px}
+.bd-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px}
+.bd-b{max-width:88%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.bd-b.u{align-self:flex-end;background:var(--ac);color:#fff;border-bottom-right-radius:4px}
+.bd-b.a{align-self:flex-start;background:var(--panel2);border:1px solid var(--line);border-bottom-left-radius:4px}
+.bd-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;white-space:normal}
+.bd-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px}
+.bd-chips:empty{display:none}
+.bd-chip{border:1px solid var(--line2);background:var(--panel);border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;color:var(--tx);cursor:pointer;display:inline-flex;gap:5px;align-items:center}
+.bd-chip:hover,.bd-chip:focus-visible{border-color:var(--ac);color:var(--ac)}
+.bd-chip svg{width:14px;height:14px}
+.bd-f{display:flex;gap:6px;padding:10px;border-top:1px solid var(--line);align-items:center}
+.bd-f input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line2);border-radius:12px;background:var(--panel);color:var(--tx);font:inherit}
+.bd-f input:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.bd-mic.on{background:var(--errs);color:var(--err)}
+.bd-mic[hidden]{display:none}
+.bd-send{width:40px;height:38px;padding:0;justify-content:center;flex:none}
+.bd-note{font-size:11px;color:var(--tx3);text-align:center;padding:0 12px 8px}
+@media(max-width:860px){.bd-fab{right:14px;bottom:calc(74px + env(safe-area-inset-bottom));width:52px;height:52px;padding:0;justify-content:center}.bd-fab span{display:none}.bd-fab svg{width:22px;height:22px}
+ body.bd-chat .bd-fab{top:auto;bottom:calc(140px + env(safe-area-inset-bottom));width:44px;height:44px}
+ .bd-p,body.bd-chat .bd-p{left:8px;right:8px;width:auto;max-width:none;top:auto;bottom:calc(70px + env(safe-area-inset-bottom));height:min(72vh,560px);border-radius:16px}
+ .bd-f input{font-size:16px}}
+@media print{.bd-fab,.bd-p{display:none!important}}
 /* odf-brand-v3: OraDayForce brand layer (see oradayforce/brand/workplace-theme.css) */
 :root{--brand-grad:linear-gradient(120deg,#4f46e5 0%,#7c3aed 55%,#db2777 100%);--brand-grad-text:linear-gradient(92deg,#4f46e5,#7c3aed 55%,#db2777)}
 [data-t="dark"]{--brand-grad-text:linear-gradient(92deg,#818cf8,#a78bfa 55%,#f472b6)}
@@ -2201,6 +2237,135 @@ document.addEventListener("change",function(e){ var t=e.target; if(!t||!t.getAtt
  if((k=t.getAttribute("data-am-pm"))&&AM.pe){tg(AM.pe.memberIds,k,t.checked);render();}
  if((k=t.getAttribute("data-am-ap"))&&AM.ae){tg(AM.ae.projectIds,k,t.checked);render();} });
 /* ---- end admin ---- */
+/* ---- odf-buddy: My Buddy. A helper in the corner of WorkPlace (like Y Buddy on ysquareai.com): type or say what you want ("open positions", "chat with the proposal agent", "add a user", "dark mode") and it takes you there or does it. It only offers what the person's access allows, works without AI, and never deletes or posts anything. ---- */
+var BD={open:false,log:[],rec:null,voice:false,busy:false};
+function bdEsc(t){return esc(String(t==null?"":t));}
+function bdFirst(){var n=S.data&&S.data.user&&S.data.user.name;return n?String(n).trim().split(/\s+/)[0]:"";}
+// Runs an existing WorkPlace action exactly as if its button had been clicked.
+function bdFire(a,v){var b=document.createElement("button");b.type="button";b.setAttribute("data-a",a);if(v!=null)b.setAttribute("data-v",v);b.style.display="none";document.body.appendChild(b);b.click();b.remove();}
+function bdCan(sec){return typeof amAllowed==="function"?amAllowed(sec):true;}
+function bdAdmin(){return typeof amIsAdmin==="function"?amIsAdmin():isAdmin();}
+function bdMatch(list,q,fields){ q=" "+q+" "; var best=null,score=0;
+ (list||[]).forEach(function(x){ var words=fields.map(function(f){return String(x[f]||"");}).join(" ").toLowerCase().replace(/[^a-z0-9 ]+/g," ").split(/\s+/).filter(function(w){return w.length>2&&["agent","the","and","for","project"].indexOf(w)<0;});
+  var sc=words.filter(function(w){return q.indexOf(" "+w)>=0;}).length; if(sc>score){score=sc;best=x;} }); return best; }
+function bdChips(){ var c=[];
+ if(bdCan("agents"))c.push(["Chat with an agent","bot"]);
+ if(bdCan("rfps"))c.push(["Open RFPs","clip"]);
+ if(bdCan("resourcing")){c.push(["Open positions","users"]);c.push(["Upload a resume","up"]);c.push(["Interview prep","brain"]);}
+ if(bdCan("pipeline"))c.push(["Open pipeline","act"]);
+ c.push(["Team chat","send"]);
+ if(bdAdmin()){c.push(["Website enquiries","send"]);c.push(["Add a user","plus"]);}
+ c.push([document.documentElement.getAttribute("data-t")==="dark"?"Light mode":"Dark mode",document.documentElement.getAttribute("data-t")==="dark"?"sun":"moon"]);
+ return c.slice(0,9); }
+function bdGo(hash,sec,label){ if(sec&&!bdCan(sec))return {reply:"You don't have access to "+label+" yet. Ask an administrator if you need it."};
+ go(hash); if(window.innerWidth<760)setTimeout(function(){bdToggle(false);},700); return {reply:"Opening "+label+"."}; }
+function bdChatWith(ag,draft){ if(!bdCan("agents"))return {reply:"You don't have access to the agents yet. Ask an administrator."};
+ S.chat.agentId=ag.id; var pj=(S.data.projects||[]).filter(function(p){return (ag.projectIds||[]).indexOf(p.id)>=0;})[0]; if(pj)S.chat.projectId=pj.id;
+ if(draft)S.chat.draft=draft; go("#/chat"); if(window.innerWidth<760)setTimeout(function(){bdToggle(false);},700);
+ return {reply:"Opening a chat with "+ag.name+(draft?". Your question is in the message box; press send when ready.":".")}; }
+// Understands plain requests. Returns {reply, btns} or null when it has no idea.
+function bdRun(text){
+ var t=" "+String(text||"").toLowerCase().replace(/[“”"’']/g,"").replace(/\s+/g," ").trim()+" ", has=function(re){return re.test(t);};
+ var D=S.data||{};
+ if(has(/^ (hi|hello|hey|thanks|thank you|ok|okay)\b/)&&t.length<18)return {reply:"Happy to help. Tell me where to go or what to do.",chips:true};
+ if(has(/\b(dark|night) (mode|theme)\b|\bgo dark\b/)){ if(document.documentElement.getAttribute("data-t")!=="dark")bdFire("theme"); return {reply:"Dark mode is on."}; }
+ if(has(/\b(light|day) (mode|theme)\b/)){ if(document.documentElement.getAttribute("data-t")==="dark")bdFire("theme"); return {reply:"Light mode is on."}; }
+ if(has(/\bsign ?out\b|\blog ?out\b/))return {reply:"Sign out of WorkPlace?",btns:[["signout","Sign out"]]};
+ if(has(/\bteam chat\b|\bmessage (the )?team\b|\binternal agent\b|\bdirect message\b|\bdm\b/)){ if(!T.open)bdFire("team"); return {reply:"Team chat is open on the right."}; }
+ if(has(/\bnotification/)){ bdFire("pop","notif"); return {reply:"Here are your notifications."}; }
+ var raw=String(text||"").replace(/\s+/g," ").trim();
+ var m=/\b(?:search|find|look for|look up)\s+(?:for\s+)?(.+)$/i.exec(raw);
+ if(m&&!/\b(position|job|rfp|resume|candidate|lead)s?\b/i.test(m[1])){ S.gq=m[1].trim(); render(); var gi=document.getElementById("gsearch"); if(gi)gi.focus(); return {reply:"Searching projects, documents and agents for “"+m[1].trim()+"”. Results are under the search box at the top."}; }
+ // Admin
+ if(bdAdmin()){
+  if(has(/\b(add|create|new|invite)\b.*\buser|\bnew (member|account)\b/)){ AM.showAdd=true; go("#/admin/users"); return {reply:"Here's Add a user, under Admin › Users & access."}; }
+  if(has(/\b(new|create|add)\b.*\bproject\b/)){ go("#/admin/projects"); setTimeout(function(){bdFire("ampnew");},300); return {reply:"Starting a new project in Admin › Projects."}; }
+  if(has(/\b(new|create|add)\b.*\bagent\b/)){ go("#/admin/agents"); setTimeout(function(){bdFire("amanew");},300); return {reply:"Starting a new agent in Admin › Agents."}; }
+  if(has(/\b(access request|approve|pending|sign.?ups?)\b/))return bdGo("#/admin/users","admin","access requests");
+  if(has(/\b(users?|roles?|permissions?|access rights?|power user|members?)\b/)&&!has(/\bteam chat\b/))return bdGo("#/admin/users","admin","Users & access");
+  if(has(/\b(audit|admin log|activity log|who changed)\b/))return bdGo("#/admin/log","admin","the admin activity log");
+  if(has(/\b(inquir|enquir|website (traffic|visit)|visitors|contact requests?)/))return bdGo("#/inquiries","inquiries","website enquiries and traffic");
+  if(has(/\badmin\b/))return bdGo("#/admin","admin","Admin");
+ }
+ // Resourcing
+ if(has(/\b(upload|add)\b.*\bresumes?\b/)){ if(!bdCan("resourcing"))return {reply:"You don't have access to Resourcing yet. Ask an administrator."}; RS.tab="resumes"; go("#/resourcing"); setTimeout(function(){bdFire("tlpick","");},350); return {reply:"Pick the resume file (PDF, Word or text) and I'll add it to Resumes."}; }
+ if(has(/\b(resume writer|write (a |my )?resume|build (a )?resume)\b/)){ RS.tab="writer"; return bdGo("#/resourcing","resourcing","the Resume writer"); }
+ if(has(/\binterview\b|\bprep\b/)){ RS.tab="prep"; return bdGo("#/resourcing","resourcing","Interview prep"); }
+ if(has(/\b(open positions?|positions?|jobs?|contract roles?|openings?|vacanc)/)){ RS.tab="positions"; return bdGo("#/resourcing","resourcing","Open positions"); }
+ if(has(/\bresumes?\b|\bcvs?\b/)){ RS.tab="resumes"; return bdGo("#/resourcing","resourcing","Resumes"); }
+ if(has(/\b(talent pool|candidates?|bench)\b/)){ RS.tab="pool"; return bdGo("#/resourcing","resourcing","the Talent pool"); }
+ if(has(/\b(staffing|resourcing|requests?)\b/)){ RS.tab="requests"; return bdGo("#/resourcing","resourcing","Resourcing"); }
+ // Agents: "chat with the proposal agent", "ask the SQL agent how many suppliers..."
+ var ag=bdMatch(D.agents,t,["name","title"]);
+ if(ag&&has(/\b(chat|talk|ask|open|use|start)\b|\bagent\b/)){ var q=/\b(?:ask|tell)\b.*?\bagent\b\s+(.+)$/i.exec(raw); return bdChatWith(ag,q?q[1]:""); }
+ if(has(/\b(chat with|talk to) (an? )?agent\b|\bagents?\b/))return bdGo("#/agents","agents","Agents");
+ // Projects
+ var pj=bdMatch(D.projects,t,["name","client"]);
+ if(pj&&has(/\b(open|show|go|project|client)\b/)){ if(!bdCan("projects"))return {reply:"You don't have access to Projects yet."}; go("#/projects/"+pj.id); return {reply:"Opening "+pj.name+" ("+pj.client+")."}; }
+ if(has(/\bprojects?\b/))return bdGo("#/projects","projects","Projects");
+ if(has(/\b(knowledge|documents?|docs|files?|upload (a )?document)\b/))return bdGo("#/knowledge","knowledge","Knowledge Bases");
+ if(has(/\b(rfps?|bids?|tenders?|solicitations?|proposals? due)\b/))return bdGo("#/rfps","rfps","RFPs");
+ if(has(/\b(pipeline|leads?|prospects?|deals?)\b/))return bdGo("#/pipeline","pipeline","the Pipeline");
+ if(has(/\b(activity|recent|what happened|history)\b/))return bdGo("#/activity","activity","Activity");
+ if(has(/\b(settings?|profile|my account|plan|password|preferences)\b/))return bdGo("#/settings","","Settings");
+ if(has(/\b(home|dashboard|start|main page)\b/))return bdGo("#/dashboard","","Home");
+ if(has(/\bhelp\b|\bwhat can you do\b|\bshortcuts?\b/))return {reply:"I can open any part of WorkPlace, start a chat with an agent, search, upload a resume, open team chat and switch dark mode"+(bdAdmin()?", and for admins add users, projects and agents":"")+". Just say it, or tap a suggestion.",chips:true};
+ return null;
+}
+function bdHandle(text,spoken){
+ text=String(text||"").replace(/\s+/g," ").trim().slice(0,400); if(!text)return;
+ BD.voice=!!spoken; BD.log.push({r:"u",t:text});
+ var res=null; try{res=bdRun(text);}catch(e){res=null;}
+ if(res){bdSay(res.reply,{btns:res.btns,chips:res.chips});return;}
+ var btns=[]; var know=(S.data&&S.data.agents||[]).filter(function(a){return /knowledge/i.test(a.name);})[0]||(S.data&&S.data.agents||[])[0];
+ if(know&&bdCan("agents"))btns.push(["ask:"+know.id,"Ask "+know.name]);
+ btns.push(["search","Search WorkPlace"]);
+ BD.pending=text;
+ bdSay("I'm not sure where that is. I can pass your question to an agent, or search WorkPlace for it.",{btns:btns,chips:true});
+}
+function bdSay(t,o){o=o||{};BD.log.push({r:"a",t:String(t||""),btns:o.btns||null,chips:!!o.chips});if(BD.log.length>40)BD.log=BD.log.slice(-40);bdPaint();
+ if(BD.voice&&window.speechSynthesis){try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(String(t).slice(0,300));u.lang=navigator.language||"en-US";speechSynthesis.speak(u);}catch(e){}} BD.voice=false;}
+function bdEnsure(){
+ if(!document.getElementById("bd-fab")){ var b=document.createElement("button");b.type="button";b.id="bd-fab";b.className="bd-fab";b.setAttribute("aria-label","Open My Buddy: tell it what you need");b.title="My Buddy - tell it what you need";
+  b.innerHTML=ic("spark")+"<span>My Buddy</span>";b.onclick=function(){bdToggle(true);};document.body.appendChild(b); }
+ if(!document.getElementById("bd-panel")){ var p=document.createElement("div");p.id="bd-panel";p.className="bd-p";p.hidden=true;p.setAttribute("role","dialog");p.setAttribute("aria-label","My Buddy");
+  p.innerHTML='<div class="bd-h"><span class="bd-logo">'+ic("spark")+'</span><span class="bd-tt"><b>My Buddy</b><small>Takes you anywhere in WorkPlace</small></span><button type="button" class="ib" data-bd="close" aria-label="Close My Buddy" title="Close">'+ic("x")+'</button></div>'+
+   '<div class="bd-log" id="bd-log" aria-live="polite"></div><div class="bd-chips" id="bd-chips"></div>'+
+   '<form class="bd-f" id="bd-form"><input id="bd-in" maxlength="400" autocomplete="off" enterkeyhint="send" aria-label="Tell My Buddy what you need" placeholder="Where to, or what should I do?">'+
+   '<button type="button" class="ib bd-mic" id="bd-mic" data-bd="mic" aria-label="Speak to My Buddy" title="Speak"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>'+
+   '<button type="submit" class="btn btn-p bd-send" aria-label="Send" title="Send">'+ic("send")+'</button></form>'+
+   '<div class="bd-note">My Buddy only moves you around WorkPlace. It never deletes or posts anything.</div>';
+  p.addEventListener("keydown",function(e){if(e.key==="Escape"){e.preventDefault();bdToggle(false);}});
+  p.addEventListener("click",function(e){ var el=e.target.closest("[data-bd]"); if(!el)return; e.stopPropagation(); var k=el.getAttribute("data-bd"),v=el.getAttribute("data-v")||"";
+   if(k==="close")bdToggle(false); else if(k==="mic")bdMic(); else if(k==="chip")bdHandle(v,false);
+   else if(k==="btn"){ if(v==="signout"){bdToggle(false);bdFire("signout");} else if(v==="search"){S.gq=BD.pending||"";render();var gi=document.getElementById("gsearch");if(gi)gi.focus();bdSay("Results are under the search box at the top.");}
+    else if(v.indexOf("ask:")===0){var a=(S.data.agents||[]).filter(function(x){return x.id===v.slice(4);})[0];if(a){var r=bdChatWith(a,BD.pending||"");bdSay(r.reply);}} } });
+  p.querySelector("#bd-form").addEventListener("submit",function(e){e.preventDefault();var i=document.getElementById("bd-in");var v=i.value;i.value="";bdHandle(v,false);});
+  document.body.appendChild(p); }
+}
+function bdLogHtml(){ var h=BD.log.map(function(m){ var acts=(m.btns||[]).map(function(b,i){return '<button type="button" class="btn btn-s'+(i===0?" btn-p":" btn-g")+'" data-bd="btn" data-v="'+attr(b[0])+'">'+bdEsc(b[1])+'</button>';}).join("");
+  return '<div class="bd-b '+(m.r==="u"?"u":"a")+'">'+bdEsc(m.t)+(acts?'<div class="bd-acts">'+acts+'</div>':'')+'</div>'; }).join(""); return h; }
+function bdPaint(){ bdEnsure(); var p=document.getElementById("bd-panel"); p.hidden=!BD.open; document.body.classList.toggle("bd-open",BD.open);
+ document.getElementById("bd-fab").hidden=!S.auth; if(!BD.open)return;
+ var lg=document.getElementById("bd-log"); lg.innerHTML=bdLogHtml(); lg.scrollTop=lg.scrollHeight;
+ var last=BD.log[BD.log.length-1]; document.getElementById("bd-chips").innerHTML=(last&&last.r==="a"&&last.chips)?bdChips().map(function(c){return '<button type="button" class="bd-chip" data-bd="chip" data-v="'+attr(c[0])+'">'+ic(c[1])+bdEsc(c[0])+'</button>';}).join(""):"";
+ var mic=document.getElementById("bd-mic"); mic.hidden=!(window.SpeechRecognition||window.webkitSpeechRecognition); mic.classList.toggle("on",!!BD.rec); }
+function bdToggle(force){ BD.open=typeof force==="boolean"?force:!BD.open;
+ if(BD.open&&!BD.log.length){var nm=bdFirst();BD.log.push({r:"a",t:"Hi"+(nm?" "+nm:"")+"! I'm My Buddy. Tell me where to go or what to do, like “open positions”, “chat with the proposal agent”"+(bdAdmin()?" or “add a user”":" or “dark mode”")+".",chips:true});}
+ bdPaint(); if(BD.open)setTimeout(function(){var i=document.getElementById("bd-in");if(i&&window.innerWidth>760)i.focus();},50); else if(BD.rec){try{BD.rec.stop();}catch(e){}} }
+function bdMic(){ var R=window.SpeechRecognition||window.webkitSpeechRecognition; if(!R){toast("This browser can't listen","Type instead","err");return;}
+ if(BD.rec){try{BD.rec.stop();}catch(e){}return;}
+ var r; try{r=new R();}catch(e){return;} BD.rec=r; var heard="";
+ r.lang=navigator.language||"en-US"; r.interimResults=true; r.continuous=false;
+ r.onresult=function(ev){var s="";for(var i=0;i<ev.results.length;i++)s+=ev.results[i][0].transcript;heard=s;var inp=document.getElementById("bd-in");if(inp)inp.value=s;};
+ r.onerror=function(ev){if(ev&&(ev.error==="not-allowed"||ev.error==="service-not-allowed"))toast("Allow the microphone","so you can talk to My Buddy","err");};
+ r.onend=function(){BD.rec=null;bdPaint();var s=heard.trim();if(s){var inp=document.getElementById("bd-in");if(inp)inp.value="";bdHandle(s,true);}};
+ bdPaint(); try{r.start();}catch(e){BD.rec=null;bdPaint();} }
+// Keep the button where it never covers a message box: on chat pages it moves to the top right.
+function bdPlace(){ document.body.classList.toggle("bd-chat",/^#\/chat/.test(location.hash)); var f=document.getElementById("bd-fab"); if(f)f.hidden=!S.auth; }
+window.addEventListener("hashchange",bdPlace);
+setInterval(function(){ if(S.auth&&!document.getElementById("bd-fab"))bdPaint(); bdPlace(); },1500);
+/* ---- end buddy ---- */
 
 
 function view(){
