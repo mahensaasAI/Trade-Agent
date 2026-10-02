@@ -1,0 +1,101 @@
+{
+  "prefix": "vol-dallas-",
+  "city": "Dallas",
+  "entries": [
+    {
+      "key": "temple",
+      "title": "Hanuman Temple",
+      "org": "Karya Siddhi Hanuman Temple",
+      "category": "Community",
+      "location": "Frisco, TX (DFW)",
+      "ages": "12 to 21",
+      "dateText": "Ongoing",
+      "hours": "Flexible, mostly weekends",
+      "blurb": "Seva at the temple: kitchen and annadanam, event setup, parking and crowd help, cleanup, and help at festivals. Sign up on the temple volunteer page.",
+      "urls": [
+        "https://www.dallashanuman.org/volunteer"
+      ]
+    },
+    {
+      "key": "medical",
+      "title": "Hospital volunteering (medical)",
+      "org": "Parkland Health",
+      "category": "Medical",
+      "location": "Dallas, TX",
+      "ages": "12 to 21",
+      "dateText": "Ongoing",
+      "hours": "Shift based, see the site",
+      "blurb": "Volunteer inside Dallas County's public hospital: patient areas, information desks, clinics and student programs. Good exposure for anyone heading into healthcare.",
+      "urls": [
+        "https://www.parklandhealth.org/volunteer",
+        "https://www.parklandhealth.org/get-involved/volunteer",
+        "https://www.bswhealth.com/volunteer"
+      ],
+      "note": "Parkland sets its own minimum age for each program - check the page before you apply."
+    },
+    {
+      "key": "business",
+      "title": "Business and community projects",
+      "org": "United Way of Metropolitan Dallas",
+      "category": "Business",
+      "location": "Dallas, TX",
+      "ages": "12 to 21",
+      "dateText": "Ongoing",
+      "hours": "One-off projects and ongoing roles",
+      "blurb": "Team and individual projects across Dallas: financial coaching, fundraising, school and workforce programs. A practical way to see how a large nonprofit is run.",
+      "urls": [
+        "https://unitedwaydallas.org/volunteer/",
+        "https://www.unitedwaydallas.org/volunteer/"
+      ],
+      "note": "United Way sets a minimum age for some projects - check the page before you apply."
+    },
+    {
+      "key": "law",
+      "title": "Legal aid clinics",
+      "org": "Dallas Volunteer Attorney Program",
+      "category": "Law",
+      "location": "Dallas, TX",
+      "ages": "12 to 21",
+      "dateText": "Ongoing",
+      "hours": "Clinic shifts",
+      "blurb": "Free civil legal aid clinics for low income Dallas residents. Students and non-attorneys help at intake and with case support; attorneys take cases.",
+      "urls": [
+        "https://dallasvolunteerattorneyprogram.org/",
+        "https://www.lanwt.org/volunteer/"
+      ],
+      "note": "Most clinic roles are for law students and attorneys; ask about student support roles."
+    },
+    {
+      "key": "it",
+      "title": "Tech mentoring and STEM events",
+      "org": "Tech Titans",
+      "category": "IT",
+      "location": "Richardson and DFW, TX",
+      "ages": "12 to 21",
+      "dateText": "Ongoing",
+      "hours": "Event based",
+      "blurb": "North Texas technology association: judge and mentor at student STEM events, help run programs, and meet people working in tech across DFW.",
+      "urls": [
+        "https://www.techtitans.org/volunteer",
+        "https://perscholas.org/volunteer/",
+        "https://genesysworks.org/get-involved/"
+      ]
+    },
+    {
+      "key": "relief",
+      "title": "Disaster relief and blood drives",
+      "org": "American Red Cross, North Texas",
+      "category": "Red Cross",
+      "location": "North Texas",
+      "ages": "12 to 21",
+      "dateText": "Ongoing",
+      "hours": "Flexible, on-call for disasters",
+      "blurb": "Disaster response teams, blood drive support, home fire safety visits and service to the armed forces across the North Texas region.",
+      "urls": [
+        "https://www.redcross.org/local/texas/north-texas/volunteer.html",
+        "https://www.redcross.org/volunteer/become-a-volunteer.html"
+      ],
+      "note": "The Red Cross sets a minimum age per role - check the page before you apply."
+    }
+  ]
+}
