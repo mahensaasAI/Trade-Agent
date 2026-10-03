@@ -946,7 +946,7 @@ function tabbar(){
 }
 function sidebar(){
  var r=S.route,d=S.data;
- var items=[["dash","home","Home","#/dashboard",""],["projects","folder","Projects","#/projects",String(d.projects.length)],
+ var items=[["dash","home","Home","#/dashboard",""],["projects","folder","Projects","#/projects",String(liveProjects().length)],
   ["knowledge","db","Knowledge Bases","#/knowledge",String(d.documents.length)],["agents","bot","Agents","#/agents",String(d.agents.length)],["rfps","clip","RFPs","#/rfps",R.loaded?String(Math.min(R.items.length,10)):""],["resourcing","users","Resourcing","#/resourcing",RS.loaded?String(RS.requests.filter(function(q){return q.status!=="closed"}).length||""):""],["pipeline","funnel","Pipeline","#/pipeline",LP.loaded?String(LP.items.filter(function(l){return l.status==="new"}).length||""):""],
   ["activity","act","Activity","#/activity",""],["settings","cog","Settings","#/settings",""]]; if(isAdmin()){iqCountSoon();items.splice(items.length-2,0,["inquiries","send","Inquiries","#/inquiries",IQ.newCount?String(IQ.newCount):""]);} items=items.filter(function(it){return it[0]!=="inquiries"&&amAllowed(AM_VIEW[it[0]]);});
  var on={dash:"dash",projects:"projects",proj:"projects",knowledge:"knowledge",agents:"agents",agent:"agents",chat:"agents",activity:"activity",settings:"settings",rfps:"rfps",pipeline:"pipeline",resourcing:"resourcing",inquiries:"inquiries",admin:"admin"}[r.v];
@@ -987,7 +987,7 @@ function header(){
 function globalResults(){
  if(!S.gq||S.gq.length<2)return "";
  var q=S.gq.toLowerCase(),out=[];
- S.data.projects.forEach(function(p){if((p.name+" "+p.client).toLowerCase().indexOf(q)>=0)out.push(["folder",p.client,p.name,"#/projects/"+p.id]);});
+ liveProjects().forEach(function(p){if((p.name+" "+p.client).toLowerCase().indexOf(q)>=0)out.push(["folder",p.client,p.name,"#/projects/"+p.id]);});
  S.data.agents.forEach(function(a){if((a.name+" "+a.title).toLowerCase().indexOf(q)>=0)out.push(["bot",a.name,a.title,"#/agents/"+a.id]);});
  S.data.documents.forEach(function(d){if(d.name.toLowerCase().indexOf(q)>=0){var p=proj(d.projectId);out.push(["file",d.name,(p?p.client:"")+" · "+d.status,"#/projects/"+d.projectId+"/knowledge"]);}});
  if(!out.length)return '<div class="pop" style="top:40px;left:0;right:auto;width:100%"><div class="pop-i" style="color:var(--tx3)">No matches for "'+esc(S.gq)+'"</div></div>';
@@ -1013,7 +1013,7 @@ function vDash(){
  '<div class="row"><button class="btn" data-a="nav" data-v="#/chat">'+ic("spark")+'Ask an agent</button><button class="btn btn-p" data-a="modal" data-v="newproj">'+ic("plus")+'New Project</button></div></div>'+
  '<div class="grid g4" style="margin-bottom:16px">'+k.map(function(x){return '<div class="card kpi"><div class="top"><span class="ico">'+ic(x[2])+'</span>'+x[0].toUpperCase()+'</div><div class="val">'+esc(x[1])+'</div><div class="fo">'+esc(x[3])+'</div></div>';}).join("")+'</div>'+
  '<div class="split"><div class="card"><div class="card-h"><h2>Recent Projects</h2><button class="btn btn-s btn-g" style="margin-left:auto" data-a="nav" data-v="#/projects">View all'+ic("chev")+'</button></div>'+
- '<div class="card-b grid g2">'+d.projects.slice(0,4).map(projCard).join("")+'</div></div>'+
+ '<div class="card-b grid g2">'+liveProjects().slice(0,4).map(projCard).join("")+'</div></div>'+
  '<div style="display:grid;gap:14px"><div class="card"><div class="card-h"><h2>Agent Utilisation</h2></div><div class="card-b" style="display:grid;gap:12px">'+
  d.agents.slice(0,5).map(function(a){return '<div><div class="row" style="justify-content:space-between;margin-bottom:5px"><span style="font-size:12.5px;font-weight:560">'+esc(a.name)+'</span><span class="meta">'+a.conversations+' convs</span></div><div class="bar"><i style="width:'+Math.min(100,Math.round(a.conversations/1.1))+'%"></i></div></div>';}).join("")+'</div></div>'+
  '<div class="card"><div class="card-h"><h2>Latest Activity</h2><button class="btn btn-s btn-g" style="margin-left:auto" data-a="nav" data-v="#/activity">All'+ic("chev")+'</button></div><div class="card-b"><div class="tl">'+d.activity.slice(0,5).map(actItem).join("")+'</div></div></div>'+
@@ -1032,7 +1032,7 @@ function projCard(p){
 function vProjects(){
  var f=S.proj,list=S.data.projects.slice();
  if(f.q)list=list.filter(function(p){return (p.name+" "+p.client+" "+p.description).toLowerCase().indexOf(f.q.toLowerCase())>=0});
- if(f.status!=="all")list=list.filter(function(p){return p.status===f.status});
+ if(f.status!=="all")list=list.filter(function(p){return p.status===f.status});else list=list.filter(function(p){return p.status!=="archived";});
  if(f.client!=="all")list=list.filter(function(p){return p.client===f.client});
  list.sort(function(a,b){if(f.sort==="name")return a.client.localeCompare(b.client);if(f.sort==="progress")return b.progress-a.progress;if(f.sort==="docs")return b.docCount-a.docCount;return new Date(b.lastActivity)-new Date(a.lastActivity);});
  var body;
@@ -1040,7 +1040,7 @@ function vProjects(){
  else if(f.view==="grid")body='<div class="grid g3">'+list.map(projCard).join("")+'</div>';
  else body='<div class="card tw"><table class="tbl"><thead><tr><th>Client / Project</th><th>Status</th><th>Manager</th><th>Team</th><th>Docs</th><th>Agents</th><th>Progress</th><th>Last activity</th></tr></thead><tbody>'+
   list.map(function(p){return '<tr style="cursor:pointer" data-a="nav" data-v="#/projects/'+p.id+'"><td><div class="row" style="gap:9px"><span class="lg" style="background:'+p.color+';width:28px;height:28px;font-size:10px">'+esc(p.initials)+'</span><span><b>'+esc(p.client)+'</b><br><span class="meta">'+esc(p.name)+'</span></span></div></td><td>'+stBadge(p.status)+'</td><td>'+esc(p.manager)+'</td><td>'+p.team+'</td><td>'+p.docCount+'</td><td>'+p.agentIds.length+'</td><td style="min-width:110px"><div class="bar"><i style="width:'+p.progress+'%"></i></div><span class="meta">'+p.progress+'%</span></td><td class="meta">'+ago(p.lastActivity)+'</td></tr>';}).join("")+'</tbody></table></div>';
- return '<div class="wrap"><div class="row" style="justify-content:space-between;margin-bottom:16px"><div><h1>Projects</h1><p class="sub">'+list.length+' of '+S.data.projects.length+' engagements.</p></div><button class="btn btn-p" data-a="modal" data-v="newproj">'+ic("plus")+'New Project</button></div>'+
+ return '<div class="wrap"><div class="row" style="justify-content:space-between;margin-bottom:16px"><div><h1>Projects</h1><p class="sub">'+list.length+' of '+liveProjects().length+' engagements.'+(f.status==="all"&&archivedCount()?' <span class="meta">'+archivedCount()+' archived hidden; choose Archived in the status filter to see them.</span>':'')+'</p></div><button class="btn btn-p" data-a="modal" data-v="newproj">'+ic("plus")+'New Project</button></div>'+
  '<div class="tool"><div class="srch" style="margin:0;width:min(280px,100%)">'+ic("srch")+'<input class="inp" id="pq" style="padding-left:32px;height:34px" placeholder="Search projects…" value="'+attr(f.q)+'" data-a="pq"></div>'+
  '<select class="inp" style="width:auto;height:34px" data-a="pstatus">'+["all","active","planning","onhold","completed","archived"].map(function(s){return '<option value="'+s+'"'+(f.status===s?" selected":"")+'>'+(s==="all"?"All statuses":s==="onhold"?"On Hold":s.charAt(0).toUpperCase()+s.slice(1))+'</option>';}).join("")+'</select>'+
  '<select class="inp" style="width:auto;height:34px" data-a="pclient"><option value="all">All clients</option>'+S.data.projects.map(function(p){return '<option'+(f.client===p.client?" selected":"")+'>'+esc(p.client)+'</option>';}).join("")+'</select>'+
@@ -1189,7 +1189,7 @@ function vChat(){
  var atts=S.chat.atts.map(function(f,i){return '<span class="chip">'+ic("file")+esc(f.name)+' <span class="meta">'+bytes(f.size)+'</span><button data-a="rmatt" data-v="'+i+'" aria-label="Remove">'+ic("x")+'</button></span>';}).join("");
  return '<div class="chat"><div class="cl"><div class="cl-s"><button class="btn btn-p" style="width:100%" data-a="newconv">'+ic("plus")+'New conversation</button></div><div class="cl-b">'+
  '<div class="sb-lbl">AGENTS</div>'+S.data.agents.map(function(x){return '<button class="ag-i'+(x.id===a.id?" on":"")+'" data-a="selagent" data-v="'+x.id+'"><span class="ai" style="background:'+x.color+'">'+ic(x.icon)+'</span><span style="min-width:0;flex:1"><b>'+esc(x.name)+'</b><small>'+esc(x.title)+'</small></span><span class="stat-dot" style="background:'+(x.status==="active"?"var(--ok)":"var(--line2)")+'"></span></button>';}).join("")+
- '<div class="sb-lbl">PROJECT CONTEXT</div>'+S.data.projects.map(function(x){return '<button class="ag-i'+(x.id===p.id?" on":"")+'" data-a="selproj" data-v="'+x.id+'"><span class="ai" style="background:'+x.color+';font-size:10px;font-weight:700">'+esc(x.initials)+'</span><span style="min-width:0;flex:1"><b>'+esc(x.client)+'</b><small>'+docsOf(x.id).length+' documents</small></span></button>';}).join("")+
+ '<div class="sb-lbl">PROJECT CONTEXT</div>'+liveProjects().map(function(x){return '<button class="ag-i'+(x.id===p.id?" on":"")+'" data-a="selproj" data-v="'+x.id+'"><span class="ai" style="background:'+x.color+';font-size:10px;font-weight:700">'+esc(x.initials)+'</span><span style="min-width:0;flex:1"><b>'+esc(x.client)+'</b><small>'+docsOf(x.id).length+' documents</small></span></button>';}).join("")+
  '</div></div><div class="cmain">'+
  '<div class="chd"><button class="ib mob-only" data-a="cltoggle" aria-label="Agents">'+ic("menu","ic18")+'</button>'+
  '<span class="lg" style="background:'+a.color+';width:34px;height:34px">'+ic(a.icon,"ic18")+'</span>'+
@@ -2377,6 +2377,10 @@ function suRestore(){ var f=S.pub&&S.pub.f; if(!f||S.pub.done||!document.getElem
  suHint(); if(S.pub.focus){ var fe=document.getElementById(S.pub.focus); S.pub.focus=null; if(fe)setTimeout(function(){fe.focus();},0); } }
 document.addEventListener("input",function(e){ var t=e.target; if(!t||!t.id||SU_IDS.indexOf(t.id)<0)return; if(S.pub){ if(!S.pub.f)S.pub.f={}; S.pub.f[t.id]=t.value; } if(t.id==="su_p")suHint(); });
 /* ---- end signup-keep ---- */
+/* ---- odf-hide-archived: archived projects stay out of everyday views ---- */
+function liveProjects(){ return ((S.data&&S.data.projects)||[]).filter(function(p){return p.status!=="archived";}); }
+function archivedCount(){ return ((S.data&&S.data.projects)||[]).length-liveProjects().length; }
+/* ---- end hide-archived ---- */
 
 
 function view(){
