@@ -915,7 +915,7 @@ function vSignup(){
    '<div class="fld"><label class="fl" for="su_e">Work email</label><input class="inp" id="su_e" type="email" autocomplete="email" placeholder="you@oradayforce.com"></div>'+
    '<div class="fld"><label class="fl" for="su_r">Job title</label><input class="inp" id="su_r" placeholder="Delivery Consultant"></div>'+
    '<div class="row2">'+
-    '<div class="fld"><label class="fl" for="su_p">Password</label><input class="inp" id="su_p" type="password" autocomplete="new-password" placeholder="At least 10 characters"></div>'+
+    '<div class="fld"><label class="fl" for="su_p">Password</label><input class="inp" id="su_p" type="password" autocomplete="new-password" placeholder="At least 10 characters"><div class="meta" id="su_hint" style="margin-top:5px">At least 10 characters</div></div>'+
     '<div class="fld"><label class="fl" for="su_p2">Confirm password</label><input class="inp" id="su_p2" type="password" autocomplete="new-password" placeholder="Repeat it"></div>'+
    '</div>'+
    '<div class="fld"><label class="fl" for="su_note">Why do you need access? <span class="meta">(optional, helps the administrator decide)</span></label>'+
@@ -2366,6 +2366,17 @@ function bdPlace(){ document.body.classList.toggle("bd-chat",/^#\/chat/.test(loc
 window.addEventListener("hashchange",bdPlace);
 setInterval(function(){ if(S.auth&&!document.getElementById("bd-fab"))bdPaint(); bdPlace(); },1500);
 /* ---- end buddy ---- */
+/* ---- odf-signup-keep: the access request form keeps what was typed when it shows an error ---- */
+var SU_IDS=["su_n","su_e","su_r","su_note","su_p","su_p2"];
+function suKeep(){ var f={}; SU_IDS.forEach(function(id){ var el=document.getElementById(id); if(el)f[id]=el.value; }); S.pub.f=f; }
+function suHint(){ var el=document.getElementById("su_p"), h=document.getElementById("su_hint"); if(!el||!h)return; var n=el.value.length;
+ h.textContent=n?(n>=10?"\u2713 "+n+" characters":n+" of 10 characters"):"At least 10 characters"; h.style.color=n&&n<10?"var(--warn)":n>=10?"var(--ok)":""; }
+function suRestore(){ var f=S.pub&&S.pub.f; if(!f||S.pub.done||!document.getElementById("su_n"))return;
+ if(S.pub.pwBad){ f.su_p=""; f.su_p2=""; S.pub.pwBad=false; }
+ SU_IDS.forEach(function(id){ var el=document.getElementById(id); if(el&&f[id]!=null&&el.value!==f[id])el.value=f[id]; });
+ suHint(); if(S.pub.focus){ var fe=document.getElementById(S.pub.focus); S.pub.focus=null; if(fe)setTimeout(function(){fe.focus();},0); } }
+document.addEventListener("input",function(e){ var t=e.target; if(!t||!t.id||SU_IDS.indexOf(t.id)<0)return; if(S.pub){ if(!S.pub.f)S.pub.f={}; S.pub.f[t.id]=t.value; } if(t.id==="su_p")suHint(); });
+/* ---- end signup-keep ---- */
 
 
 function view(){
@@ -2385,7 +2396,7 @@ function render(){
  try{ss=ae.selectionStart;se=ae.selectionEnd;}catch(e){}
  var keep=document.querySelector("[data-keepscroll]"),sc=keep?keep.scrollTop:null;
  var atBot=keep?(keep.scrollHeight-keep.scrollTop-keep.clientHeight<80):true;
- document.getElementById("app").innerHTML=view();
+ document.getElementById("app").innerHTML=view();suRestore();
  if(aid){var el=document.getElementById(aid);if(el){el.focus();try{el.setSelectionRange(ss,se);}catch(e){}}}
  var nk=document.querySelector("[data-keepscroll]");
  if(nk){var n=(S.data&&S.chat.agentId)?getConv().msgs.length:0;
@@ -2483,19 +2494,19 @@ function doLogin(){
 function doSignup(){
  var g=function(id){var el=document.getElementById(id);return el?String(el.value||""):"";};
  var name=g("su_n").trim(),email=g("su_e").trim(),role=g("su_r").trim();
- var p1=g("su_p"),p2=g("su_p2"),note=g("su_note").trim();
- if(!name||!email||!p1){S.pub.err="Name, work email and password are all required.";render();return;}
- if(p1!==p2){S.pub.err="The two passwords do not match.";render();return;}
- if(p1.length<10){S.pub.err="Choose a password of at least 10 characters.";render();return;}
+ var p1=g("su_p"),p2=g("su_p2"),note=g("su_note").trim(); suKeep(); S.pub.pwBad=false; S.pub.focus=null;
+ if(!name||!email||!p1){S.pub.err="Name, work email and password are all required.";S.pub.focus=!name?"su_n":!email?"su_e":"su_p";render();return;}
+ if(p1!==p2){S.pub.err="The two passwords do not match. Please enter them again.";S.pub.pwBad=true;S.pub.focus="su_p";render();return;}
+ if(p1.length<10){S.pub.err="Choose a password of at least 10 characters. Your other details are kept.";S.pub.pwBad=true;S.pub.focus="su_p";render();return;}
  S.pub.busy=true;S.pub.err=null;render();
  fetch(API+"/signup",{method:"POST",headers:{"Content-Type":"application/json"},
   body:JSON.stringify({name:name,email:email,role:role,password:p1,note:note})})
  .then(function(r){return r.json();})
  .then(function(j){
   S.pub.busy=false;
-  if(!j||!j.success){S.pub.err=(j&&j.error&&j.error.message)||"The request could not be sent.";render();return;}
+  if(!j||!j.success){S.pub.err=(j&&j.error&&j.error.message)||"The request could not be sent.";if(/password/i.test(S.pub.err)){S.pub.pwBad=true;S.pub.focus="su_p";}render();return;}
   S.pub.done={name:(j.data||{}).name||name,email:(j.data||{}).email||email,message:(j.data||{}).message||""};
-  S.pub.err=null;render();
+  S.pub.err=null;S.pub.f=null;render();
  }).catch(function(x){S.pub.busy=false;S.pub.err="Could not reach the sign-up service. "+x.message;render();});
 }
 function adminApi(body){
