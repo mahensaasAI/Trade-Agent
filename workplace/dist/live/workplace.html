@@ -488,25 +488,6 @@ label.fl{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bo
 .tl-q summary{cursor:pointer;font-weight:600;font-size:13.5px}
 .tl-q[open] summary{margin-bottom:6px}
 @media(max-width:700px){.tl-ph,.tl-rh{flex-wrap:wrap}.tl-best{margin-left:0}}
-/* odf-insights: Inquiries page (enquiries, website traffic) */
-.iq-list{display:grid;gap:12px}
-.iq-q{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px}
-.iq-q.new{border-color:var(--acl);box-shadow:0 0 0 3px var(--acs)}
-.iq-qh{display:flex;gap:12px;align-items:flex-start}
-.iq-qh select.iq-st{width:140px;flex:none}
-.iq-msg{margin-top:10px;font-size:13.4px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
-.iq-note{display:flex;gap:8px;align-items:flex-start;margin-top:10px}
-.iq-note textarea{flex:1;min-height:38px;resize:vertical}
-.iq-chart{display:flex;align-items:flex-end;gap:3px;height:150px;padding-top:6px;border-bottom:1px solid var(--line)}
-.iq-b{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0}
-.iq-b span{display:block;width:100%;border-radius:4px 4px 0 0;background:var(--brand-grad,linear-gradient(180deg,var(--ac),var(--ac2)))}
-.iq-b:hover span{opacity:.75}
-.iq-ax{display:flex;justify-content:space-between;font-size:11.5px;color:var(--tx3);margin-top:6px}
-.iq-split{grid-template-columns:1fr 1fr;margin-top:16px}
-.iq-li{margin-bottom:12px}
-.iq-lt{display:flex;justify-content:space-between;gap:10px;font-size:12.8px;margin-bottom:5px}
-.iq-lt span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media(max-width:860px){.iq-split{grid-template-columns:1fr}.iq-qh,.iq-note{flex-wrap:wrap}.iq-qh select.iq-st{width:100%}.iq-note .btn{margin-left:auto}}
 /* odf-admin: Admin page (overview, users and access, projects, agents, log) */
 .am-tabs{display:flex;gap:4px;padding:0 14px;border-top:1px solid var(--line);overflow-x:auto}
 .am-tabs button{border:0;background:none;padding:11px 12px;font-size:13px;font-weight:580;color:var(--tx2);cursor:pointer;display:flex;align-items:center;gap:7px;border-bottom:2px solid transparent;white-space:nowrap}
@@ -577,6 +558,25 @@ body.bd-chat .bd-p{top:66px;bottom:auto}
  .bd-p,body.bd-chat .bd-p{left:8px;right:8px;width:auto;max-width:none;top:auto;bottom:calc(70px + env(safe-area-inset-bottom));height:min(72vh,560px);border-radius:16px}
  .bd-f input{font-size:16px}}
 @media print{.bd-fab,.bd-p{display:none!important}}
+/* odf-insights: Inquiries page (enquiries, website traffic) */
+.iq-list{display:grid;gap:12px}
+.iq-q{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px}
+.iq-q.new{border-color:var(--acl);box-shadow:0 0 0 3px var(--acs)}
+.iq-qh{display:flex;gap:12px;align-items:flex-start}
+.iq-qh select.iq-st{width:140px;flex:none}
+.iq-msg{margin-top:10px;font-size:13.4px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+.iq-note{display:flex;gap:8px;align-items:flex-start;margin-top:10px}
+.iq-note textarea{flex:1;min-height:38px;resize:vertical}
+.iq-chart{display:flex;align-items:flex-end;gap:3px;height:150px;padding-top:6px;border-bottom:1px solid var(--line)}
+.iq-b{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0}
+.iq-b span{display:block;width:100%;border-radius:4px 4px 0 0;background:var(--brand-grad,linear-gradient(180deg,var(--ac),var(--ac2)))}
+.iq-b:hover span{opacity:.75}
+.iq-ax{display:flex;justify-content:space-between;font-size:11.5px;color:var(--tx3);margin-top:6px}
+.iq-split{grid-template-columns:1fr 1fr;margin-top:16px}
+.iq-li{margin-bottom:12px}
+.iq-lt{display:flex;justify-content:space-between;gap:10px;font-size:12.8px;margin-bottom:5px}
+.iq-lt span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:860px){.iq-split{grid-template-columns:1fr}.iq-qh,.iq-note{flex-wrap:wrap}.iq-qh select.iq-st{width:100%}.iq-note .btn{margin-left:auto}}
 /* odf-brand-v3: OraDayForce brand layer (see oradayforce/brand/workplace-theme.css) */
 :root{--brand-grad:linear-gradient(120deg,#4f46e5 0%,#7c3aed 55%,#db2777 100%);--brand-grad-text:linear-gradient(92deg,#4f46e5,#7c3aed 55%,#db2777)}
 [data-t="dark"]{--brand-grad-text:linear-gradient(92deg,#818cf8,#a78bfa 55%,#f472b6)}
@@ -1962,6 +1962,9 @@ function iapi(action,payload){ var h={"Content-Type":"application/json"}; if(S.t
 function iqCountSoon(){ if(IQ.counted||IQ.counting||IQ.loading||!S.token)return; IQ.counting=true;
  setTimeout(function(){ iapi("inq.count").then(function(d){IQ.counting=false;IQ.counted=true;var n=d.newCount||0;if(n!==IQ.newCount){IQ.newCount=n;render();}}).catch(function(){IQ.counting=false;IQ.counted=true;}); },0); }
 setInterval(function(){ if(IQ.counted&&S.data&&isAdmin()){IQ.counted=false;iqCountSoon();} },300000);
+// Mark this browser as a WorkPlace member across *.oradayforce.com, so website traffic stats can leave members out.
+function iqMember(){ try{ if(S.auth&&S.data&&/(^|\.)oradayforce\.com$/.test(location.hostname)&&document.cookie.indexOf("odf_member=1")<0)document.cookie="odf_member=1; Domain=.oradayforce.com; Path=/; Max-Age=31536000; SameSite=Lax; Secure"; }catch(e){} }
+setInterval(iqMember,5000);
 function iqLoad(){ if(IQ.loading)return; IQ.loading=true;
  iapi("web.summary").then(function(d){IQ.loading=false;IQ.loaded=true;IQ.err=null;IQ.d=d;IQ.newCount=d.new_count||0;IQ.counted=true;render();})
  .catch(function(e){IQ.loading=false;IQ.loaded=true;IQ.err=e.message;render();}); }
@@ -2006,14 +2009,23 @@ function vInquiries(){
  var kpis='<div class="grid g4" style="margin:12px 0 16px">'+k.map(function(x){return '<div class="card kpi"><div class="top"><span class="ico">'+ic(x[2])+'</span>'+x[0].toUpperCase()+'</div><div class="val">'+esc(x[1])+'</div><div class="fo">'+esc(x[3])+'</div></div>';}).join("")+'</div>';
  var chart='<div class="card"><div class="card-h"><h2>Page views, last 30 days</h2></div><div class="card-b">'+iqChart(d.series||[])+
   '<p class="meta" style="margin-top:10px">Each page load counts once. Visitors are counted by a one-way hash of the network address, never the address itself. '+(d.bots30?iqNum(d.bots30)+' visits from bots and link previews in the last 30 days are left out.':'Bots and link previews are left out.')+'</p></div></div>';
- var SITE={site:"oradayforce.com",trade:"trade.oradayforce.com"};
+ var SITE={site:"oradayforce.com",trade:"trade.oradayforce.com",buddy:"mybuddy.oradayforce.com",ybuddy:"ybuddy.ysquareai.com"};
  var side='<div class="split iq-split"><div class="card"><div class="card-h"><h2>Where visitors came from</h2></div><div class="card-b">'+iqList(d.referrers,function(r){return r.source;})+'</div></div>'+
   '<div class="card"><div class="card-h"><h2>Pages</h2></div><div class="card-b">'+iqList(d.sites,function(r){return (SITE[r.site]||r.site)+" · "+r.visitors+" visitor"+(r.visitors===1?"":"s");})+'</div></div></div>';
+ // External visitors: everything above minus WorkPlace members (member cookie, or a network a member has used).
+ var x=d.ext||null, ext='';
+ if(x){ var ek=[["Today",iqNum(x.today),"clk",iqNum(x.today_visitors)+" visitor"+(x.today_visitors===1?"":"s")],["Last 7 days",iqNum(x.d7),"act",iqNum(x.d7_visitors)+" visitors"],["Last 30 days",iqNum(x.d30),"grid",iqNum(x.d30_visitors)+" visitors"]];
+  ext='<div class="card iq-ext" style="margin-top:16px"><div class="card-h"><div><h2>External visitors</h2><div class="meta">People outside OraDayForce: visits from registered WorkPlace members are left out.</div></div><span class="bg b-ac" style="margin-left:auto">EXCLUDES MEMBERS</span></div><div class="card-b">'+
+   '<div class="grid g3" style="margin-bottom:14px">'+ek.map(function(k){return '<div class="card kpi"><div class="top"><span class="ico">'+ic(k[2])+'</span>'+k[0].toUpperCase()+'</div><div class="val">'+esc(k[1])+'</div><div class="fo">'+esc(k[3])+'</div></div>';}).join("")+'</div>'+
+   iqChart(x.series||[])+
+   '<div class="split iq-split" style="margin-top:14px"><div><h3 style="margin:0 0 10px;font-size:14px">Where they came from</h3>'+iqList(x.referrers,function(r){return r.source;})+'</div><div><h3 style="margin:0 0 10px;font-size:14px">Pages they opened</h3>'+iqList(x.sites,function(r){return (SITE[r.site]||r.site)+" · "+r.visitors+" visitor"+(r.visitors===1?"":"s");})+'</div></div>'+
+   '<p class="meta" style="margin-top:10px">'+iqNum(x.member_views30)+' member page view'+(x.member_views30===1?' was':'s were')+' left out in the last 30 days. A browser counts as a member once someone signs in to WorkPlace on it; visits from the same network as a member are left out too.</p></div></div>'; }
  var f=IQ.filter, list=all.filter(function(q){return f==="all"||(f==="new"?q.status==="new":q.status!=="closed");});
  var seg='<div class="seg" style="margin-left:auto">'+[["open","Open"],["new","New"],["all","All"]].map(function(x){return '<button class="'+(f===x[0]?"on":"")+'" data-a="iqf" data-v="'+x[0]+'">'+x[1]+'</button>';}).join("")+'</div>';
  var inq='<div class="card" style="margin-top:12px"><div class="card-h"><div><h2>Enquiries</h2><div class="meta">Set a status as you follow up so the team knows who has been answered.</div></div>'+seg+'</div>'+
   '<div class="card-b">'+(list.length?'<div class="iq-list">'+list.map(iqCard).join("")+'</div>':'<div class="emp"><h3>Nothing here</h3><p>'+(all.length?'No enquiries match this filter.':'Enquiries from the chat agent on oradayforce.com appear here.')+'</p></div>')+'</div></div>';
- return head+inq+kpis+chart+side;
+ var allHead='<h2 style="margin:22px 0 0;font-size:17px">All traffic <span class="meta" style="font-weight:500">including WorkPlace members</span></h2>';
+ return head+inq+ext+allHead+kpis+chart+side;
 }
 function iqSave(id,patch,msg){ IQ.busy=String(id); render();
  iapi("inq.update",Object.assign({id:Number(id)},patch)).then(function(d){ IQ.busy=null; var l=IQ.d.inquiries; for(var i=0;i<l.length;i++)if(String(l[i].id)===String(id))l[i]=d.inquiry;
