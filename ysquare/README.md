@@ -61,6 +61,8 @@ Callers send either `X-Guest-Id: guest-...` (free version) or `Authorization: Be
 | Y Square - Event Admin | `POST /svc/events-admin`: `events.admin_list` (admins: every event with its people, tasks, updates and chat counts) and `events.delete` (admins any event; organisers - signed in, or the guest who created it - their own). Removes the event with its tasks, updates, chat and members and notifies the other members (`event_removed`) |
 | Y Square - DB Update v44b (interest track) | Manual, idempotent: `ys_interest.track` |
 | Y Square - Account Basics | `POST /svc/me`: the signed-in person's own name and month and year of birth (same session check as Y Square Services), so the Athlete Edge profile form can be filled in for them |
+| Y Square - Follow Y Square | `POST /svc/follow`: `follow.list` and `follow.hit` for everyone (live posts; page visits, posts shown and played, Instagram and Follow taps, each viewer once a day), and for admins `follow.admin_list`, `follow.save`, `follow.toggle` (pin, hide), `follow.order`, `follow.delete`, `follow.prefs` (account, intro, on/off, hide from under-13s). Admin changes go to the activity log |
+| Y Square - DB Update Follow v1 | Manual, idempotent: `ys_follow_posts`, `ys_follow_stats`, `ys_follow_seen`, `ys_follow_prefs` |
 
 The SDK code that created each workflow is in `dist/workflows/*.sdk.js`, generated from the sources below.
 
@@ -210,6 +212,25 @@ number so it cannot clash with the next numbered block.
   **Admin > Events** tab (every event, "looks unused" = nobody else joined and no tasks, updates or chat, with one
   button to delete all unused ones) and a "Delete (admin)" button on events they are in but not organising.
   Deleting cannot be undone; setting the status to cancelled keeps the history instead.
+
+## Follow Y Square (Instagram)
+
+`yfl` block (source `ui/yfl_follow.js`, placed after `yat` and before `ysa`), Y Square Community > Follow Y Square (`#/follow`):
+
+- **What people see**: Y Square's promotional announcements and reels from Instagram, pinned ones first, with a Follow
+  button for the account, filters (All / Announcements / Reels and shorts) and an optional button under each post that
+  leads to a Y Square page (Startups, Events, ...). Each post is a placeholder until it is tapped; only then does
+  Instagram's player load (it sets its own cookies). "Always load on this device" loads them all. A loaded player keeps
+  playing when the page redraws (it is parked and moved back, not rebuilt).
+- **Under 13**: members under 13 see a short note instead of the posts while "hide from under-13s" is on (default).
+- **Admin > Follow Y Square**: add a post by pasting its Instagram link (post or reel; the link is checked and cut down
+  to `instagram.com/p|reel/<code>/`), with title, short description, optional button, show from / until, pin and
+  "keep hidden". Each post can be edited, pinned, hidden or shown, moved up or down and deleted. Settings: the Instagram
+  username, the intro, the section on or off (off: only admins see it) and the under-13 rule. Numbers: page visits
+  (7 and 30 days), posts played, Follow taps, and per post how often it was shown, played and opened on Instagram.
+  These are counted on ysquareai.com; Instagram's own likes and views stay in Instagram Insights.
+- **Publishing**: post the reel or announcement on Instagram first, then add its link here. Publishing to Instagram
+  from Y Square would need a Meta app with the Instagram content publishing permission (not set up).
 
 ## Athlete Edge for every age
 
