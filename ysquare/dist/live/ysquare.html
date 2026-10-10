@@ -2551,7 +2551,7 @@ vEvents=function(){
 A.joinEvent=function(form){
  var o=fd(form);busyBtn(form,true);
  api("events.join",{code:o.code}).then(function(d){
-  toast(d.pending===true?"Request sent. The organiser of "+d.title+" needs to approve you.":"Joined "+d.title,"ok");
+  if(d.waitlist)capShowFull(d);else toast(d.pending===true?"Request sent. The organiser of "+d.title+" needs to approve you.":"Joined "+d.title,"ok");
   S.event=null;return api("events.list").then(function(l){S.boot.events=l;go("#/events/"+d.eventId);});
  }).catch(function(e){toast(e.message,"err");busyBtn(form,false);});
  return false;
@@ -4281,8 +4281,1382 @@ render=function(){
   b.classList.toggle("ych",sp||!!document.querySelector(".content .sqview, .content .apview"));b.classList.toggle("ych-sp",sp);}catch(e){}
  return r;
 };
+// ---- v45: Class work, student email suggestions for coaches, and Y Guide ---------------------------------------------
+// 1. Class work (ycw): a card beside "Playground downloads" in the Middle School and High School AI Playground. Students
+//    in the class (and coaches) share their own work - PDF, Word, PowerPoint or a picture, up to 10 MB - with the small
+//    Upload button in the card's top corner. Everyone in the class sees every upload in the same rows as the downloads
+//    (preview and download), with "Uploaded by <name>" under each. Coaches and admins can delete any upload (the student
+//    gets a notice in the bell); students can delete their own. POST /svc/classwork (workflow "Y Square - Class Work",
+//    table ys_pg_work) with the same access rule as the rest of the AI Playground.
+// 2. Email suggestions (ysg): in Coach Tools > Middle School / High School, typing in the "approve a student" box lists
+//    registered accounts whose email or name starts with what was typed (for example "sat"), with a badge when they are
+//    already approved or have not confirmed their email yet. Arrow keys and Enter pick one; the coach still presses
+//    Approve. Same endpoint, people.suggest (coaches and admins only, at least 2 characters, 8 results).
+// 3. Y Guide (ygd): a helper in the corner of every page (in the top bar on the chat pages, so it never covers the message
+//    box). People type or say what they want ("open StudyPals", "create a pizza party on Saturday at 5pm", "upload my
+//    class work", "dark mode"). Clear commands run here straight away; anything else goes to the agent-guide agent (a free
+//    model) with the list of places this person can open, built from their own menu. It only helps people find things in
+//    Y Square: other questions get a one-line refusal and, when it fits, a button to the right agent. It can open pages,
+//    the sign-in page, Agent Planner (filled in with what they said), the class work upload, the account menu and the
+//    theme switch - nothing else.
+(function(){var st=document.createElement("style");st.id="v45css";st.textContent=
+ ".ycw .bd{max-height:440px;overflow-y:auto}"+
+ ".ycw .hd .ycw-n{margin-right:2px}"+
+ ".ycw-up{gap:4px;flex:none}"+
+ ".ycw-up svg{width:14px;height:14px}"+
+ ".ycw .mat .btn{flex:none}"+
+ ".ycw .ycw-by{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}"+
+ ".ycw-busy .t b{color:var(--tx2)}"+
+ ".ycw-spin{width:18px;height:18px;border:2px solid var(--line2);border-top-color:var(--ac);border-radius:50%;animation:ycwspin .8s linear infinite;flex:none;margin-right:6px}"+
+ "@keyframes ycwspin{to{transform:rotate(360deg)}}"+
+ ".ysg{position:fixed;z-index:65;background:var(--panel);border:1px solid var(--line2);border-radius:12px;box-shadow:0 12px 32px rgba(15,23,42,.18);padding:4px;max-height:min(360px,60vh);overflow-y:auto;max-width:calc(100vw - 16px);box-sizing:border-box}"+
+ ".ysg[hidden]{display:none}"+
+ ".ysg-o{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;cursor:pointer}"+
+ ".ysg-o:hover,.ysg-o.on{background:var(--acs)}"+
+ ".ysg-o .av{width:30px;height:30px;font-size:11px}"+
+ ".ysg-t{display:grid;min-width:0;flex:1}.ysg-t b{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}"+
+ ".ysg-t small{color:var(--tx2);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}"+
+ ".ysg mark{background:transparent;color:var(--ac);font-weight:700}"+
+ ".ysg-o.added{opacity:.78}"+
+ ".ysg-none{padding:10px 12px;color:var(--tx3);font-size:12.5px}"+
+ ".ygd-fab{position:fixed;right:22px;bottom:22px;z-index:45;display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 18px 0 14px;border:0;border-radius:999px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font:inherit;font-weight:650;font-size:14px;box-shadow:0 10px 26px rgba(79,70,229,.35);cursor:pointer}"+
+ ".ygd-fab:hover{filter:brightness(1.07)}.ygd-fab:focus-visible{outline:3px solid var(--acl);outline-offset:2px}"+
+ ".ygd-fab svg{width:20px;height:20px}"+
+ "body.ych .ygd-fab,body.ygd-open .ygd-fab{display:none}"+
+ ".ygd-hbtn{display:none}"+
+ "body.ych .ygd-hbtn{display:inline-flex;gap:6px;align-items:center}"+
+ ".ygd-p{position:fixed;right:22px;bottom:22px;z-index:46;width:380px;max-width:calc(100vw - 24px);height:min(560px,calc(100vh - 110px));display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 48px rgba(15,23,42,.24);overflow:hidden}"+
+ ".ygd-p[hidden]{display:none}"+
+ "body.ych .ygd-p{top:66px;bottom:auto}"+
+ ".ygd-h{display:flex;align-items:center;gap:10px;padding:12px 10px 12px 14px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,rgba(79,70,229,.09),rgba(124,58,237,.06))}"+
+ ".ygd-logo{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#4f46e5,#7c3aed);flex:none}"+
+ ".ygd-logo svg{width:18px;height:18px}"+
+ ".ygd-h .ygd-tt{flex:1;min-width:0}.ygd-h b{display:block;font-size:14.5px}.ygd-h small{display:block;color:var(--tx2);font-size:12px}"+
+ ".ygd-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px}"+
+ ".ygd-b{max-width:88%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-break:break-word}"+
+ ".ygd-b.u{align-self:flex-end;background:var(--ac);color:#fff;border-bottom-right-radius:4px}"+
+ ".ygd-b.a{align-self:flex-start;background:var(--panel2);border:1px solid var(--line);border-bottom-left-radius:4px}"+
+ ".ygd-b.e{border-color:var(--err);background:var(--errs)}"+
+ ".ygd-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;white-space:normal}"+
+ ".ygd-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px}"+
+ ".ygd-chip{border:1px solid var(--line2);background:var(--panel);border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;color:var(--tx);cursor:pointer;display:inline-flex;gap:5px;align-items:center}"+
+ ".ygd-chip:hover,.ygd-chip:focus-visible{border-color:var(--ac);color:var(--ac)}"+
+ ".ygd-chip svg{width:14px;height:14px}"+
+ ".ygd-f{display:flex;gap:6px;padding:10px;border-top:1px solid var(--line);align-items:center}"+
+ ".ygd-f input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line2);border-radius:12px;background:var(--panel);color:var(--tx);font:inherit}"+
+ ".ygd-f input:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}"+
+ ".ygd-f .btn.icon{flex:none}"+
+ ".ygd-mic.on{background:var(--errs);color:var(--err);border-color:var(--err)}"+
+ ".ygd-typing{align-self:flex-start;display:inline-flex;gap:4px;padding:11px 12px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)}"+
+ ".ygd-typing i{width:6px;height:6px;border-radius:50%;background:var(--tx3);animation:ygdb 1s infinite ease-in-out}"+
+ ".ygd-typing i:nth-child(2){animation-delay:.15s}.ygd-typing i:nth-child(3){animation-delay:.3s}"+
+ "@keyframes ygdb{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}"+
+ ".ygd-note{font-size:11px;color:var(--tx3);text-align:center;padding:0 12px 8px}"+
+ "body:not(.ych) .toasts{bottom:84px}"+
+ "@media (min-width:761px){body:not(.ych) .content{padding-bottom:84px}}"+
+ "@media (max-width:760px){"+
+  ".ygd-fab{right:14px;bottom:calc(70px + env(safe-area-inset-bottom));height:52px;width:52px;padding:0;justify-content:center}"+
+  ".ygd-fab span{display:none}.ygd-fab svg{width:22px;height:22px}"+
+  ".ygd-p{left:8px;right:8px;width:auto;max-width:none;bottom:calc(66px + env(safe-area-inset-bottom));height:min(72vh,560px);border-radius:16px}"+
+  "body.ych .ygd-p{top:auto;bottom:calc(66px + env(safe-area-inset-bottom))}"+
+  "body:not(.ych) .content{padding-bottom:calc(140px + env(safe-area-inset-bottom))}"+
+  "body:not(.ych) .toasts{bottom:calc(132px + env(safe-area-inset-bottom))}"+
+  ".ygd-hbtn span{display:none}"+
+  ".ygd-f input{font-size:16px}"+
+ "}"+
+ "@media print{.ygd-fab,.ygd-p,.ysg{display:none!important}}";
+ document.head.appendChild(st);})();
+if(typeof NT_KIND!=="undefined")NT_KIND.pg_work_removed=["file","err"];
+
+// ---- shared: the class work endpoint ---------------------------------------------------------------------------------
+function ycwApi(action,payload){
+ return fetch(BASE+"/svc/classwork",{method:"POST",headers:headers(),body:JSON.stringify({action:action,payload:payload||{}})})
+  .then(function(r){return r.json().catch(function(){return {success:false,error:{code:"BAD_RESPONSE",message:"The server returned an unexpected response ("+r.status+")."}};});})
+  .then(function(j){if(j&&j.success)return j.data;throw (j&&j.error)||{code:"ERROR",message:"Request failed."};},function(){throw {code:"NETWORK",message:"We could not connect. Check your internet connection and try again."};});
+}
+function ycwBytes(b64){var bin=atob(String(b64||"")),bytes=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return bytes;}
+function ycwExt(name){var e=(String(name||"").match(/\.([a-z0-9]{2,5})$/i)||[])[1];return e?e.toLowerCase().slice(0,4):"file";}
+var YCW_EXT=["pdf","doc","docx","ppt","pptx","png","jpg","jpeg","gif","webp"];
+var YCW_MAX=10485760;
+
+// ---- 1. Class work -----------------------------------------------------------------------------------------------------
+function ycwLoad(section,force){
+ var st=pgState(section);
+ if(st.cwLoading)return;
+ // Loaded once, then refreshed when the class page is drawn again a minute or more later.
+ if(!force&&(st.cwErr||(Array.isArray(st.cw)&&Date.now()-(st.cwAt||0)<60000)))return;
+ st.cwLoading=true;st.cwErr=null;
+ ycwApi("work.list",{section:section}).then(function(d){st.cwLoading=false;st.cwAt=Date.now();st.cw=(d&&Array.isArray(d.items))?d.items:[];ycwPaint(section);})
+  .catch(function(e){st.cwLoading=false;st.cwErr=e||{};ycwPaint(section);});
+}
+function ycwRow(section,m,staff){
+ var vk=v40Kind(m.file_name,m.mime_type),q="'"+attr(m.id)+"'",who=(m.owner_name||"A classmate")+(m.mine?" (you)":"");
+ var open=vk?'A.ycwView('+q+',this)':'A.ycwDownload('+q+')';
+ return '<div class="mat" data-id="'+attr(m.id)+'"><div class="fi">'+esc(ycwExt(m.file_name))+'</div>'+
+  '<div class="t"><b class="v40open" title="'+(vk?"Preview":"Download")+'" onclick="'+open+'">'+esc(m.title||m.file_name||"Class work")+'</b>'+
+  '<div class="muted small ycw-by">Uploaded by '+esc(who)+(m.created_at?' &middot; '+esc(ago(m.created_at)):'')+'</div></div>'+
+  (vk?'<button class="btn xs ghost" type="button" title="Preview" aria-label="Preview '+attr(m.title)+'" onclick="A.ycwView('+q+',this)">'+ic("eye")+'</button>':'')+
+  '<button class="btn xs ghost" type="button" title="Download" aria-label="Download '+attr(m.title)+'" onclick="A.ycwDownload('+q+')">'+ic("down")+'</button>'+
+  ((staff||m.mine)?'<button class="btn xs ghost ycw-del" type="button" title="Delete" aria-label="Delete '+attr(m.title)+'" onclick="A.ycwDelete(\''+section+'\','+q+')">'+ic("x")+'</button>':'')+
+  '</div>';
+}
+function ycwCard(section){
+ var st=pgState(section);ycwLoad(section);
+ var items=Array.isArray(st.cw)?st.cw:[],up=st.cwUp||[],staff=isTeacher();
+ var head='<div class="hd">'+ic("users")+'<h3>Class work</h3><div class="sp"></div>'+(items.length?'<span class="muted small ycw-n">'+items.length+'</span>':'')+
+  '<button type="button" class="btn xs p ycw-up" title="Share your work with the class: PDF, Word, PowerPoint or a picture (up to 10 MB)" aria-label="Upload your work" onclick="A.ycwPick(\''+section+'\')">'+ic("plus")+'Upload</button></div>';
+ var rows=up.map(function(u){return '<div class="mat ycw-busy"><div class="fi">'+esc(ycwExt(u.name))+'</div><div class="t"><b>'+esc(u.title)+'</b><div class="muted small">Uploading...</div></div><span class="ycw-spin" aria-hidden="true"></span></div>';}).join("")+
+  items.map(function(m){return ycwRow(section,m,staff);}).join("");
+ var body;
+ if(!rows&&st.cwErr)body='<div class="muted small">'+esc(friendlyMsg(st.cwErr,"Class work could not load."))+' <a href="#" onclick="A.ycwRetry(\''+section+'\');return false">Try again</a></div>';
+ else if(!rows&&!Array.isArray(st.cw))body='<div class="muted small">Loading class work...</div>';
+ else if(!rows)body='<div class="muted small">No class work yet. Press Upload to share your PDF, Word document, PowerPoint or picture with the class.</div>';
+ else body=rows;
+ return '<div class="card ycw" id="ycw-'+section+'">'+head+'<div class="bd">'+body+'</div></div>';
+}
+function ycwPaint(section){
+ var el=document.getElementById("ycw-"+section);if(!el)return;
+ var bd=el.querySelector(".bd"),top=bd?bd.scrollTop:0,tmp=document.createElement("div");tmp.innerHTML=ycwCard(section);
+ var nu=tmp.firstChild;el.parentNode.replaceChild(nu,el);var nb=nu.querySelector(".bd");if(nb)nb.scrollTop=top;
+}
+A.ycwRetry=function(section){var st=pgState(section);st.cwErr=null;st.cw=null;ycwLoad(section,true);ycwPaint(section);};
+A.ycwPick=function(section){
+ if(["middle","high"].indexOf(section)<0)return;
+ if(!signedIn()){toast("Sign in to share your work with the class.","err");return;}
+ var inp=document.createElement("input");inp.type="file";inp.multiple=true;inp.style.display="none";
+ inp.accept=".pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp";
+ inp.addEventListener("change",function(){var fs=[].slice.call(inp.files||[]);inp.remove();
+  if(fs.length>5){toast("You can upload up to 5 files at a time.","err");fs=fs.slice(0,5);}
+  fs.reduce(function(p,f){return p.then(function(){return ycwUpload(section,f);});},Promise.resolve());});
+ document.body.appendChild(inp);inp.click();
+};
+function ycwUpload(section,file){
+ var ext=(String(file.name||"").match(/\.([a-z0-9]{2,5})$/i)||[])[1];ext=ext?ext.toLowerCase():"";
+ if(YCW_EXT.indexOf(ext)<0){toast(file.name+": upload a PDF, Word document (DOC, DOCX), PowerPoint (PPT, PPTX) or picture (PNG, JPG, GIF, WEBP).","err");return Promise.resolve();}
+ if(file.size>YCW_MAX){toast(file.name+" is larger than 10 MB.","err");return Promise.resolve();}
+ if(!file.size){toast(file.name+" is empty.","err");return Promise.resolve();}
+ var st=pgState(section);st.cwUp=st.cwUp||[];
+ var u={name:file.name,title:String(file.name).replace(/\.[^.]+$/,"").replace(/[_]+/g," ").trim().slice(0,120)||"My work"};
+ st.cwUp.push(u);ycwPaint(section);
+ return new Promise(function(res){var r=new FileReader();r.onload=function(){res(String(r.result||""));};r.onerror=function(){res("");};r.readAsDataURL(file);})
+  .then(function(url){if(!url)throw {message:"Could not read "+file.name+"."};return ycwApi("work.upload",{section:section,title:u.title,fileName:file.name,dataBase64:url.replace(/^data:[^,]*,/,"")});})
+  .then(function(d){if(d&&d.item){st.cw=Array.isArray(st.cw)?st.cw:[];st.cw=[d.item].concat(st.cw.filter(function(x){return x.id!==d.item.id;}));}toast("Shared with your class: "+u.title,"ok");})
+  .catch(function(e){toast((e&&e.message)||("Could not upload "+file.name+"."),"err");})
+  .then(function(){st.cwUp=(st.cwUp||[]).filter(function(x){return x!==u;});ycwPaint(section);});
+}
+A.ycwDownload=function(id){
+ ycwApi("work.download",{id:id}).then(function(d){var m=d&&d.item;if(!m||!m.data_b64){toast("Could not download that file.","err");return;}v40Save(ycwBytes(m.data_b64),m.file_name||"class-work",m.mime_type);})
+  .catch(function(e){toast((e&&e.message)||"Could not download that file.","err");});
+};
+A.ycwDelete=function(section,id){
+ var st=pgState(section),m=(st.cw||[]).filter(function(x){return x.id===id;})[0];if(!m)return;
+ var msg=m.mine?'Delete "'+m.title+'" from Class work?':'Delete "'+m.title+'" shared by '+(m.owner_name||"a student")+'?\n\nThey will get a notice that a coach removed it.';
+ if(!confirm(msg))return;
+ ycwApi("work.delete",{id:id}).then(function(){st.cw=(st.cw||[]).filter(function(x){return x.id!==id;});toast("Deleted","ok");ycwPaint(section);})
+  .catch(function(e){toast((e&&e.message)||"Could not delete that.","err");});
+};
+// The same preview as Playground downloads (v40), reading the file from Class work.
+A.ycwView=function(id,btn){
+ v40CloseViewer();S.v40Focus=btn||document.activeElement;
+ var v=document.createElement("div");v.id="v40view";v.className="v40v";v.setAttribute("role","dialog");v.setAttribute("aria-modal","true");v.setAttribute("aria-label","File preview");
+ v.innerHTML='<div class="v40bar"><b>Opening...</b><button class="btn s" type="button" data-dl disabled>'+ic("down")+'Download</button><button class="btn icon ghost" type="button" data-x aria-label="Close preview" title="Close">'+ic("x")+'</button></div><div class="v40body"></div>';
+ document.body.appendChild(v);document.body.classList.add("v40open");
+ v.querySelector("[data-x]").onclick=v40CloseViewer;document.addEventListener("keydown",v40OnKey);window.addEventListener("message",v40OnMsg);
+ try{v.querySelector("[data-x]").focus();}catch(e){}
+ v40Msg(v,"Opening the file...",false);
+ ycwApi("work.download",{id:id}).then(function(d){
+  if(document.getElementById("v40view")!==v)return;
+  var m=d&&d.item;if(!m||!m.data_b64){v40Msg(v,"Could not open that file.",false);return;}
+  var bytes=ycwBytes(m.data_b64),name=m.file_name||"class-work",mime=m.mime_type||"application/octet-stream",kind=v40Kind(name,mime),label=(m.title||name)+(m.owner_name?" - "+m.owner_name:"");
+  v.querySelector(".v40bar b").textContent=label;v.setAttribute("aria-label","Preview: "+label);
+  v._dl=function(){v40Save(bytes,name,mime);};var db=v.querySelector("[data-dl]");db.disabled=false;db.onclick=v._dl;
+  var body=v.querySelector(".v40body");
+  if(kind==="img"){var u=URL.createObjectURL(new Blob([bytes],{type:mime}));v._url=u;var im=document.createElement("img");im.className="v40img";im.alt=label;im.onload=function(){var x=v.querySelector(".v40msg");if(x)x.remove();};im.onerror=function(){v40Fail(v);};im.src=u;body.insertBefore(im,body.firstChild);return;}
+  if(!kind||kind==="av"||kind==="txt"){v40Msg(v,"This kind of file can't be shown here. Download it to open it.",true);return;}
+  var f=document.createElement("iframe");f.setAttribute("sandbox","allow-scripts");f.setAttribute("referrerpolicy","no-referrer");f.title="Preview of "+label;
+  v._frame=f;v._buf=bytes.buffer.slice(0);v._t=setTimeout(function(){if(document.getElementById("v40view")===v&&v.querySelector(".v40msg"))v40Fail(v);},45000);
+  f.srcdoc=v40FrameHtml(kind);body.insertBefore(f,body.firstChild);
+ }).catch(function(e){if(document.getElementById("v40view")===v)v40Msg(v,(e&&e.message)||"Could not open that file.",false);});
+};
+// The card sits right after "Playground downloads" (same grid, same size), before "Pending work".
+var ycwBasePlayground=vPlayground;
+vPlayground=function(section){
+ var h=ycwBasePlayground.apply(this,arguments);
+ if(["middle","high"].indexOf(section)<0||!S.pgAccess||!S.pgAccess[section])return h;
+ h=h.replace("downloadable class material, a class chat and your pending work","downloadable class material, class work you share, a class chat and your pending work");
+ var k=h.indexOf("<h3>Pending work</h3>");if(k<0)return h;
+ var s=h.lastIndexOf('<div class="card">',k);if(s<0||k-s>400)return h;
+ return h.slice(0,s)+ycwCard(section)+h.slice(s);
+};
+
+// ---- 2. Email suggestions when a coach approves students ---------------------------------------------------------------
+var YSG={el:null,inp:null,items:[],idx:-1,t:0,seq:0,cache:{}};
+function ysgSection(inp){var f=inp&&inp.form;if(!f||inp.name!=="email")return "";var m=String(f.getAttribute("onsubmit")||"").match(/A\.pgWhitelistAdd\(this,'(middle|high)'\)/);return m?m[1]:"";}
+function ysgBox(){
+ if(YSG.el&&document.body.contains(YSG.el))return YSG.el;
+ var d=document.createElement("div");d.id="ysg-list";d.className="ysg";d.setAttribute("role","listbox");d.setAttribute("aria-label","Registered students");d.hidden=true;
+ d.addEventListener("mousedown",function(e){e.preventDefault();});
+ d.addEventListener("click",function(e){var o=e.target.closest("[data-i]");if(o)ysgPick(+o.getAttribute("data-i"));});
+ document.body.appendChild(d);YSG.el=d;return d;
+}
+function ysgHide(){if(YSG.el)YSG.el.hidden=true;YSG.idx=-1;YSG.items=[];if(YSG.inp){YSG.inp.setAttribute("aria-expanded","false");YSG.inp.removeAttribute("aria-activedescendant");}}
+function ysgPlace(){
+ var d=YSG.el,i=YSG.inp;if(!d||d.hidden)return;if(!i||!document.body.contains(i)){ysgHide();return;}
+ var r=i.getBoundingClientRect(),w=Math.max(260,r.width),l=Math.min(Math.max(8,r.left),Math.max(8,window.innerWidth-w-8));
+ d.style.left=l+"px";d.style.top=(r.bottom+4)+"px";d.style.width=w+"px";
+}
+function ysgMark(text,q){var t=String(text||""),i=t.toLowerCase().indexOf(q);if(!q||i<0)return esc(t);return esc(t.slice(0,i))+"<mark>"+esc(t.slice(i,i+q.length))+"</mark>"+esc(t.slice(i+q.length));}
+function ysgShow(list,q){
+ var d=ysgBox();YSG.items=list;YSG.idx=-1;
+ d.innerHTML=list.length?list.map(function(p,i){
+  var badge=p.added?'<span class="badge ok">Approved</span>':(!p.verified?'<span class="badge warn" title="They need to confirm their email (or sign in with Google) before the class opens for them">Email not confirmed</span>':'');
+  return '<div class="ysg-o'+(p.added?' added':'')+'" role="option" id="ysg-o'+i+'" data-i="'+i+'" aria-selected="false"><span class="av">'+esc(initialsOf(p.name||p.email))+'</span><span class="ysg-t"><b>'+ysgMark(p.name,q)+'</b><small>'+ysgMark(p.email,q)+'</small></span>'+badge+'</div>';
+ }).join(""):'<div class="ysg-none">No registered account matches "'+esc(q)+'". You can still approve any email address.</div>';
+ d.hidden=false;if(YSG.inp)YSG.inp.setAttribute("aria-expanded","true");ysgPlace();
+}
+function ysgQuery(inp){
+ var q=String(inp.value||"").trim().toLowerCase(),sec=ysgSection(inp);YSG.inp=inp;
+ clearTimeout(YSG.t);
+ if(q.length<2||!sec||!isTeacher()){YSG.seq++;ysgHide();return;}
+ var key=sec+"|"+q;if(YSG.cache[key]){YSG.seq++;ysgShow(YSG.cache[key],q);return;}
+ var seq=++YSG.seq;
+ YSG.t=setTimeout(function(){
+  ycwApi("people.suggest",{q:q,section:sec}).then(function(d){
+   var list=(d&&Array.isArray(d.people))?d.people:[];YSG.cache[key]=list;
+   if(seq!==YSG.seq||!YSG.inp||document.activeElement!==YSG.inp||String(YSG.inp.value||"").trim().toLowerCase()!==q)return;
+   ysgShow(list,q);
+  }).catch(function(){if(seq===YSG.seq)ysgHide();});
+ },180);
+}
+function ysgMove(i){
+ YSG.idx=i;var os=YSG.el?YSG.el.querySelectorAll(".ysg-o"):[];
+ [].forEach.call(os,function(o,k){var on=k===i;o.classList.toggle("on",on);o.setAttribute("aria-selected",on?"true":"false");if(on&&o.scrollIntoView)o.scrollIntoView({block:"nearest"});});
+ if(YSG.inp)YSG.inp.setAttribute("aria-activedescendant","ysg-o"+i);
+}
+function ysgPick(i){var p=YSG.items[i],inp=YSG.inp;if(!p||!inp)return;inp.value=p.email;ysgHide();try{inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}catch(e){}}
+function ysgWire(t){if(t.getAttribute("role")==="combobox")return;t.setAttribute("autocomplete","off");t.setAttribute("role","combobox");t.setAttribute("aria-autocomplete","list");t.setAttribute("aria-controls","ysg-list");t.setAttribute("aria-expanded","false");t.setAttribute("placeholder","Type a name or email");}
+document.addEventListener("input",function(e){var t=e.target;if(t&&t.tagName==="INPUT"&&ysgSection(t)){ysgWire(t);ysgQuery(t);}},true);
+document.addEventListener("focusin",function(e){var t=e.target;if(t&&t.tagName==="INPUT"&&ysgSection(t)){ysgWire(t);if(String(t.value||"").trim().length>=2)ysgQuery(t);}},true);
+document.addEventListener("focusout",function(e){if(e.target===YSG.inp)setTimeout(function(){if(document.activeElement!==YSG.inp)ysgHide();},150);},true);
+document.addEventListener("keydown",function(e){
+ if(!YSG.el||YSG.el.hidden||e.target!==YSG.inp)return;var n=YSG.items.length;
+ if(e.key==="ArrowDown"&&n){e.preventDefault();ysgMove((YSG.idx+1)%n);}
+ else if(e.key==="ArrowUp"&&n){e.preventDefault();ysgMove((YSG.idx-1+n)%n);}
+ else if(e.key==="Enter"&&YSG.idx>=0){e.preventDefault();ysgPick(YSG.idx);}
+ else if(e.key==="Escape"){e.preventDefault();ysgHide();}
+},true);
+window.addEventListener("resize",ysgPlace);window.addEventListener("scroll",ysgPlace,true);
+// The coach's box asks for a name or an email; after approving someone the "Approved" badges are refreshed.
+var ysgBaseManage=vPlaygroundManage;
+vPlaygroundManage=function(){return ysgBaseManage.apply(this,arguments).replace('name="email" type="email" required placeholder="student@example.com"','name="email" type="email" required autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="ysg-list" aria-expanded="false" aria-label="Student email" placeholder="Type a name or email"');};
+var ysgBaseWhitelistAdd=A.pgWhitelistAdd;
+A.pgWhitelistAdd=function(){YSG.cache={};ysgHide();return ysgBaseWhitelistAdd.apply(this,arguments);};
+var ysgBaseWhitelistRemove=A.pgWhitelistRemove;
+A.pgWhitelistRemove=function(){YSG.cache={};return ysgBaseWhitelistRemove.apply(this,arguments);};
+
+// ---- 3. Y Guide -------------------------------------------------------------------------------------------------------
+var YGD={open:false,log:[],busy:false,conv:"ygd-"+uid("").slice(0,16),rec:null,voice:false};
+var YGD_INFO={
+ home:["Home","All agents, today's plan, and plans and prices"],
+ plan:["My Plan","Your calendar of meals, workouts, study and events, with reminders"],
+ athlete:["Athlete Edge","Sports nutrition agent: meals, game-day plans and drinks for your sport"],
+ studypals:["StudyPals","AI tutor, lessons, quizzes and Ask AI for school subjects"],
+ synthiq:["SynthIQ","Research assistant that searches scientific papers and cites them"],
+ events:["Event Planner","Create and run events: tasks, RSVPs, updates, chat and Agent Planner"],
+ "playground/middle":["Middle School","AI Playground class: announcements, schedule, Playground downloads, Class work uploads, class chat, pending work"],
+ "playground/high":["High School","AI Playground class: announcements, schedule, Playground downloads, Class work uploads, class chat, pending work"],
+ volunteer:["Volunteer","Volunteer opportunities in the community"],
+ startups:["Startups","Entrepreneurship and startup program for middle and high school students"],
+ jobs:["Jobs","Startup jobs and internships"],
+ account:["Account","Your account, plan and billing"],
+ teacher:["Coach Tools","Tutor library uploads; approve students for Middle and High School; announcements, schedule, pending work and Playground downloads"],
+ "teacher/classes":["StudyPals Classes","Choose which grades and subjects StudyPals offers"],
+ admin:["Admin","Users, plans, models, limits, settings and events"],
+ "admin/volunteers":["Volunteer Approvals","Approve volunteer listings"],
+ "home/plans":["Plans and prices","Free and paid plans and what each includes"],
+ "home/agents":["Agents","What each agent does"],
+ privacy:["Privacy Policy","How Y Square handles your data"],
+ terms:["Terms","Terms of use"]
+};
+var YGD_ACT={
+ "action:newEvent":["Create an event","Opens Agent Planner: describe the event in a sentence and it creates it"],
+ "action:classWork":["Upload class work","Opens your AI Playground class and its Class work upload"],
+ "action:theme":["Dark or light mode","Switches the colour theme"],
+ "action:signIn":["Sign in","Sign in or create a free account"],
+ "action:accountMenu":["Account menu","Opens your account menu (manage account, sign out)"],
+ "action:upgrade":["Upgrade","Paid plans with more AI use, Claude, ChatGPT and pictures"]
+};
+// Words people use for each place (whole words; the longest match wins).
+var YGD_SYN={
+ home:["home","home page","main page","dashboard","start page"],
+ plan:["my plan","my calendar","calendar","my schedule","day plan","reminders","to do list","todo list"],
+ athlete:["athlete edge","athlete","sports nutrition","nutrition","meal plan","game day food"],
+ studypals:["studypals","study pals","studypal","tutor","ask ai","lessons","quiz","quizzes","homework help","study"],
+ synthiq:["synthiq","synth iq","research papers","research assistant","research"],
+ events:["event planner","events","my events","ai planner"],
+ "playground/middle":["middle school","middle school playground","middle school class"],
+ "playground/high":["high school","high school playground","high school class"],
+ volunteer:["volunteer","volunteering","volunteer opportunities","community service"],
+ startups:["startups","startup","startup program","entrepreneurship","future founders"],
+ jobs:["jobs","startup jobs","internships","internship"],
+ account:["account","my account","profile","my profile","billing","account settings"],
+ teacher:["coach tools","coach","teacher tools","tutor library","approve students","whitelist"],
+ "teacher/classes":["studypals classes","grades and subjects"],
+ admin:["admin","admin panel","admin dashboard"],
+ "admin/volunteers":["volunteer approvals"],
+ "home/plans":["plans","plans and prices","pricing","prices","plan prices","subscriptions"],
+ "home/agents":["agents","all agents"],
+ privacy:["privacy","privacy policy"],
+ terms:["terms","terms of use","terms of service"]
+};
+var YGD_HELP="I can take you anywhere in Y Square and start things for you. Try:\n- \"open StudyPals\" or \"take me to My Plan\"\n- \"create a birthday party on Saturday at 3pm\"\n- \"upload my class work\"\n- \"switch to dark mode\"\nI only help you find things here. For school questions, use StudyPals.";
+function ygdIs(re,n){return re.test(n);}
+function ygdNorm(t){return " "+String(t||"").toLowerCase().replace(/[’']/g,"").replace(/[^a-z0-9/ ]+/g," ").replace(/\s+/g," ").trim()+" ";}
+function ygdPlaces(){
+ var out=[],seen={};
+ function add(id,t,d){if(seen[id]||!/^(?:[a-z0-9-]{1,30}(?:\/[a-z0-9-]{1,30})?|action:[a-zA-Z]{2,30})$/.test(id))return;seen[id]=1;out.push({id:id,t:String(t||id).slice(0,40),d:String(d||"").slice(0,140)});}
+ var pg=S.pgAccess||{},T=isTeacher();
+ [].forEach.call(document.querySelectorAll("#app .sb .nav a[href^='#/']"),function(a){var id=String(a.getAttribute("href")||"").replace(/^#\/?/,"")||"home",inf=YGD_INFO[id];add(id,inf?inf[0]:a.textContent.trim(),inf?inf[1]:"");});
+ ["home","plan","athlete","studypals","synthiq","events"].forEach(function(id){add(id,YGD_INFO[id][0],YGD_INFO[id][1]);});
+ if(T||pg.middle)add("playground/middle",YGD_INFO["playground/middle"][0],YGD_INFO["playground/middle"][1]);
+ if(T||pg.high)add("playground/high",YGD_INFO["playground/high"][0],YGD_INFO["playground/high"][1]);
+ ["volunteer","startups","jobs","home/plans","home/agents"].forEach(function(id){add(id,YGD_INFO[id][0],YGD_INFO[id][1]);});
+ if(signedIn())add("account",YGD_INFO.account[0],YGD_INFO.account[1]);
+ if(T){add("teacher",YGD_INFO.teacher[0],YGD_INFO.teacher[1]);add("teacher/classes",YGD_INFO["teacher/classes"][0],YGD_INFO["teacher/classes"][1]);}
+ if(isAdmin()){add("admin",YGD_INFO.admin[0],YGD_INFO.admin[1]);add("admin/volunteers",YGD_INFO["admin/volunteers"][0],YGD_INFO["admin/volunteers"][1]);}
+ add("privacy",YGD_INFO.privacy[0],YGD_INFO.privacy[1]);add("terms",YGD_INFO.terms[0],YGD_INFO.terms[1]);
+ function act(id){add(id,YGD_ACT[id][0],YGD_ACT[id][1]);}
+ act("action:newEvent");if(T||pg.middle||pg.high)act("action:classWork");act("action:theme");
+ if(signedIn())act("action:accountMenu");else act("action:signIn");
+ if(!isPremium())act("action:upgrade");
+ return out.slice(0,40);
+}
+function ygdHas(id){return ygdPlaces().some(function(p){return p.id===id;});}
+function ygdLabel(id){var i=YGD_INFO[id]||YGD_ACT[id];return i?i[0]:id;}
+function ygdWhere(){var h=document.querySelector("#app .top h1");return h?String(h.textContent||"").trim().slice(0,40):"";}
+function ygdPhone(){try{return window.matchMedia("(max-width:760px)").matches;}catch(e){return false;}}
+// Clear commands are handled here at once; anything else goes to the agent.
+function ygdLocal(text){
+ var n=ygdNorm(text),words=n.trim()?n.trim().split(" ").length:0;
+ if(/^ (hi|hii|hello|hey|hey there|hi there|hello there|yo|hola|good (morning|afternoon|evening))( y ?guide)? $/.test(n))return {reply:"Hi! Where would you like to go? You can say things like \"open StudyPals\" or \"create an event\".",chips:true};
+ if(/^ (help|menu|commands|what can you do|what do you do|how does this work|how do you work)( for me)? $/.test(n))return {reply:YGD_HELP,chips:true};
+ if(/\b(dark|light|night) ?(mode|theme)\b|\b(change|switch|toggle) (the )?(theme|colou?rs?)\b/.test(n))return {act:"action:theme",want:/\blight\b/.test(n)?"light":(/\b(dark|night)\b/.test(n)?"dark":"")};
+ if(/\b(sign|log) ?(out|off)\b|\blogout\b/.test(n))return {act:"action:accountMenu"};
+ if(/\b(sign|log) ?(in|on)\b|\blogin\b|\bsign ?up\b|\bregister\b|\bcreate (an |my |a )?(free )?account\b/.test(n))return {act:"action:signIn"};
+ if(/\b(create|make|new|plan|organi[sz]e|start|set ?up|add|host|throw|schedule)\b.{0,40}\b(event|party|birthday|meet ?up|gathering|practice|tournament|fundraiser|picnic|celebration|reunion|clean ?up|bbq|potluck)\b/.test(n)&&!/\b(my plan|calendar|to ?do)\b/.test(n))return {act:"action:newEvent"};
+ if(/\b(upload|share|submit|turn in|hand in|post)\b.{0,30}\b(work|homework|assignment|project|file|essay|pdf|ppt|pptx|slides?|docs?|document|picture|photo|presentation)\b/.test(n))return {act:"action:classWork"};
+ if(/\b(upgrade|go premium|get premium|subscribe)\b/.test(n))return {act:"action:upgrade"};
+ var best=null,bl=0;
+ Object.keys(YGD_SYN).forEach(function(id){YGD_SYN[id].forEach(function(s){if(s.length>bl&&n.indexOf(" "+s+" ")>=0){best=id;bl=s.length;}});});
+ if(!best||!ygdHas(best))return null;
+ var rest=n.replace(/\b(please|pls|plz|the|my|page|section|tab|area|to|me|a|an|go|goto|open|show|take|bring|navigate|switch|visit|view|see|launch|i|want|wanna|would|like|can|you|could|lets|let|us|now|into|in|on|for|of|over|there|back|jump|head|where|is|are|find|get)\b/g," ").replace(/\s+/g," ").trim();
+ var exact=YGD_SYN[best].some(function(s){return rest===s;});
+ var nav=/\b(open|go|goto|take|bring|show|navigate|switch|visit|view|launch|jump|head)\b/.test(n);
+ if(exact||(nav&&words<=8))return {go:best};
+ return null;
+}
+function ygdEventText(text){
+ var n=ygdNorm(text).trim();
+ if(/^(please )?(can you |could you |i want to |i d like to |id like to |help me )?(create|make|start|plan|set ?up|add|organi[sz]e|host|schedule|new)( me)?( an?| a new| new| my)? ?(event|party)?( for me)?( please)?$/.test(n))return "";
+ return String(text).replace(/\s+/g," ").trim().slice(0,1500);
+}
+// Runs one place or action. Returns the reply to show (or null).
+function ygdRun(id,o){
+ o=o||{};var pg=S.pgAccess||{},T=isTeacher(),reply=null,closeOnPhone=true;
+ if(id==="action:theme"){
+  if(o.want&&S.theme===o.want)reply="It's already in "+o.want+" mode.";else{A.theme();reply="Switched to "+(S.theme==="dark"?"dark":"light")+" mode.";}
+  closeOnPhone=false;
+ }else if(id==="action:signIn"){
+  if(signedIn())reply="You're already signed in as "+(actor().name||"you")+".";else{A.ysaSignIn();reply="Opening sign in. You can use Google or your email.";}
+ }else if(id==="action:accountMenu"){
+  if(!signedIn()){reply="You're not signed in. Say \"sign in\" if you want to.";closeOnPhone=false;}
+  else{setTimeout(function(){try{if(typeof YSA!=="undefined"&&!YSA.open)A.ysaToggle();}catch(e){}},60);reply="Your account menu is open at the top right. Sign out is at the bottom of it.";}
+ }else if(id==="action:upgrade"){
+  if(isPremium()){reply="You're already on "+(typeof tierName==="function"&&typeof myTier==="function"?tierName(myTier()):"a paid plan")+". Plans and prices are on the Home page.";go("#/home/plans");}
+  else{try{A.openUpgrade();}catch(e){go("#/home/plans");}reply="Here are the paid plans.";}
+ }else if(id==="action:newEvent"){
+  var detail=o.text?ygdEventText(o.text):"";
+  A.agpOpen();
+  if(detail&&S.agp&&!S.agp.busy){S.agp.text=detail;S.agp.focus=true;if((S.route||{}).view==="events"&&!S.route.id)render();}
+  reply=detail?"I opened Agent Planner with your words. Check them and press Send to create the event.":"Opening Agent Planner. Describe your event in a sentence: what it is, the date and the start time.";
+ }else if(id==="action:classWork"){
+  var secs=["middle","high"].filter(function(s){return T||pg[s];});
+  var cur=(S.route||{}).view==="playground"&&secs.indexOf(S.route.id)>=0?S.route.id:"";
+  if(!secs.length){
+   reply=signedIn()?"Class work is in your AI Playground class, which opens once your coach approves "+(actor().email||"your email")+".":"Class work is in the AI Playground for approved students. Sign in first, then ask your coach to add your email.";
+   closeOnPhone=false;
+  }else if(cur||secs.length===1){
+   var sec=cur||secs[0];go("#/playground/"+sec);
+   if(o.gesture&&signedIn()){A.ycwPick(sec);reply="Opening "+ygdLabel("playground/"+sec)+". Pick the files to share with your class.";}
+   else reply="Opening "+ygdLabel("playground/"+sec)+". Press Upload in the Class work card to share your file.";
+  }else return {reply:"Which class?",btns:[["ygdUpload('middle')","Middle School"],["ygdUpload('high')","High School"]]};
+ }else if(YGD_INFO[id]){
+  go("#/"+(id==="home"?"":id));reply="Opening "+ygdLabel(id)+".";
+ }else return null;
+ if(closeOnPhone&&ygdPhone())setTimeout(function(){A.ygdToggle(false);},700);
+ return {reply:reply};
+}
+A.ygdUpload=function(sec){go("#/playground/"+sec);if(signedIn())A.ycwPick(sec);YGD.log.push({r:"a",t:"Opening "+ygdLabel("playground/"+sec)+". Pick the files to share with your class."});ygdPaint();if(ygdPhone())setTimeout(function(){A.ygdToggle(false);},700);};
+A.ygdGo=function(id){if(!ygdHas(id))return;var res=ygdRun(id,{gesture:true});if(res&&res.reply){YGD.log.push({r:"a",t:res.reply,btns:res.btns});ygdPaint();}};
+function ygdHist(){return YGD.log.filter(function(m){return !m.err&&!m.local;}).slice(-6).map(function(m){return {r:m.r==="u"?"u":"a",t:String(m.t).slice(0,400)};});}
+function ygdSay(t,o){o=o||{};YGD.log.push({r:"a",t:String(t||""),offer:o.offer||null,btns:o.btns||null,chips:!!o.chips,err:!!o.err});if(YGD.log.length>40)YGD.log=YGD.log.slice(-40);ygdPaint();ygdSpeak(t);}
+function ygdSpeak(t){if(!YGD.voice)return;YGD.voice=false;try{var ss=window.speechSynthesis;if(!ss)return;ss.cancel();var u=new SpeechSynthesisUtterance(String(t).replace(/\n- /g,". ").slice(0,300));u.lang=navigator.language||"en-US";ss.speak(u);}catch(e){}}
+function ygdHandle(text,gesture){
+ text=String(text||"").replace(/\s+/g," ").trim().slice(0,300);if(!text||YGD.busy)return;
+ YGD.log.push({r:"u",t:text});
+ var loc=null;try{loc=ygdLocal(text);}catch(e){loc=null;}
+ if(loc&&loc.reply){YGD.log[YGD.log.length-1].local=true;ygdSay(loc.reply,{chips:loc.chips});YGD.log[YGD.log.length-1].local=true;return;}
+ if(loc&&(loc.act||loc.go)){var res=null;try{res=ygdRun(loc.act||loc.go,{gesture:gesture,text:text,want:loc.want});}catch(e){res=null;}if(res&&res.reply){ygdSay(res.reply,{btns:res.btns});return;}}
+ ygdAsk(text);
+}
+function ygdAsk(text){
+ YGD.busy=true;ygdPaint();
+ var body={agentId:"agent-guide",message:text,conversationId:YGD.conv,context:{map:ygdPlaces(),where:ygdWhere(),history:ygdHist().slice(0,-1)}};
+ Promise.resolve().then(function(){return voBaseChatApiMsg(body);}).then(function(j){
+  YGD.busy=false;
+  if(j&&j.success&&j.task==="guide"&&j.reply){
+   var go2=j.go&&ygdHas(j.go)?j.go:null,offer=!go2&&j.offer&&ygdHas(j.offer)?j.offer:null;
+   ygdSay(j.reply,{offer:offer});
+   if(go2)setTimeout(function(){var res=ygdRun(go2,{text:text});if(res&&res.btns)ygdSay(res.reply,{btns:res.btns});},350);
+  }else if(j&&j.success&&j.message&&j.message.content){ygdSay(String(j.message.content).slice(0,300));YGD.log[YGD.log.length-1].local=true;}
+  else ygdSay(friendlyMsg((j&&j.error)||{},"Y Guide could not answer just now.")+" You can still pick a place below.",{chips:true,err:true});
+ }).catch(function(){YGD.busy=false;ygdSay("Y Guide could not answer just now. You can still pick a place below.",{chips:true,err:true});});
+}
+function ygdChips(){
+ var c=[],pg=S.pgAccess||{},T=isTeacher();
+ c.push(["Create an event","cal"]);c.push(["Open My Plan","cal"]);c.push(["Open StudyPals","book"]);
+ if(T||pg.middle||pg.high)c.push(["Upload my class work","file"]);
+ c.push(["Open Athlete Edge","bolt"]);
+ if(!isPremium())c.push(["Show plans and prices","star"]);
+ c.push([S.theme==="dark"?"Light mode":"Dark mode",S.theme==="dark"?"sun":"moon"]);
+ if(!signedIn())c.push(["Sign in","user"]);
+ return c;
+}
+A.ygdChip=function(i,btn){var c=ygdChips()[i];if(c)ygdHandle(c[0],true);};
+function ygdLogHtml(){
+ var h=YGD.log.map(function(m,k){
+  var acts="";
+  if(m.offer)acts+='<button type="button" class="btn xs p" onclick="A.ygdGo(\''+attr(m.offer)+'\')">'+(/^action:/.test(m.offer)?esc(ygdLabel(m.offer)):"Open "+esc(ygdLabel(m.offer)))+'</button>';
+  if(m.btns)m.btns.forEach(function(b){acts+='<button type="button" class="btn xs" onclick="A.'+b[0]+'">'+esc(b[1])+'</button>';});
+  return '<div class="ygd-b '+(m.r==="u"?"u":"a")+(m.err?" e":"")+'">'+esc(m.t)+(acts?'<div class="ygd-acts">'+acts+'</div>':'')+'</div>';
+ }).join("");
+ if(YGD.busy)h+='<div class="ygd-typing" aria-label="Y Guide is thinking"><i></i><i></i><i></i></div>';
+ return h;
+}
+function ygdChipsHtml(){
+ var last=YGD.log[YGD.log.length-1];if(YGD.busy||!last||last.r!=="a"||!last.chips)return "";
+ return ygdChips().map(function(c,i){return '<button type="button" class="ygd-chip" onclick="A.ygdChip('+i+',this)">'+ic(c[1])+esc(c[0])+'</button>';}).join("");
+}
+function ygdEnsure(){
+ if(!document.getElementById("ygd-fab")){
+  var b=document.createElement("button");b.type="button";b.id="ygd-fab";b.className="ygd-fab";b.setAttribute("aria-label","Open Y Guide: find anything in Y Square");b.title="Y Guide - find anything in Y Square";
+  b.innerHTML=ic("spark")+"<span>Y Guide</span>";b.onclick=function(){A.ygdToggle(true);};document.body.appendChild(b);
+ }
+ if(!document.getElementById("ygd-panel")){
+  var p=document.createElement("div");p.id="ygd-panel";p.className="ygd-p";p.hidden=true;p.setAttribute("role","dialog");p.setAttribute("aria-label","Y Guide");
+  p.innerHTML='<div class="ygd-h"><span class="ygd-logo">'+ic("spark")+'</span><span class="ygd-tt"><b>Y Guide</b><small>Finds anything in Y Square</small></span>'+
+   '<button type="button" class="btn icon ghost" aria-label="Close Y Guide" title="Close" onclick="A.ygdToggle(false)">'+ic("x")+'</button></div>'+
+   '<div class="ygd-log" id="ygd-log" aria-live="polite"></div><div class="ygd-chips" id="ygd-chips"></div>'+
+   '<form class="ygd-f" onsubmit="return A.ygdSend(event)"><input id="ygd-in" maxlength="300" autocomplete="off" enterkeyhint="send" aria-label="Ask Y Guide" placeholder="Where do you want to go?">'+
+   '<button type="button" class="btn icon ygd-mic" id="ygd-mic" aria-label="Speak to Y Guide" title="Speak" onclick="A.ygdMic()">'+ic("mic")+'</button>'+
+   '<button type="submit" class="btn icon p" aria-label="Send" title="Send">'+ic("send")+'</button></form>'+
+   '<div class="ygd-note">Y Guide only helps you find things in Y Square.</div>';
+  p.addEventListener("keydown",function(e){if(e.key==="Escape"){e.preventDefault();A.ygdToggle(false);}});
+  document.body.appendChild(p);
+ }
+}
+function ygdPaint(){
+ ygdEnsure();
+ var p=document.getElementById("ygd-panel");p.hidden=!YGD.open;document.body.classList.toggle("ygd-open",YGD.open);
+ if(!YGD.open)return;
+ var lg=document.getElementById("ygd-log");lg.innerHTML=ygdLogHtml();lg.scrollTop=lg.scrollHeight;
+ document.getElementById("ygd-chips").innerHTML=ygdChipsHtml();
+ var mic=document.getElementById("ygd-mic");if(mic){mic.classList.toggle("on",!!YGD.rec);mic.hidden=!(window.SpeechRecognition||window.webkitSpeechRecognition);}
+}
+A.ygdToggle=function(force){
+ var was=YGD.open;YGD.open=typeof force==="boolean"?force:!YGD.open;
+ if(YGD.open&&!YGD.log.length){var nm=signedIn()?String(actor().name||"").trim().split(/\s+/)[0]:"";YGD.log.push({r:"a",t:"Hi"+(nm?" "+nm:"")+"! I'm Y Guide. Tell me where you want to go or what you want to do, and I'll take you there.",chips:true,local:true});}
+ if(!YGD.open&&YGD.rec){try{YGD.rec.abort();}catch(e){}YGD.rec=null;}
+ ygdPaint();
+ if(YGD.open&&!was){setTimeout(function(){var i=document.getElementById("ygd-in");if(i&&!ygdPhone())try{i.focus();}catch(e){}},30);}
+ if(!YGD.open&&was){var f=document.getElementById("ygd-fab");var hb=document.querySelector("body.ych .ygd-hbtn");try{(hb||f).focus({preventScroll:true});}catch(e){}}
+};
+A.ygdSend=function(ev){if(ev&&ev.preventDefault)ev.preventDefault();var inp=document.getElementById("ygd-in");var t=String((inp&&inp.value)||"").trim();if(!t||YGD.busy)return false;inp.value="";ygdHandle(t,true);return false;};
+A.ygdMic=function(){
+ var R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){toast("This browser cannot listen. Type instead.","err");return;}
+ if(YGD.rec){try{YGD.rec.stop();}catch(e){}return;}
+ try{if(VO.listening&&VO.rec)VO.rec.stop();}catch(e){}
+ try{if(window.speechSynthesis)window.speechSynthesis.cancel();}catch(e){}
+ var rec=new R(),fin="",inp=document.getElementById("ygd-in");rec.lang=navigator.language||"en-US";rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;
+ rec.onresult=function(e){var t="";for(var i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)fin+=e.results[i][0].transcript;else t+=e.results[i][0].transcript;}if(inp)inp.value=(fin+" "+t).replace(/\s+/g," ").trim();};
+ rec.onerror=function(e){if(e&&(e.error==="not-allowed"||e.error==="service-not-allowed"))toast("Allow the microphone to talk to Y Guide.","err");};
+ rec.onend=function(){YGD.rec=null;ygdPaint();var t=String((inp&&inp.value)||"").trim();if(t&&YGD.open){inp.value="";YGD.voice=true;ygdHandle(t,false);}};
+ YGD.rec=rec;try{rec.start();}catch(e){YGD.rec=null;}ygdPaint();
+};
+// On the chat pages the button sits in the top bar instead, so it never covers the message box.
+var ygdBaseHeader=header;
+header=function(title){
+ var h=ygdBaseHeader.apply(this,arguments);
+ var pill='<button type="button" class="btn s ygd-hbtn" onclick="A.ygdToggle()" aria-label="Open Y Guide" title="Y Guide - find anything in Y Square">'+ic("spark")+'<span>Y Guide</span></button>';
+ var k=h.indexOf('<div class="ysa" id="ysaw">');if(k<0)k=h.lastIndexOf("</div>");if(k<0)return h;
+ return h.slice(0,k)+pill+h.slice(k);
+};
+var ygdBaseRender=render;
+render=function(){
+ var r=ygdBaseRender.apply(this,arguments);
+ try{ygdEnsure();if(YSG.el&&!YSG.el.hidden&&(!YSG.inp||!document.body.contains(YSG.inp)))ysgHide();if(YGD.open)document.getElementById("ygd-chips").innerHTML=ygdChipsHtml();}catch(e){}
+ return r;
+};
+// ==== v46: Y Buddy ====================================================================================================
+// Y Guide becomes Y Buddy, and it now does things for the person instead of only opening pages.
+//  - Their own things happen at once, with an Undo where it makes sense: add to My Plan, the My Plan morning email off or
+//    on, dark or light mode, marking notifications read, creating their own event (Agent Planner sends it), StudyPals
+//    lessons and quizzes, handing a question to the right agent (Athlete Edge, StudyPals, SynthIQ, AI Planner).
+//  - Anything other people see or get waits for a one-tap Confirm: event RSVPs, chat messages, updates and tasks,
+//    joining an event, class chat, class announcements, pending work and approving students. Signing out asks too.
+//  - Never: deleting anything, accounts, roles, plans and payments, admin settings, other people's data.
+// Clear requests are understood here at once, several in one message too ("add ... to my plan and turn off mail
+// notifications"). Anything else goes to the Agents workflow (agent-guide), which answers with up to 3 commands checked
+// against what this person may do; the services check every action again when it runs.
+(function(){var st=document.createElement("style");st.id="ybcss";st.textContent=
+ ".ygd-b.c{background:var(--panel);border-color:var(--ac)}"+
+ ".ygd-q{display:block;margin-top:7px;padding:8px 10px;border-radius:10px;background:var(--panel2);border:1px dashed var(--line2);font-size:13px;white-space:pre-wrap;word-break:break-word}";
+ document.head.appendChild(st);})();
+var YB={seq:0,acts:{},pending:null,offer:null};
+YGD_HELP="I can do things for you in Y Square. Try:\n- \"add dentist tomorrow at 4pm to my plan\"\n- \"turn off the morning email\"\n- \"create a birthday party on Saturday at 3pm\"\n- \"make a quiz on fractions\"\n- \"what should I eat before a game?\"\nAnything other people will see waits for your OK. I can't delete things or change accounts.";
+function ybId(){YB.seq+=1;return "yb"+YB.seq;}
+function ybPush(m){m.r="a";YGD.log.push(m);if(YGD.log.length>40)YGD.log=YGD.log.slice(-40);ygdPaint();ygdSpeak(m.t);return m;}
+function ybBusy(on){YGD.busy=!!on;ygdPaint();}
+function ybMsg(id){for(var i=YGD.log.length-1;i>=0;i--)if(YGD.log[i].aid===id)return YGD.log[i];return null;}
+function ybDone(id){var m=ybMsg(id);if(m)m.btns=null;if(YB.offer===id)YB.offer=null;}
+function ybErr(e,fb){return e&&e.message?String(e.message):fb;}
+function ybNeedIn(what){ybPush({t:"Sign in first to use "+what+". It's free.",btns:[["ygdGo('action:signIn')","Sign in"]]});}
+function ybPhoneClose(){if(ygdPhone())setTimeout(function(){A.ygdToggle(false);},900);}
+function ybLocalNow(){var d=new Date();return yplYmd(d)+"T"+yplHm(d);}
+function ybDay(ymd){try{var d=yplLocal(ymd,"12:00"),n=Math.round((yplDay0(d)-yplDay0(new Date()))/864e5);return n===0?"today":n===1?"tomorrow":d.toLocaleDateString([],{weekday:"short",month:"short",day:"numeric"});}catch(e){return ymd;}}
+function ybWhen(x){try{var d=yplLocal(x.date,x.start||"00:00"),n=Math.round((yplDay0(d)-yplDay0(new Date()))/864e5);var s=n===0?"Today":n===1?"Tomorrow":d.toLocaleDateString([],{weekday:"short",month:"short",day:"numeric"});return s+(x.start?" at "+yplTime(d):"");}catch(e){return x.date||"";}}
+// What the person can act on: their (approved) events, their AI Playground classes, and the commands for them.
+function ybEvents(){
+ return (((S.boot||{}).events)||[]).filter(function(e){return e&&e.id&&e.my_approved!==false&&/^[A-Za-z0-9_-]{4,64}$/.test(String(e.id));}).slice(0,20).map(function(e){
+  var d=null;try{if(e.starts_at)d=yplYmd(new Date(e.starts_at));}catch(x){}
+  return {id:String(e.id),t:String(e.title||"Event").replace(/\s+/g," ").trim().slice(0,60)||"Event",r:["organizer","helper","guest"].indexOf(e.my_role)>=0?e.my_role:"guest",d:d};});
+}
+function ybEvent(id){return ybEvents().filter(function(e){return e.id===id;})[0]||null;}
+function ybClasses(){if(!signedIn())return [];var pg=S.pgAccess||{},T=isTeacher();return ["middle","high"].filter(function(s){return T||pg[s];}).map(function(s){return {id:s,coach:T};});}
+function ybClassName(s){return s==="high"?"High School":"Middle School";}
+function ybCan(){
+ var c=["theme","event.create","event.join","ask","lesson","quiz"],ev=ybEvents(),cl=ybClasses();
+ if(signedIn())c.push("plan.add","email.off","email.on","notif.read","signout");else c.push("signin");
+ if(ev.length)c.push("event.rsvp","event.message");
+ if(ev.some(function(e){return e.r==="organizer"||e.r==="helper";}))c.push("event.update","event.task");
+ if(cl.length)c.push("class.message","classwork.upload");
+ if(cl.some(function(k){return k.coach;}))c.push("class.announce","class.task","class.approve");
+ return c;
+}
+// ---- buttons in the log: Confirm / Cancel, Undo, and offered actions ("Turn off the morning email")
+function ybConfirm(t,q,run,ok){var id=ybId();YB.acts[id]={run:run};ybPush({t:t,q:q||"",card:true,aid:id,btns:[["ygdOk('"+id+"')",ok||"Confirm"],["ygdNo('"+id+"')","Cancel"]]});}
+function ybOffer(t,label,run,o){var id=ybId();YB.acts[id]={run:run};YB.offer=id;var m={t:t,aid:id,pri:true,btns:[["ygdAct('"+id+"')",label]]};if(o&&o.chips)m.chips=true;ybPush(m);}
+function ybResult(r){if(!r)return;if(typeof r==="string")r={t:r};ybPush(r);}
+A.ygdOk=function(id){
+ var a=YB.acts[id];if(!a||a.used||!a.run)return;a.used=true;ybDone(id);ybBusy(true);
+ Promise.resolve().then(a.run).then(function(r){ybBusy(false);ybResult(r);}).catch(function(e){ybBusy(false);ybPush({t:"That didn't go through: "+ybErr(e,"please try again in a moment."),err:true});});
+};
+A.ygdNo=function(id){var a=YB.acts[id];if(!a||a.used)return;a.used=true;ybDone(id);ybPush({t:"Cancelled. Nothing was sent."});};
+A.ygdUndo=function(id){
+ var a=YB.acts[id];if(!a||a.used||!a.undo)return;a.used=true;ybDone(id);ybBusy(true);
+ Promise.resolve().then(a.undo).then(function(r){ybBusy(false);ybResult(r||"Undone.");}).catch(function(e){ybBusy(false);ybPush({t:"I couldn't undo that: "+ybErr(e,"please try again."),err:true});});
+};
+A.ygdAct=function(id){var a=YB.acts[id];if(!a||a.used||!a.run)return;a.used=true;ybDone(id);Promise.resolve().then(a.run).catch(function(){});};
+A.ygdEv=function(id){if(/^[A-Za-z0-9_-]{4,64}$/.test(String(id))){go("#/events/"+id);if(ygdPhone())setTimeout(function(){A.ygdToggle(false);},500);}};
+function ybLastA(){for(var i=YGD.log.length-1;i>=0;i--)if(YGD.log[i].r==="a")return YGD.log[i];return null;}
+function ybLastCard(){for(var i=YGD.log.length-1;i>=0;i--){var m=YGD.log[i];if(m.r==="u")continue;if(m.card&&m.btns&&YB.acts[m.aid]&&!YB.acts[m.aid].used)return m.aid;return null;}return null;}
+// ---- the commands ------------------------------------------------------------------------------------------------
+function ybPlanText(t){return String(t||"").replace(/\b(?:on|to|in|into|onto)\s+(?:my|the)\s+(?:plan|calendar|schedule|agenda|planner|to-?do list|todo list|to do list)\b/ig," ").replace(/\s+/g," ").replace(/^[\s,.;]+|[\s,.;]+$/g,"").trim();}
+var YB_FILLER=/\b(please|pls|can|could|would|will|you|u|add|put|it|that|this|them|those|there|for|me|now|just|then|also|ok|okay|something|a|an|the|my|plan|calendar)\b/ig;
+function ybThin(t){return String(t||"").replace(YB_FILLER," ").replace(/[^a-z0-9]+/ig,"").length<3;}
+// "Can you add it to my plan?" - the thing to add is in what they asked before.
+function ybPrevPlanText(){
+ var seen=0;
+ for(var i=YGD.log.length-2;i>=0&&seen<4;i--){var m=YGD.log[i];if(m.r!=="u")continue;seen++;
+  var ps=ybSplit(m.t);for(var k=0;k<ps.length;k++){var r=null;try{r=ybLocalOne(ps[k]);}catch(e){}if(r&&r.cmd&&r.cmd.cmd==="plan.add"&&!ybThin(ybPlanText(ps[k])))return ybPlanText(ps[k]);}}
+ return "";
+}
+function ybPlanAdd(text){
+ if(!signedIn()){ybNeedIn("My Plan");return;}
+ var refers=/\b(it|that|this|them|those)\b/i.test(String(text||""));
+ text=ybPlanText(text);
+ if(ybThin(text)){var prev=refers?ybPrevPlanText():"";if(prev)text=prev;else{YB.pending={cmd:"plan.add",text:""};ybPush({t:"What should I add to My Plan, and when?"});return;}}
+ var now=new Date();ybBusy(true);
+ return yplApi("plan.parse",{text:text.slice(0,600),source:"sentence",today:yplYmd(now),weekday:now.toLocaleDateString("en-US",{weekday:"long"}),tz:yplTz()}).then(function(d){
+  var items=((d&&d.items)||[]).slice(0,12);
+  if(!items.length){ybBusy(false);YB.pending={cmd:"plan.add",text:text};ybPush({t:(d&&d.question)||"When should I put it in My Plan? Tell me the day and the time."});return;}
+  return yplApi("plan.save_many",{items:items.map(function(x){return yplToItem(x,"sentence");})}).then(function(s){
+   ybBusy(false);
+   var ids=((s&&s.ids)||[]).filter(function(i){return /^pl-[a-f0-9]{18}$/.test(String(i));}),id=ybId();
+   if(ids.length)YB.acts[id]={undo:function(){return Promise.all(ids.map(function(i){return yplApi("plan.delete",{id:i});})).then(function(){yplLoad(true);return "Removed "+(ids.length===1?"it":"them")+" from My Plan.";});}};
+   yplLoad(true);if((S.route||{}).view==="plan")setTimeout(render,600);
+   var list=items.map(function(x){return x.title+" - "+ybWhen(x)+(x.repeat?" (repeats)":"");});
+   var b=[];if(ids.length)b.push(["ygdUndo('"+id+"')","Undo"]);b.push(["ygdGo('plan')","Open My Plan"]);
+   ybPush({t:"Added to My Plan: "+(list.length===1?list[0]+".":"\n- "+list.join("\n- ")),aid:id,btns:b});
+  });
+ }).catch(function(e){
+  ybBusy(false);
+  if(e&&e.code==="NOTHING_FOUND"){YB.pending={cmd:"plan.add",text:text};ybPush({t:"I couldn't tell what to add. What is it, and on which day and time?"});return;}
+  ybPush({t:"I couldn't add that to My Plan: "+ybErr(e,"please try again in a moment."),err:true});
+ });
+}
+function ybEmail(on){
+ if(!signedIn()){ybNeedIn("email settings");return;}
+ var st=yplState(),was=st.prefs?st.prefs.digest!==false:null;ybBusy(true);
+ return yplApi("plan.prefs",{digest:!!on,tz:yplTz()}).then(function(d){
+  ybBusy(false);st.prefs=st.prefs||{};st.prefs.digest=d.digest;
+  var t=was===!!on?(on?"The My Plan morning email was already on.":"The My Plan morning email was already off, so Y Square doesn't email you your daily plan.")
+   :(on?"Done. The My Plan morning email is on again. It comes at 7am on days you have something planned.":"Done. I turned off the My Plan morning email, so Y Square won't email you your daily plan any more.");
+  var id=ybId();YB.acts[id]={run:function(){return ybEmail(!on);}};
+  ybPush({t:t,aid:id,btns:[["ygdAct('"+id+"')",on?"Turn it off":"Turn it back on"]]});
+ }).catch(function(e){ybBusy(false);ybPush({t:"I couldn't change the email setting: "+ybErr(e,"please try again in a moment."),err:true});});
+}
+function ybNotifRead(){
+ if(!signedIn()){ybNeedIn("notifications");return;}
+ var n=Number((typeof NT!=="undefined"&&NT.unread)||0);
+ try{A.notifReadAll();}catch(e){}
+ ybPush({t:n?"Marked "+n+" notification"+(n===1?"":"s")+" as read.":"You're all caught up. There are no unread notifications."});
+}
+function ybEventCreate(text){
+ var detail=text?ygdEventText(text):"";
+ try{A.agpOpen();}catch(e){go("#/events");}
+ var a=S.agp;
+ if(detail&&a&&!a.busy&&!a.creating){
+  if(a.base||(a.turns&&a.turns.length)){S.agp=yevNewAgp();a=S.agp;try{render();}catch(e){}}
+  a.text=detail;
+  setTimeout(function(){try{var ta=document.getElementById("agp-in");if(ta)ta.value=detail;if(S.agp&&!S.agp.busy&&!S.agp.creating){S.agp.focus=false;A.agpSend();}}catch(e){}ybRefocus();},150);
+  ybPush({t:"Creating your event with Agent Planner. If a detail is missing, it asks you there.",btns:[["ygdGo('events')","Open Event Planner"]]});
+ }else if(a&&(a.busy||a.creating))ybPush({t:"Agent Planner is still working on your last event. Have a look in Event Planner.",btns:[["ygdGo('events')","Open Event Planner"]]});
+ else ybPush({t:"Opening Agent Planner. Tell it what the event is, the date and the start time."});
+ ybPhoneClose();
+}
+// Keep typing in Y Buddy: the Agent Planner it started must not take the keyboard while the person is talking to Y Buddy.
+function ybRefocus(){if(!YGD.open||ygdPhone())return;var i=document.getElementById("ygd-in");if(i&&document.activeElement!==i)try{i.focus({preventScroll:true});}catch(e){}}
+var ybBaseAgpShow=agpShow;
+function ybKeepFocus(){try{var ae=document.activeElement;if(YGD.open&&ae&&ae.id==="ygd-in"&&S.agp)S.agp.focus=false;}catch(e){}}
+agpShow=function(){ybKeepFocus();return ybBaseAgpShow.apply(this,arguments);};
+var ybBaseRender=render;
+render=function(){ybKeepFocus();return ybBaseRender.apply(this,arguments);};
+function ybEvDone(t,eid){return {t:t,btns:[["ygdEv('"+eid+"')","Open event"]]};}
+function ybEvRefresh(eid){
+ try{if(S.event&&S.event.event&&S.event.event.id===eid)A.refreshEvent();}catch(e){}
+ api("events.list").then(function(l){if(S.boot)S.boot.events=l;if((S.route||{}).view==="events"&&!S.route.id)render();}).catch(function(){});
+}
+function ybJoin(code){
+ code=String(code||"").replace(/\s+/g,"").toUpperCase();
+ if(!/^[A-Z0-9]{4,12}$/.test(code)){YB.pending={cmd:"event.join"};ybPush({t:"What's the event code? The organiser can share it with you."});return;}
+ ybConfirm("Join the event with code "+code+"? The organiser and the other people in it will see you joined.",null,function(){
+  return api("events.join",{code:code}).then(function(d){
+   S.event=null;api("events.list").then(function(l){if(S.boot)S.boot.events=l;}).catch(function(){});
+   var eid=String((d&&d.eventId)||""),t=d&&d.waitlist?capFullText(d):d&&d.pending===true?"Request sent. The organiser of "+d.title+" needs to approve you.":"You joined "+((d&&d.title)||"the event")+".";
+   return /^[A-Za-z0-9_-]{4,64}$/.test(eid)?ybEvDone(t,eid):t;
+  });
+ },"Join");
+}
+function ybEventCmd(x){
+ var e=ybEvent(x.event);if(!e){ybPush({t:"I can't find that event in your list.",btns:[["ygdGo('events')","Open Event Planner"]]});return;}
+ var c=x.cmd,eid=e.id;
+ if((c==="event.update"||c==="event.task")&&e.r!=="organizer"&&e.r!=="helper"){ybPush({t:"Only the organisers and helpers of "+e.t+" can do that."});return;}
+ if(c==="event.rsvp"){
+  var an=["yes","no","maybe"].indexOf(x.answer)>=0?x.answer:"yes";
+  return ybConfirm("RSVP \""+an+"\" to "+e.t+"? The organiser will see your answer.",null,function(){return api("rsvp.set",{eventId:eid,rsvp:an}).then(function(){ybEvRefresh(eid);return ybEvDone("RSVP saved for "+e.t+": "+an+".",eid);});},"Send RSVP");
+ }
+ if(c==="event.message"&&x.text)return ybConfirm("Post this in the "+e.t+" chat? Everyone in the event will see it.",x.text,function(){return api("messages.post",{eventId:eid,body:x.text}).then(function(){ybEvRefresh(eid);return ybEvDone("Posted in the "+e.t+" chat.",eid);});},"Post");
+ if(c==="event.update"&&x.title&&x.text)return ybConfirm("Post this update to everyone in "+e.t+"?",x.title+"\n"+x.text,function(){return api("updates.post",{eventId:eid,kind:"announcement",title:x.title,body:x.text,pinned:false}).then(function(){ybEvRefresh(eid);return ybEvDone("Update posted to "+e.t+".",eid);});},"Post update");
+ if(c==="event.task"&&x.title)return ybConfirm("Add this task to "+e.t+"? Everyone in the event can see it.",x.title+(x.due?"\nDue "+ybDay(x.due):""),function(){var p={eventId:eid,title:x.title,category:"other",priority:"normal"};if(x.due)p.dueAt=x.due;return api("tasks.create",p).then(function(){ybEvRefresh(eid);return ybEvDone("Task added to "+e.t+".",eid);});},"Add task");
+}
+function ybClsDone(t,s){return {t:t,btns:[["ygdGo('playground/"+s+"')","Open "+ybClassName(s)]]};}
+function ybClassCmd(x){
+ var cl=ybClasses().filter(function(k){return k.id===x["class"];})[0];
+ if(!cl){ybPush({t:"You're not in that class. Your coach approves students for each AI Playground class."});return;}
+ var s=cl.id,nm=ybClassName(s),c=x.cmd;
+ var reset=function(k){try{pgState(s)[k]=null;if((S.route||{}).view==="playground"&&S.route.id===s)render();}catch(e){}};
+ if(/^class\.(announce|task|approve)$/.test(c)&&!cl.coach){ybPush({t:"Only coaches can do that for a class."});return;}
+ if(c==="class.message"&&x.text)return ybConfirm("Post this in the "+nm+" class chat? Everyone in the class will see it.",x.text,function(){return api("playground.chat_post",{section:s,body:x.text}).then(function(){reset("chat");return ybClsDone("Posted in the "+nm+" class chat.",s);});},"Post");
+ if(c==="class.announce"&&x.title&&x.text)return ybConfirm("Post this announcement to "+nm+"? Everyone in the class will see it.",x.title+"\n"+x.text,function(){return api("playground.announcement_add",{section:s,title:x.title,body:x.text,pinned:false}).then(function(){reset("announcements");return ybClsDone("Announcement posted to "+nm+".",s);});},"Post");
+ if(c==="class.task"&&x.title)return ybConfirm("Add this to "+nm+" pending work? Everyone in the class will see it.",x.title+(x.due?"\nDue "+ybDay(x.due):""),function(){return api("playground.pending_add",{section:s,title:x.title,description:"",dueAt:x.due||""}).then(function(){reset("pending");return ybClsDone("Added to "+nm+" pending work.",s);});},"Add");
+ if(c==="class.approve"&&x.email)return ybConfirm("Approve "+x.email+" for "+nm+"? They get access to the class.",null,function(){return api("playground.whitelist_add",{section:s,email:x.email}).then(function(){reset("whitelist");try{YSG.cache={};}catch(e){}return {t:"Approved "+x.email+" for "+nm+".",btns:[["ygdGo('teacher')","Open Coach Tools"]]};});},"Approve");
+}
+function ybUpload(x,o){
+ var cl=x["class"]&&ybClasses().filter(function(k){return k.id===x["class"];})[0];
+ if(cl&&o.gesture){A.ygdUpload(cl.id);return;}
+ if(cl){go("#/playground/"+cl.id);ybPush({t:"Opening "+ybClassName(cl.id)+". Press Upload in the Class work card to share your file."});ybPhoneClose();return;}
+ var r=ygdRun("action:classWork",{gesture:!!o.gesture});if(r&&r.reply)ybPush({t:r.reply,btns:r.btns});
+}
+function ybStudy(kind,topic){
+ topic=String(topic||"").replace(/\s+/g," ").replace(/^[\s,.;:]+|[\s,.;:!?]+$/g,"").trim().slice(0,120);
+ if(!topic){YB.pending={cmd:kind};ybPush({t:"What topic should the "+kind+" be about?"});return;}
+ var bk=kind==="quiz"?"quiz":"lesson";
+ if(S.busy&&S.busy[bk]){ybPush({t:"StudyPals is still building your "+bk+". It'll be ready in a moment.",btns:[["ygdGo('studypals')","Open StudyPals"]]});return;}
+ S.spTab=kind==="quiz"?"quiz":"lessons";LS.set("spTab",S.spTab);
+ var qp=LS.get("quizPref",{n:5,d:"medium"})||{},f=document.createElement("form");
+ f.innerHTML='<input name="topic"><input name="numQuestions"><input name="difficulty">';
+ f.elements.topic.value=topic;f.elements.numQuestions.value=String(qp.n||5);f.elements.difficulty.value=qp.d||"medium";
+ if((S.route||{}).view!=="studypals")go("#/studypals");else render();
+ setTimeout(function(){try{if(kind==="quiz")A.genQuiz(f);else A.genLesson(f);}catch(e){}},80);
+ ybPush({t:"StudyPals is building a "+kind+" on "+topic+" for "+spLabel()+". It's ready in 15 to 40 seconds.",btns:[["ygdGo('studypals')","Open StudyPals"]]});
+ ybPhoneClose();
+}
+var YB_AGENTS={athlete:["agent-athlete","athlete","Athlete Edge"],studypals:["agent-askai","studypals","StudyPals"],synthiq:["agent-synthiq","synthiq","SynthIQ"],planner:["agent-events","events","AI Planner"]};
+function ybAskAgent(agent,text){
+ var m=YB_AGENTS[agent];text=String(text||"").replace(/\s+/g," ").trim().slice(0,600);if(!m||!text)return;
+ var id=m[0];
+ if(agent==="studypals"){S.spTab="askai";LS.set("spTab","askai");}
+ if(agent==="planner"){var y=yevS();y.open=true;y.tab="ai";}
+ var r=S.route||{};
+ if(r.view!==m[1]||r.id)go("#/"+m[1]);else render();
+ setTimeout(function(){
+  var ctx=agent==="planner"?{}:ctxFor(id);
+  if(S.busy[convKey(id,ctx)]){toast("Please wait for the answer to finish, then ask again.");return;}
+  send(id,text,ctx);
+ },120);
+ ybPush({t:"I asked "+m[2]+" for you. The answer is on its page.",btns:[["ygdGo('"+m[1]+"')","Open "+m[2]]]});
+ ybPhoneClose();
+}
+// Runs one command; returns a promise when it waits for the server, so commands run one after another.
+function ybOne(x,o){
+ o=o||{};var c=x&&x.cmd;if(!c)return;
+ if(c==="classwork.upload")return ybUpload(x,o);
+ if(ybCan().indexOf(c)<0){
+  if(!signedIn()&&/^(plan\.add|email\.|notif\.|signout|class\.)/.test(c)){ybNeedIn(c==="plan.add"?"My Plan":/^email/.test(c)?"email settings":/^notif/.test(c)?"notifications":/^class/.test(c)?"your AI Playground class":"that");return;}
+  if(c==="signin"){ybPush({t:"You're already signed in as "+(actor().name||"you")+"."});return;}
+  if(/^event\./.test(c)){ybPush({t:"I can't find an event of yours where you can do that.",btns:[["ygdGo('events')","Open Event Planner"]]});return;}
+  if(/^class\./.test(c)){ybPush({t:isTeacher()?"Only coaches can do that for a class.":"That needs an AI Playground class your coach approved you for."});return;}
+  ybPush({t:"I can't do that for you."});return;
+ }
+ if(c==="plan.add")return ybPlanAdd(x.text);
+ if(c==="email.off"||c==="email.on")return ybEmail(c==="email.on");
+ if(c==="notif.read")return ybNotifRead();
+ if(c==="theme"){var r=ygdRun("action:theme",{want:x.mode==="dark"||x.mode==="light"?x.mode:""});if(r&&r.reply)ybPush({t:r.reply});return;}
+ if(c==="signin"){var r2=ygdRun("action:signIn",{});if(r2&&r2.reply)ybPush({t:r2.reply});return;}
+ if(c==="signout")return ybConfirm("Sign out of Y Square on this device?",null,function(){A.signOut();return "Signing you out.";},"Sign out");
+ if(c==="event.create")return ybEventCreate(x.text||"");
+ if(c==="event.join")return ybJoin(x.code);
+ if(/^event\./.test(c))return ybEventCmd(x);
+ if(/^class\./.test(c))return ybClassCmd(x);
+ if(c==="lesson"||c==="quiz")return ybStudy(c,x.topic);
+ if(c==="ask")return ybAskAgent(x.agent,x.text);
+}
+function ybRun(list,o){
+ var p=Promise.resolve();
+ (list||[]).slice(0,4).forEach(function(x){p=p.then(function(){return ybOne(x,o);}).catch(function(){ybBusy(false);ybPush({t:"That didn't work just now. Please try again.",err:true});});});
+ return p;
+}
+// ---- understanding clear requests here ------------------------------------------------------------------------------
+var YB_SPLIT=/\s*[,;.]?\s+(?:and then|and also|and|also|then|plus)\s+(?=(?:please |pls |can you |could you |also )?(?:turn|switch|add|put|create|make|open|take|mark|remind|schedule|book|join|send|post|upload|start|show|go|set|change|stop|disable|enable|unsubscribe|build|give|sign|log)\b)/i;
+function ybSplit(text){return String(text||"").split(YB_SPLIT).map(function(s){return s.trim();}).filter(Boolean).slice(0,4);}
+var YB_MAIL=/\b(e ?mails?|mail|mails|digest|morning email|newsletters?)\b/;
+var YB_OFF=/\b(turn|switch|shut|put)\b(?: \w+){0,4} off\b|\b(stop|disable|unsubscribe|mute|pause|block|silence)\b|\bno more\b|\bdont (send|want|email)\b|\bopt out\b|\bget rid of\b/;
+var YB_ON=/\b(turn|switch|put)\b(?: \w+){0,4} on\b|\b(enable|resume|restart|unmute|reactivate)\b|\bstart (sending|getting)\b|\bopt in\b|\bsend me\b.*\b(again|back)\b/;
+function ybLocalOne(part){
+ var n=ygdNorm(part);
+ if(/\b(delete|remove|erase|wipe|deactivate|close|cancel|terminate)\b.{0,40}\b(account|profile)\b/.test(n))return {reply:"I can't delete or close accounts. You can manage your account yourself in Account.",offer:"account"};
+ if(/\b(delete|remove|erase|cancel)\b.{0,40}\bevents?\b/.test(n))return {reply:"I can't delete or cancel events. The organiser can do that on the event's page.",offer:"events"};
+ if(/^ (please )?(can you |could you |pls )?(remind me|set (a |an )?reminder|add (a |an )?reminder)\b/.test(n)||/\b(add|put|schedule|book|set|save|note|block|pencil|create|make)\b.{0,160}\b(on|to|in|into|onto) (my|the) (plan|calendar|schedule|agenda|planner|to ?do list|todo list)\b/.test(n))return {cmd:{cmd:"plan.add",text:part}};
+ if(YB_MAIL.test(n)){if(YB_OFF.test(n))return {cmd:{cmd:"email.off"}};if(YB_ON.test(n))return {cmd:{cmd:"email.on"}};}
+ if(/\bnotifications?\b|\bthe bell\b/.test(n)){
+  if(/\b(mark|read|dismiss|clear)\b/.test(n))return {cmd:{cmd:"notif.read"}};
+  if(YB_OFF.test(n))return {notif:true};
+ }
+ if(/\bjoin\b/.test(n)&&/\bevent|code\b/.test(n)){var cm=String(part).match(/\bcode\s*(?:is\s*)?[:#]?\s*([A-Za-z0-9]{4,12})\b/i)||String(part).match(/\bjoin\s+(?:the\s+)?(?:event\s+)?(?:with\s+)?([A-Z0-9]{5,12})\b/);return {cmd:{cmd:"event.join",code:cm?cm[1]:""}};}
+ var qm=/\b(make|create|build|give|generate|start|take|do|prepare|write)\b(?: me| us)?(?: a| an| another| one| some)?(?: (?:short|quick|small|new|practice|fun|easy|hard))?\s+(quiz|lesson|test)(?:zes)?\b/.exec(n);
+ if(qm){var tm=String(part).match(/\b(?:quiz|lesson|test)(?:zes)?\b\s*(?:on|about|for|of|in|covering)\s+(.+)$/i);return {cmd:{cmd:qm[2]==="lesson"?"lesson":"quiz",topic:tm?tm[1]:""}};}
+ var old=null;try{old=ygdLocal(part);}catch(e){old=null;}
+ if(!old)return null;
+ if(old.reply)return old;
+ if(old.act==="action:theme")return {cmd:{cmd:"theme",mode:old.want||""}};
+ if(old.act==="action:accountMenu")return signedIn()?{cmd:{cmd:"signout"}}:{reply:"You're not signed in. Say \"sign in\" if you want to."};
+ if(old.act==="action:signIn")return {cmd:{cmd:"signin"}};
+ if(old.act==="action:newEvent")return {cmd:{cmd:"event.create",text:part}};
+ if(old.act==="action:classWork")return {cmd:{cmd:"classwork.upload"}};
+ if(old.act)return {act:old.act};
+ if(old.go)return {go:old.go};
+ return null;
+}
+// One understood piece: a reply, a command, or a place to open.
+function ybDoLocal(r,part,gesture){
+ if(r.reply){ybPush({t:r.reply,chips:!!r.chips,offer:r.offer&&ygdHas(r.offer)?r.offer:null});return;}
+ if(r.notif){
+  if(!signedIn()){ybPush({t:"The bell shows reminders and updates while Y Square is open. The only email is the My Plan morning email, for signed-in members."});return;}
+  ybOffer("The bell inside Y Square can't be switched off, but you can mark everything read. The only email Y Square sends is the My Plan morning email. Want me to turn that off?","Turn off the morning email",function(){return ybEmail(false);});return;
+ }
+ if(r.cmd)return ybOne(r.cmd,{gesture:gesture,text:part});
+ var res=null;try{res=ygdRun(r.act||r.go,{gesture:gesture,text:part});}catch(e){res=null;}
+ if(res&&res.reply)ybPush({t:res.reply,btns:res.btns});
+}
+var YB_YES=/^(yes|yeah|yea|yep|yup|ya|sure|ok|okay|ok do it|okay do it|do it|do that|go ahead|please do|yes please|please|sounds good|confirm|yes do it|alright|go for it|yes go ahead|sure go ahead|yes thanks|do it please|please do it|yes confirm|confirm it|send it|post it)$/;
+var YB_NO=/^(no|nope|nah|cancel|cancel it|never mind|nevermind|dont|no thanks|stop|forget it)$/;
+// ---- the new message handler (the send button, chips and the microphone all come here) ---------------------------------
+ygdHandle=function(text,gesture){
+ text=String(text||"").replace(/\s+/g," ").trim().slice(0,600);if(!text||YGD.busy)return;
+ YGD.log.push({r:"u",t:text});
+ var n=ygdNorm(text).trim();
+ if(/^(hi|hii|hello|hey|hey there|hi there|hello there|yo|hola|good (morning|afternoon|evening))( y ?(guide|buddy))?$/.test(n)){YGD.log[YGD.log.length-1].local=true;var g=ybPush({t:"Hi! What can I do for you? You can say things like \"add soccer practice Friday 5pm to my plan\" or \"make a quiz on fractions\".",chips:true});g.local=true;return;}
+ if(/^(help|menu|commands|what can you do|what do you do|how does this work|how do you work)( for me)?$/.test(n)){YGD.log[YGD.log.length-1].local=true;var h=ybPush({t:YGD_HELP,chips:true});h.local=true;return;}
+ // "yes" / "no" answer the last question: an offered action or a card waiting for Confirm.
+ if(YB_YES.test(n)){
+  var card=ybLastCard();if(YB.offer&&YB.acts[YB.offer]&&!YB.acts[YB.offer].used){A.ygdAct(YB.offer);return;}if(card){A.ygdOk(card);return;}
+  var la=ybLastA();
+  if(!YB.pending&&!(la&&la.srv&&/\?\s*$/.test(String(la.t||"")))){YGD.log[YGD.log.length-1].local=true;var k=ybPush({t:"OK! What else can I do for you?",chips:true});k.local=true;return;}
+ }
+ if(YB_NO.test(n)){var card2=ybLastCard();if(card2){A.ygdNo(card2);return;}if(YB.offer||YB.pending){YB.offer=null;YB.pending=null;ybPush({t:"OK, I'll leave it."});return;}}
+ YB.offer=null;
+ var pend=YB.pending;YB.pending=null;
+ var parts=ybSplit(text),res=parts.map(function(p){try{return ybLocalOne(p);}catch(e){return null;}});
+ if(parts.length&&res.every(Boolean)){
+  var p=Promise.resolve();
+  res.forEach(function(r,i){p=p.then(function(){return ybDoLocal(r,parts[i],gesture);}).catch(function(){ybBusy(false);});});
+  return;
+ }
+ // An answer to the question asked last (the time for a plan item, a quiz topic, an event code).
+ if(pend&&!res.some(function(r){return r&&(r.cmd||r.go||r.act);})){
+  if(pend.cmd==="plan.add"){ybPlanAdd((pend.text?pend.text+" ":"")+text);return;}
+  if(pend.cmd==="lesson"||pend.cmd==="quiz"){ybStudy(pend.cmd,text.replace(/^(on|about|the topic is|topic)\s+/i,""));return;}
+  if(pend.cmd==="event.join"){var cm=text.match(/\b([A-Za-z0-9]{4,12})\b\W*$/);ybJoin(cm?cm[1]:"");return;}
+ }
+ ybAskServer(text,gesture);
+};
+function ybAskServer(text,gesture){
+ YGD.busy=true;ygdPaint();
+ var body={agentId:"agent-guide",message:text,conversationId:YGD.conv,context:{map:ygdPlaces(),where:ygdWhere(),history:ygdHist().slice(0,-1),events:ybEvents(),classes:ybClasses(),can:ybCan(),tz:yplTz(),localNow:ybLocalNow()}};
+ Promise.resolve().then(function(){return voBaseChatApiMsg(body);}).then(function(j){
+  YGD.busy=false;
+  if(j&&j.success&&j.task==="guide"&&j.reply){
+   var can=ybCan(),list=(Array.isArray(j["do"])?j["do"]:[]).filter(function(x){return x&&typeof x==="object"&&can.indexOf(x.cmd)>=0;}).slice(0,3);
+   if(list.length){
+    if(/\b(can ?not|can't|cant|not able|unable|only help|isn't possible|not possible)\b/i.test(j.reply))ybPush({t:j.reply});
+    ybRun(list,{gesture:false,text:text});return;
+   }
+   var go2=j.go&&ygdHas(j.go)?j.go:null,offer=!go2&&j.offer&&ygdHas(j.offer)?j.offer:null;
+   ygdSay(j.reply,{offer:offer});YGD.log[YGD.log.length-1].srv=true;
+   if(go2)setTimeout(function(){var res=ygdRun(go2,{text:text});if(res&&res.btns)ygdSay(res.reply,{btns:res.btns});},350);
+  }else if(j&&j.success&&j.message&&j.message.content){ygdSay(String(j.message.content).slice(0,300));YGD.log[YGD.log.length-1].local=true;}
+  else ygdSay(friendlyMsg((j&&j.error)||{},"Y Buddy could not answer just now.")+" You can still pick something below.",{chips:true,err:true});
+ }).catch(function(){YGD.busy=false;ygdSay("Y Buddy could not answer just now. You can still pick something below.",{chips:true,err:true});});
+}
+// ---- the panel: new name and wording, cards and quotes in the log ----------------------------------------------------
+ygdChips=function(){
+ var c=[],T=isTeacher();
+ c.push(["Create an event","cal"]);
+ if(signedIn())c.push(["Add to My Plan","cal"]);else c.push(["Open My Plan","cal"]);
+ c.push(["Make a quiz","chk"]);c.push(["Open StudyPals","book"]);
+ if(ybClasses().length)c.push(["Upload my class work","file"]);
+ c.push(["Open Athlete Edge","bolt"]);
+ if(!isPremium())c.push(["Show plans and prices","star"]);
+ c.push([S.theme==="dark"?"Light mode":"Dark mode",S.theme==="dark"?"sun":"moon"]);
+ if(!signedIn())c.push(["Sign in","user"]);
+ return c;
+};
+ygdLogHtml=function(){
+ var h=YGD.log.map(function(m){
+  var acts="";
+  if(m.offer)acts+='<button type="button" class="btn xs p" onclick="A.ygdGo(\''+attr(m.offer)+'\')">'+(/^action:/.test(m.offer)?esc(ygdLabel(m.offer)):"Open "+esc(ygdLabel(m.offer)))+'</button>';
+  if(m.btns)m.btns.forEach(function(b,i){acts+='<button type="button" class="btn xs'+((m.card||m.pri)&&i===0?" p":"")+'" onclick="A.'+b[0]+'">'+esc(b[1])+'</button>';});
+  return '<div class="ygd-b '+(m.r==="u"?"u":"a")+(m.err?" e":"")+(m.card?" c":"")+'">'+esc(m.t)+(m.q?'<span class="ygd-q">'+esc(m.q)+'</span>':'')+(acts?'<div class="ygd-acts">'+acts+'</div>':'')+'</div>';
+ }).join("");
+ if(YGD.busy)h+='<div class="ygd-typing" aria-label="Y Buddy is working on it"><i></i><i></i><i></i></div>';
+ return h;
+};
+ygdEnsure=function(){
+ if(!document.getElementById("ygd-fab")){
+  var b=document.createElement("button");b.type="button";b.id="ygd-fab";b.className="ygd-fab";b.setAttribute("aria-label","Open Y Buddy: your helper in Y Square");b.title="Y Buddy - tell it what you need";
+  b.innerHTML=ic("spark")+"<span>Y Buddy</span>";b.onclick=function(){A.ygdToggle(true);};document.body.appendChild(b);
+ }
+ if(!document.getElementById("ygd-panel")){
+  var p=document.createElement("div");p.id="ygd-panel";p.className="ygd-p";p.hidden=true;p.setAttribute("role","dialog");p.setAttribute("aria-label","Y Buddy");
+  p.innerHTML='<div class="ygd-h"><span class="ygd-logo">'+ic("spark")+'</span><span class="ygd-tt"><b>Y Buddy</b><small>Does things for you in Y Square</small></span>'+
+   '<button type="button" class="btn icon ghost" aria-label="Close Y Buddy" title="Close" onclick="A.ygdToggle(false)">'+ic("x")+'</button></div>'+
+   '<div class="ygd-log" id="ygd-log" aria-live="polite"></div><div class="ygd-chips" id="ygd-chips"></div>'+
+   '<form class="ygd-f" onsubmit="return A.ygdSend(event)"><input id="ygd-in" maxlength="600" autocomplete="off" enterkeyhint="send" aria-label="Tell Y Buddy what to do" placeholder="What should I do for you?">'+
+   '<button type="button" class="btn icon ygd-mic" id="ygd-mic" aria-label="Speak to Y Buddy" title="Speak" onclick="A.ygdMic()">'+ic("mic")+'</button>'+
+   '<button type="submit" class="btn icon p" aria-label="Send" title="Send">'+ic("send")+'</button></form>'+
+   '<div class="ygd-note">Y Buddy asks before posting anything others will see. It never deletes things.</div>';
+  p.addEventListener("keydown",function(e){if(e.key==="Escape"){e.preventDefault();A.ygdToggle(false);}});
+  document.body.appendChild(p);
+ }
+};
+var ybBaseToggle=A.ygdToggle;
+A.ygdToggle=function(force){
+ var opening=typeof force==="boolean"?force:!YGD.open;
+ if(opening&&!YGD.log.length){var nm=signedIn()?String(actor().name||"").trim().split(/\s+/)[0]:"";YGD.log.push({r:"a",t:"Hi"+(nm?" "+nm:"")+"! I'm Y Buddy. Tell me what you need, like adding something to My Plan, creating an event or making a quiz, and I'll do it.",chips:true,local:true});}
+ return ybBaseToggle.apply(this,arguments);
+};
+var ybBaseMic=A.ygdMic;
+A.ygdMic=function(){
+ var R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){toast("This browser cannot listen. Type instead.","err");return;}
+ var r=ybBaseMic.apply(this,arguments);
+ try{if(YGD.rec){var oe=YGD.rec.onerror;YGD.rec.onerror=function(e){if(e&&(e.error==="not-allowed"||e.error==="service-not-allowed"))toast("Allow the microphone to talk to Y Buddy.","err");else if(oe)oe.call(this,e);};}}catch(e){}
+ return r;
+};
+var ybBaseHeader=header;
+header=function(title){
+ return ybBaseHeader.apply(this,arguments).split('aria-label="Open Y Guide" title="Y Guide - find anything in Y Square">').join('aria-label="Open Y Buddy" title="Y Buddy - tell it what you need">').split('<span>Y Guide</span>').join('<span>Y Buddy</span>');
+};
+// ==== v48: Admin > Interested =========================================================================================
+// Everyone who sent the "Send us a message" form on the Startups page (table ys_interest, workflow "Y Square - Ecosystem
+// Interest"), in one Admin tab: how many people are interested, who they are (student, parent, teacher...), grades and
+// Future Founders Academy tracks, every message in full, a status (New, Replied, Done), a short reply, delete for spam,
+// and a CSV download. POST /svc/interest-admin (workflow "Y Square - Interest Admin", admins only). A reply is not a
+// chat: it is emailed from the Y Square Gmail, and people whose email has a Y Square account also get a bell notice.
+// The admins' bell notice for a new message opens this tab (#/admin/interest).
+(function(){var st=document.createElement("style");st.id="v48css";st.textContent=
+ ".yin-kpis{margin-bottom:14px}"+
+ ".yin-kpis .kpi.on{border-color:var(--ac);box-shadow:0 0 0 2px var(--acs)}"+
+ ".yin-kpis button.kpi{text-align:left;font:inherit;color:inherit;cursor:pointer}"+
+ ".yin-break{display:grid;gap:12px}"+
+ ".yin-break h4{font-size:12px;font-weight:650;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px}"+
+ ".yin-chips{display:flex;flex-wrap:wrap;gap:6px}"+
+ ".yin-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);font:inherit;font-size:12.5px;color:var(--tx2);cursor:pointer}"+
+ ".yin-chip b{color:var(--tx);font-weight:700}"+
+ ".yin-chip.on{border-color:var(--ac);background:var(--acs);color:var(--ac)}"+
+ ".yin-chip.ro{cursor:default}"+
+ ".yin-count{font-size:12.5px;color:var(--tx3);margin:2px 0 10px}"+
+ ".yin-item{margin-bottom:12px}"+
+ ".yin-item .bd{padding:16px 18px;display:grid;gap:8px}"+
+ ".yin-item.new{border-left:3px solid var(--warn)}"+
+ ".yin-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}"+
+ ".yin-who{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}"+
+ ".yin-who b{font-size:15px;word-break:break-word}"+
+ ".yin-meta{font-size:12.5px;color:var(--tx3);display:flex;gap:6px 10px;flex-wrap:wrap;align-items:center}"+
+ ".yin-meta a{word-break:break-all}"+
+ ".yin-msg{font-size:14px;color:var(--tx);white-space:pre-wrap;word-break:break-word;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}"+
+ ".yin-msg.empty{color:var(--tx3);font-style:italic}"+
+ ".yin-reps{display:grid;gap:6px}"+
+ ".yin-rep{border-left:3px solid var(--acl);padding:4px 0 4px 10px;font-size:13px}"+
+ ".yin-rep .t{white-space:pre-wrap;word-break:break-word;color:var(--tx)}"+
+ ".yin-rep .m{font-size:12px;color:var(--tx3);margin-top:2px}"+
+ ".yin-rep .bad{color:var(--err)}"+
+ ".yin-acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap}"+
+ ".yin-acts select{padding:5px 8px;font:inherit;font-size:13px;color:var(--tx);background:var(--panel);border:1px solid var(--line2);border-radius:8px}"+
+ ".yin-acts .sp{flex:1}"+
+ ".yin-form{display:grid;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px}"+
+ ".yin-form textarea{width:100%;min-height:96px;resize:vertical;padding:9px 11px;border:1px solid var(--line2);border-radius:9px;background:var(--panel);font:inherit;font-size:14px}"+
+ ".yin-form .small{line-height:1.45}"+
+ "@media (max-width:640px){.yin-item .bd{padding:14px}.yin-acts .sp{display:none}}";
+ document.head.appendChild(st);})();
+if(typeof NT_KIND!=="undefined")NT_KIND.interest_reply=["mail","ac"];
+var YIN={data:null,at:0,busy:false,err:null,f:{status:"",role:"",q:""},open:{},drafts:{},sending:{},qT:0};
+var YIN_ROLES={student:"Student (middle or high school)",undergrad:"College / undergraduate student",professional:"Working professional",parent:"Parent or guardian",educator:"Teacher or coach",mentor:"Mentor, founder or investor",other:"Other"};
+var YIN_SHORT={student:"Students",undergrad:"College students",professional:"Professionals",parent:"Parents",educator:"Teachers and coaches",mentor:"Mentors, founders, investors",other:"Other"};
+var YIN_TRACKS={agentic_ai:"Agentic AI",bpm:"BPM Track",erp:"ERP Track",career_edge:"Career Edge",upskill:"Upskill Track",unsure:"Not sure yet"};
+var YIN_STATUS=[["new","New"],["replied","Replied"],["done","Done"]];
+function yinApi(action,payload){
+ return fetch(BASE+"/svc/interest-admin",{method:"POST",headers:headers(),body:JSON.stringify({action:action,payload:payload||{}})})
+  .then(function(r){return r.json().catch(function(){return {success:false,error:{code:"BAD_RESPONSE",message:"The server returned an unexpected response ("+r.status+")."}};});})
+  .then(function(j){if(j&&j.success)return j.data;throw (j&&j.error)||{code:"ERROR",message:"Request failed."};},function(e){if(e&&e.code)throw e;throw {code:"NETWORK",message:"We could not connect. Check your internet connection and try again."};});
+}
+function yinMsg(e,fb){return (e&&e.message&&e.code!=="NETWORK")?String(e.message):friendlyMsg(e,fb);}
+function yinTab(){for(var i=0;i<ADM_TABS.length;i++)if(ADM_TABS[i][0]==="interest")return ADM_TABS[i];return null;}
+function yinLabel(){var t=yinTab(),s=YIN.data&&YIN.data.stats,n=s?Number(s["new"])||0:0;if(t)t[1]="Interested"+(n?" ("+n+" new)":"");}
+function yinLoad(force){
+ if(YIN.busy||!isAdmin())return;
+ if(!force&&YIN.at&&Date.now()-YIN.at<60000)return;
+ YIN.busy=true;
+ yinApi("interest.list",{}).then(function(d){YIN.busy=false;YIN.at=Date.now();YIN.err=null;YIN.data=d||{items:[]};if(!Array.isArray(YIN.data.items))YIN.data.items=[];yinLabel();render();})
+  .catch(function(e){YIN.busy=false;YIN.at=Date.now();YIN.err=e||{};render();});
+}
+function yinItems(){return (YIN.data&&YIN.data.items)||[];}
+function yinFind(id){id=String(id);return yinItems().filter(function(x){return String(x.id)===id;})[0]||null;}
+function yinShown(){
+ var f=YIN.f,q=String(f.q||"").trim().toLowerCase();
+ return yinItems().filter(function(x){
+  if(f.status&&x.status!==f.status)return false;
+  if(f.role&&x.role!==f.role)return false;
+  if(q&&[x.name,x.email,x.message,YIN_ROLES[x.role]||x.role,x.grade?"grade "+x.grade:"",YIN_TRACKS[x.track]||x.track].join(" ").toLowerCase().indexOf(q)<0)return false;
+  return true;
+ });
+}
+function yinStatusBadge(s){var c=s==="new"?"warn":(s==="done"?"ok":"info"),l=(YIN_STATUS.filter(function(x){return x[0]===s;})[0]||[s,s])[1];return '<span class="badge '+c+'">'+esc(l)+'</span>';}
+function yinDate(v){return v?esc(fmtDT(v))+' <span title="'+attr(String(v))+'">('+esc(ago(v))+')</span>':"";}
+function yinRep(r){
+ var how=[];
+ if(r.emailOk===true)how.push("emailed");else if(r.emailOk===false)how.push('<span class="bad">email not sent</span>');else how.push("sending...");
+ if(r.notified)how.push("bell notice");
+ return '<div class="yin-rep"><div class="t">'+esc(r.body||"")+'</div><div class="m">Reply by '+esc(r.by||"an admin")+' &middot; '+esc(fmtDT(r.at))+' &middot; '+how.join(" &middot; ")+'</div></div>';
+}
+function yinCard(x){
+ var id=String(x.id),open=!!YIN.open[id],sending=!!YIN.sending[id],reps=Array.isArray(x.replies)?x.replies:[];
+ var who=YIN_ROLES[x.role]||x.role||"";
+ var head='<div class="yin-head"><div class="yin-who"><b>'+esc(x.name||"(no name)")+'</b>'+(who?'<span class="badge">'+esc(who)+'</span>':'')+(x.grade?'<span class="badge">Grade '+esc(x.grade)+'</span>':'')+(x.track?'<span class="badge info">Academy: '+esc(YIN_TRACKS[x.track]||x.track)+'</span>':'')+'</div>'+yinStatusBadge(x.status)+'</div>';
+ var meta='<div class="yin-meta">'+(x.email?'<a href="'+attr("mailto:"+x.email)+'">'+esc(x.email)+'</a>':'')+(x.has_account?'<span class="badge ac" title="This email has a Y Square account, so replies also show in their bell">Has a Y Square account</span>':'')+'<span>'+yinDate(x.created_at)+'</span></div>';
+ var msg=x.message?'<div class="yin-msg">'+esc(x.message)+'</div>':'<div class="yin-msg empty">No message, just their details.</div>';
+ var sel='<select aria-label="Status" onchange="A.yinStatus(\''+id+'\',this.value)"'+(sending?" disabled":"")+'>'+YIN_STATUS.map(function(s){return '<option value="'+s[0]+'"'+(x.status===s[0]?" selected":"")+'>'+s[1]+'</option>';}).join("")+'</select>';
+ var acts='<div class="yin-acts">'+sel+'<button type="button" class="btn s'+(open?"":" p")+'" onclick="A.yinReplyToggle(\''+id+'\')"'+(sending?" disabled":"")+'>'+ic("mail")+(open?"Close reply":(reps.length?"Reply again":"Reply"))+'</button><div class="sp"></div><button type="button" class="btn s ghost" title="Delete this message for good (spam)" onclick="A.yinDelete(\''+id+'\')"'+(sending?" disabled":"")+'>'+ic("x")+'Delete</button></div>';
+ var form="";
+ if(open){
+  var d=YIN.drafts[id]||"";
+  form='<form class="yin-form" onsubmit="return A.yinSend(this,\''+id+'\')"><textarea name="message" maxlength="2000" data-yin="r'+id+'" placeholder="Write a short reply to '+attr(x.name||"them")+'..." oninput="A.yinDraft(\''+id+'\',this.value)"'+(sending?" disabled":"")+'>'+esc(d)+'</textarea>'+
+   '<div class="small muted">Emailed to <b>'+esc(x.email||"")+'</b> from the Y Square Gmail, with their message quoted underneath'+(x.has_account?', and shown in their Y Square bell':'')+'. If they write back, it arrives in that Gmail inbox.</div>'+
+   '<div class="row" style="gap:8px"><button type="submit" class="btn p s"'+(sending?" disabled":"")+'>'+ic("send")+(sending?"Sending...":"Send reply")+'</button><button type="button" class="btn s ghost" onclick="A.yinReplyToggle(\''+id+'\')"'+(sending?" disabled":"")+'>Cancel</button></div></form>';
+ }
+ return '<div class="card yin-item'+(x.status==="new"?" new":"")+'" id="yin-'+id+'"><div class="bd">'+head+meta+msg+(reps.length?'<div class="yin-reps">'+reps.map(yinRep).join("")+'</div>':'')+acts+form+'</div></div>';
+}
+function yinChips(title,map,labels,key){
+ var ks=Object.keys(map||{}).filter(function(k){return Number(map[k])>0;});
+ if(!ks.length)return "";
+ ks.sort(function(a,b){return (Number(map[b])||0)-(Number(map[a])||0)||String(a).localeCompare(String(b),undefined,{numeric:true});});
+ return '<div><h4>'+esc(title)+'</h4><div class="yin-chips">'+ks.map(function(k){
+  var l=labels?(labels[k]||k):("Grade "+k);
+  if(key==="role"){var on=YIN.f.role===k;return '<button type="button" class="yin-chip'+(on?" on":"")+'" aria-pressed="'+on+'" onclick="A.yinFilter(\'role\',\''+attr(on?"":k)+'\')">'+esc(l)+' <b>'+Number(map[k])+'</b></button>';}
+  return '<span class="yin-chip ro">'+esc(l)+' <b>'+Number(map[k])+'</b></span>';
+ }).join("")+'</div></div>';
+}
+function yinAdmin(){
+ yinLoad(false);
+ var bar='<div class="adm-bar"><button type="button" class="btn s" onclick="A.yinRefresh()"'+(YIN.busy?" disabled":"")+'>'+ic("refresh")+(YIN.busy?"Loading...":"Refresh")+'</button><button type="button" class="btn s" onclick="A.yinCsv()"'+(yinItems().length?"":" disabled")+'>'+ic("down")+'Download CSV</button><span class="muted small">Messages from the &quot;Send us a message&quot; form on the Startups page.</span></div>';
+ if(!YIN.data){
+  if(YIN.err)return bar+'<div class="card"><div class="empty">'+esc(yinMsg(YIN.err,"The messages could not load."))+'<br><button class="btn s" style="margin-top:10px" onclick="A.yinRefresh()">'+ic("refresh")+'Try again</button></div></div>';
+  return bar+'<div class="card"><div class="bd"><div class="sk" style="width:40%"></div><br><div class="sk"></div></div></div>';
+ }
+ var s=YIN.data.stats||{},f=YIN.f;
+ function kpi(v,label,st){var on=st!=null&&f.status===st;var inner='<b>'+(Number(v)||0)+'</b><span>'+esc(label)+'</span>';return st==null?'<div class="kpi">'+inner+'</div>':'<button type="button" class="kpi'+(on?" on":"")+'" aria-pressed="'+on+'" title="Show only '+attr(label.toLowerCase())+'" onclick="A.yinFilter(\'status\',\''+(on?"":st)+'\')">'+inner+'</button>';}
+ var kp='<div class="kpis yin-kpis">'+kpi(s.people,"people interested")+kpi(s.messages,"messages")+kpi(s["new"],"new","new")+kpi(s.replied,"replied","replied")+kpi(s.done,"done","done")+kpi(s.last7,"in the last 7 days")+'</div>';
+ var br=yinChips("Who they are",YIN.data.byRole,YIN_SHORT,"role")+yinChips("Grades",YIN.data.byGrade,null,"grade")+yinChips("Future Founders Academy tracks",YIN.data.byTrack,YIN_TRACKS,"track");
+ var brCard=br?'<div class="card" style="margin-bottom:14px"><div class="bd yin-break">'+br+'</div></div>':'';
+ var items=yinItems();
+ if(!items.length)return bar+kp+'<div class="card"><div class="empty">'+ic("rocket","ic22")+'<br><b>No messages yet</b><div class="small">When someone sends the &quot;Send us a message&quot; form on the Startups page, it shows up here.</div></div></div>';
+ var roles=Object.keys(YIN_ROLES);
+ var filt='<div class="adm-bar"><select aria-label="Status" onchange="A.yinFilter(\'status\',this.value)"><option value="">All statuses</option>'+YIN_STATUS.map(function(x){return '<option value="'+x[0]+'"'+(f.status===x[0]?" selected":"")+'>'+x[1]+'</option>';}).join("")+'</select>'+
+  '<select aria-label="Who they are" onchange="A.yinFilter(\'role\',this.value)"><option value="">Everyone</option>'+roles.map(function(k){return '<option value="'+k+'"'+(f.role===k?" selected":"")+'>'+esc(YIN_SHORT[k])+'</option>';}).join("")+'</select>'+
+  '<input type="search" data-yin="q" aria-label="Search" placeholder="Search name, email or message" value="'+attr(f.q)+'" oninput="A.yinSearch(this.value)">'+
+  ((f.status||f.role||f.q)?'<button type="button" class="btn s ghost" onclick="A.yinClear()">Clear</button>':'')+'</div>';
+ var shown=yinShown();
+ var list=shown.length?shown.map(yinCard).join(""):'<div class="card"><div class="empty">Nothing matches. <button class="btn s ghost" onclick="A.yinClear()">Clear the filters</button></div></div>';
+ return bar+kp+brCard+filt+'<div class="yin-count">Showing '+shown.length+' of '+items.length+' message'+(items.length===1?"":"s")+'</div>'+list;
+}
+A.yinRefresh=function(){YIN.err=null;yinLoad(true);render();};
+A.yinFilter=function(k,v){if(["status","role"].indexOf(k)<0)return;YIN.f[k]=String(v||"");render();};
+A.yinClear=function(){YIN.f={status:"",role:"",q:""};render();};
+A.yinSearch=function(v){YIN.f.q=String(v||"").slice(0,100);clearTimeout(YIN.qT);YIN.qT=setTimeout(function(){render();},200);};
+A.yinDraft=function(id,v){YIN.drafts[String(id)]=String(v||"");};
+A.yinReplyToggle=function(id){id=String(id);if(YIN.sending[id])return;YIN.open[id]=!YIN.open[id];render();if(YIN.open[id])setTimeout(function(){var t=document.querySelector('[data-yin="r'+id+'"]');if(t)try{t.focus();}catch(e){}},0);};
+A.yinStatus=function(id,st){
+ var x=yinFind(id);if(!x||YIN_STATUS.map(function(s){return s[0];}).indexOf(st)<0)return;
+ var old=x.status;if(old===st)return;x.status=st;render();
+ yinApi("interest.status",{id:Number(id),status:st}).then(function(d){x.status=(d&&d.status)||st;toast("Marked "+((YIN_STATUS.filter(function(s){return s[0]===x.status;})[0]||[0,x.status])[1])+".","ok");yinLoad(true);})
+  .catch(function(e){x.status=old;render();toast(yinMsg(e,"That did not save. Please try again."),"err");});
+};
+A.yinSend=function(form,id){
+ id=String(id);var x=yinFind(id);if(!x||YIN.sending[id])return false;
+ var msg=String((form.elements.message||{}).value||"").trim();
+ if(!msg){toast("Write a reply first.","err");return false;}
+ YIN.drafts[id]=msg;YIN.sending[id]=true;render();
+ yinApi("interest.reply",{id:Number(id),message:msg}).then(function(d){
+  YIN.sending[id]=false;var cur=yinFind(id)||x;
+  if(d&&d.reply){cur.replies=(Array.isArray(cur.replies)?cur.replies:[]).concat([d.reply]);}
+  if(d&&d.status)cur.status=d.status;
+  delete YIN.drafts[id];YIN.open[id]=false;
+  if(d&&d.emailOk)toast("Reply emailed to "+cur.email+(d.bell?" and added to their Y Square bell.":"."),"ok");
+  else if(d&&d.bell)toast("The email could not be sent"+(d.emailError?" ("+d.emailError+")":"")+". They will see the reply in their Y Square bell.","err");
+  else toast("The email could not be sent"+(d&&d.emailError?": "+d.emailError:".")+" The reply is saved here; please try again later.","err");
+  render();yinLoad(true);
+ }).catch(function(e){YIN.sending[id]=false;render();toast(yinMsg(e,"The reply was not sent. Please try again."),"err");});
+ return false;
+};
+A.yinDelete=function(id){
+ id=String(id);var x=yinFind(id);if(!x||YIN.sending[id])return;
+ if(!confirm("Delete the message from "+(x.name||"this person")+" for good?\n\nUse this for spam. It cannot be undone."))return;
+ yinApi("interest.delete",{id:Number(id)}).then(function(){
+  if(YIN.data)YIN.data.items=yinItems().filter(function(y){return String(y.id)!==id;});
+  delete YIN.open[id];delete YIN.drafts[id];toast("Message deleted.","ok");render();yinLoad(true);
+ }).catch(function(e){toast(yinMsg(e,"That did not delete. Please try again."),"err");});
+};
+// The whole list as a spreadsheet file (UTF-8 with BOM so Excel shows names correctly). Cells that could run as a formula
+// in a spreadsheet get a leading apostrophe.
+function yinCell(v){var s=String(v==null?"":v);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
+A.yinCsv=function(){
+ var items=yinItems();if(!items.length)return;
+ var head=["Date","Name","Email","Who they are","Grade","Academy track","Message","Status","Replies","Last reply","Has a Y Square account"];
+ var rows=items.map(function(x){var reps=Array.isArray(x.replies)?x.replies:[],last=reps.length?reps[reps.length-1]:null;
+  return [x.created_at?new Date(x.created_at).toISOString().replace("T"," ").slice(0,16)+" UTC":"",x.name,x.email,YIN_ROLES[x.role]||x.role,x.grade||"",YIN_TRACKS[x.track]||x.track||"",x.message||"",(YIN_STATUS.filter(function(s){return s[0]===x.status;})[0]||[0,x.status])[1],reps.length,last?(last.body||""):"",x.has_account?"yes":"no"];});
+ var csv=String.fromCharCode(65279)+[head].concat(rows).map(function(r){return r.map(yinCell).join(",");}).join("\r\n");
+ var url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+ var a=document.createElement("a");a.href=url;a.download="y-square-interested-"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();
+ setTimeout(function(){URL.revokeObjectURL(url);a.remove();},1000);
+};
+// ---- hooks ----
+(function(){var k=ADM_TABS.map(function(x){return x[0];}).indexOf("users");ADM_TABS.splice(k>=0?k+1:ADM_TABS.length,0,["interest","Interested"]);})();
+var yinBaseAdmin=vAdmin;
+vAdmin=function(){
+ if(!isAdmin())return yinBaseAdmin.apply(this,arguments);
+ var a=admS();
+ if((S.route||{}).id==="interest"){a.tab="interest";try{history.replaceState(history.state,"","#/admin");}catch(e){}}
+ yinLoad(false);
+ if(a.tab!=="interest")return yinBaseAdmin.apply(this,arguments);
+ return '<div class="adm-top"><div class="tabs">'+ADM_TABS.map(function(x){return '<button class="'+(a.tab===x[0]?"on":"")+'" onclick="A.admTab(\''+x[0]+'\')">'+esc(x[1])+'</button>';}).join("")+'</div></div>'+yinAdmin();
+};
+// The admins' bell notice for a new message opens this tab.
+var yinBaseNotifOpen=A.notifOpen;
+A.notifOpen=function(id){
+ try{var x=(NT.items||[]).filter(function(n){return Number(n.id)===Number(id);})[0];if(x&&x.kind==="interest"&&isAdmin()){x.link="#/admin/interest";if(location.hash==="#/admin")admS().tab="interest";}}catch(e){}
+ return yinBaseNotifOpen.apply(this,arguments);
+};
+// The search box and reply boxes keep their focus and cursor when the page redraws.
+var yinBaseRender=render;
+render=function(){
+ var ae=document.activeElement,k=ae&&ae.getAttribute&&ae.getAttribute("data-yin"),s=null,e=null;
+ if(k){try{s=ae.selectionStart;e=ae.selectionEnd;}catch(x){}}
+ var r=yinBaseRender.apply(this,arguments);
+ if(k){var el=document.querySelector('[data-yin="'+k+'"]');if(el&&el!==document.activeElement){try{el.focus({preventScroll:true});if(s!=null)el.setSelectionRange(s,e);}catch(x){}}}
+ return r;
+};
+// Signing out forgets the list.
+var yinBaseWipe=wipeLocal;
+wipeLocal=function(){YIN.data=null;YIN.err=null;YIN.at=0;YIN.open={};YIN.drafts={};YIN.sending={};YIN.f={status:"",role:"",q:""};var t=yinTab();if(t)t[1]="Interested";return yinBaseWipe.apply(this,arguments);};
+// ---- v52: member limit and queue for events --------------------------------------------------------------------
+// Organisers set a member limit (Edit event or Manage RSVPs). When it is reached, people who join with the code or
+// the RSVP link go into a queue (rsvp 'waitlist'); the database offers the next free spot in queue order and sends
+// the bell notices. Here: the limit field, the "spots taken" line, the queue banner and the "event is full" messages.
+NT_KIND.event_waitlist=["users","ac"];NT_KIND.event_spot=["check","ok"];
+function capPost(path,action,payload){var h=headers();h["X-Guest-Id"]=S.guestId;return fetch(BASE+path,{method:"POST",headers:h,body:JSON.stringify({action:action,payload:payload||{},guestId:S.guestId})}).then(function(r){return r.json();}).then(function(j){if(j&&j.success)return j.data;throw {message:(j&&j.error&&j.error.message)||"That did not work just now. Please try again."};},function(e){if(e&&e.message)throw e;throw {message:"We could not connect. Check your internet connection and try again."};});}
+function capPpl(n){return esc(n)+(Number(n)===1?" person":" people");}
+function capWhen(v){var d=new Date(v);return isNaN(d)?"":d.toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});}
+function capFullText(d){return "This event is full: the maximum of "+(d.max?d.max+(Number(d.max)===1?" person":" people"):"people")+" has been reached. We let the organiser know, and you are number "+(d.pos||"?")+" in the queue. We will notify you here if a spot opens up.";}
+function capShowFull(d){openModal('<div class="row between"><h2>This event is full</h2><button class="btn icon ghost" onclick="A.closeModal()">'+ic("x")+'</button></div><p class="sub">The maximum number of people'+(d.max?' ('+esc(d.max)+')':'')+' for <b>'+esc(d.title||"this event")+'</b> has been reached. We have let the organiser know, and you are number <b>'+esc(d.pos||"?")+'</b> in the queue.</p><p class="small muted" style="margin:10px 0 14px">If someone changes their RSVP to No, the next person in the queue is offered the spot and gets a notification here (the bell at the top). You then have 24 hours to reply Yes.</p><button class="btn p" type="button" style="width:100%" onclick="A.closeModal()">OK</button>');}
+// Joining with the event code: when the event is full the person is put in the queue, so say so instead of "Joined".
+var capBaseApi=api;
+api=function(action,payload){
+ var pr=capBaseApi.apply(this,arguments);
+ if(action!=="events.join"||!payload||!payload.code)return pr;
+ return pr.then(function(d){
+  if(!d||!d.eventId)return d;
+  return capPost("/svc/rsvp","rsvp.info",{code:String(payload.code).toUpperCase()}).then(function(i){var m=i&&i.me;if(m&&m.rsvp==="waitlist"){d.waitlist=true;d.pos=m.pos;d.max=i.cap&&i.cap.max;d.queue=i.cap&&i.cap.queue;}return d;},function(){return d;});
+ });
+};
+// Your RSVP on the event page: when the event is full, Yes or Maybe puts you in the queue.
+A.rsvp=function(eid,r){api("rsvp.set",{eventId:eid,rsvp:r}).then(function(d){var m=d&&d.member;if(m&&m.rsvp==="waitlist")toast("This event is full, so you are in the queue. We will notify you if a spot opens up.","");else toast("RSVP saved: "+r,"ok");return A.refreshEvent();}).catch(function(e){toast(e.message,"err");});};
+// Edit event: the member limit field (saved through /svc/event-manage before the other fields).
+var capBaseEdit=A.editEvent;
+A.editEvent=function(){
+ var res=capBaseEdit.apply(this,arguments);
+ try{var e=S.event&&S.event.event,anchor='<div class="f"><label>Status</label>';
+  if(e&&typeof S.modal==="string"&&S.modal.indexOf('name="maxAttendees"')<0&&S.modal.indexOf(anchor)>=0){
+   S.modal=S.modal.replace(anchor,'<div class="f"><label>Member limit <span class="muted small">(optional)</span></label><input name="maxAttendees" type="number" min="1" max="100000" step="1" placeholder="No limit" value="'+attr(e.max_attendees==null?"":e.max_attendees)+'"><div class="muted small" style="margin-top:4px">The most people who can come (party sizes count; organisers do not). When it is reached, new people join a queue and get the next free spot when someone replies No. Lowering it never removes anyone already going. Leave empty for no limit.</div></div>'+anchor);
+   renderModal();}
+ }catch(x){}
+ return res;
+};
+var capBaseUpdate=A.updateEvent;
+A.updateEvent=function(form){
+ var e=S.event&&S.event.event,inp=form&&form.querySelector('[name=maxAttendees]');
+ if(!e||!inp)return capBaseUpdate.apply(this,arguments);
+ var v=String(inp.value||"").trim(),cur=e.max_attendees==null?"":String(e.max_attendees);
+ if(v===cur)return capBaseUpdate.apply(this,arguments);
+ if(v!==""&&!(/^[0-9]{1,6}$/.test(v)&&Number(v)>=1)){toast("Member limit: type a whole number of 1 or more, or leave it empty for no limit.","err");return false;}
+ var self=this,args=arguments;busyBtn(form,true);
+ capPost("/svc/event-manage","capacity.set",{eventId:e.id,max:v}).then(function(d){e.max_attendees=d.max==null?null:d.max;busyBtn(form,false);capBaseUpdate.apply(self,args);}).catch(function(x){busyBtn(form,false);toast(x.message,"err");});
+ return false;
+};
+// Event page: "12 of 20 spots taken" under your RSVP, and a banner when you are in the queue.
+S.capPos=S.capPos||{};
+var capBaseVEvent=vEvent;
+vEvent=function(id){
+ var h=capBaseVEvent.apply(this,arguments);
+ try{
+  var d=S.event;if(!d||!d.event||d.event.id!==id)return h;var e=d.event,st=d.stats||{};
+  var me=(d.members||[]).filter(function(m){return m.member_id===actor().id;})[0]||(d.pending&&d.me?d.me:null);
+  var max=e.max_attendees;
+  if(max!=null){
+   var taken=Number(st.taken||0),q=Number(st.queue||0),full=st.spots!=null&&Number(st.spots)<=0;
+   var line='<div class="muted small" style="text-align:right">'+ic("users")+' '+taken+' of '+esc(max)+' spots taken'+(q?' &middot; '+q+' in the queue':'')+(full?' <span class="badge warn">Full</span>':'')+'</div>';
+   var i=h.indexOf('<div class="rsvp">'),j=i<0?-1:h.indexOf('<div class="row">',i);
+   if(j>0)h=h.slice(0,j)+line+h.slice(j);
+  }
+  if(me&&me.rsvp==="waitlist"){
+   var key=e.id+":"+me.member_id+":"+(me.waitlisted_at||"")+":"+(me.offered_at||""),pos=S.capPos[key];
+   if(pos===undefined&&e.code){S.capPos[key]=null;capPost("/svc/rsvp","rsvp.info",{code:e.code}).then(function(i){S.capPos[key]=i&&i.me?i.me.pos:null;if(S.event&&S.event.event&&S.event.event.id===e.id)render();}).catch(function(){});}
+   var b=me.offered_at?'<div class="card" style="margin-bottom:14px;border-color:var(--ok)"><div class="bd"><b>A spot is free for you!</b> Reply <b>yes</b> or <b>maybe</b> by '+esc(capWhen(new Date(new Date(me.offered_at).getTime()+86400000)))+' to take it. After that it goes to the next person in the queue.</div></div>'
+    :'<div class="card" style="margin-bottom:14px;border-color:var(--warn,#f5a623)"><div class="bd"><b>This event is full.</b> '+(max!=null?'The maximum of '+capPpl(max):'The maximum number of people')+' has been reached'+(pos?' and you are number <b>'+esc(pos)+'</b> in the queue':' and you are in the queue')+'. We let the organiser know, and we will notify you here if a spot opens up. Reply <b>no</b> if you can no longer go.</div></div>';
+   h=b+h;
+  }
+ }catch(x){}
+ return h;
+};
 render();boot();
 })();
 </script>
+<script>/* ybuddy-guest: visitors who are not signed in get the full-page Y Buddy (ybuddy.ysquareai.com); signed-in people keep the Y Buddy panel */(function(){var URL="https://ybuddy.ysquareai.com/";function signedIn(){try{var t=localStorage.getItem("ys.token")||sessionStorage.getItem("ys.token"),u=localStorage.getItem("ys.user")||sessionStorage.getItem("ys.user");return !!(t&&t!=="null"&&u&&u!=="null");}catch(e){return false;}}document.addEventListener("click",function(e){var t=e.target&&e.target.closest?e.target.closest("#ygd-fab,.ygd-hbtn"):null;if(!t||signedIn())return;e.preventDefault();e.stopPropagation();location.href=URL;},true);})();</script>
+<script>/* ysquare-join: #/join (also #/startups/join) opens the Startups page scrolled to the "send us a message" form */(function(){function want(){return /^#\/(join|startups\/join)\/?$/i.test(location.hash||"");}function toForm(){var n=0;(function go(){var f=document.getElementById("yscform");if(f){f.scrollIntoView({block:"start"});var i=document.querySelector("#yscform ~ * input:not([type=hidden]), #yscform ~ * textarea");if(i&&window.innerWidth>760)try{i.focus({preventScroll:true});}catch(e){}return;}if(++n<50)setTimeout(go,100);})();}function check(){if(!want())return;location.hash="#/startups";setTimeout(toForm,50);}window.addEventListener("hashchange",check);check();})();</script>
+<script>/* ysquare-rsvp: public RSVP link https://ysquareai.com/#/rsvp/<event code> (signed-in people reply as members, everyone else with just a name; POST /svc/rsvp) and a "Copy RSVP link" button next to the event code on event pages */(function(){
+var RE=/^#\/rsvp\/([A-Za-z0-9]{4,12})\/?$/;
+function base(){var m=location.pathname.match(/^(.*?\/(?:webhook\/)?Y2Workplace)(?:\/|$)/i);return location.origin+(m?m[1]:"");}
+function rd(k){try{var v=localStorage.getItem("ys."+k);if(v==null)v=sessionStorage.getItem("ys."+k);return v==null?null:JSON.parse(v);}catch(e){return null;}}
+function guest(){var g=rd("guest");if(typeof g==="string"&&/^guest-[a-z0-9]{12,40}$/i.test(g))return g;var a="abcdefghijklmnopqrstuvwxyz0123456789",s="guest-",r=new Uint8Array(16);try{crypto.getRandomValues(r);}catch(e){for(var i=0;i<16;i++)r[i]=Math.floor(Math.random()*256);}for(var k=0;k<16;k++)s+=a[r[k]%36];try{localStorage.setItem("ys.guest",JSON.stringify(s));}catch(e){}return s;}
+function call(action,payload){var h={"Content-Type":"application/json","X-Guest-Id":guest()},t=rd("token"),u=rd("user");if(t&&u)h.Authorization="Bearer "+t;return fetch(base()+"/svc/rsvp",{method:"POST",headers:h,body:JSON.stringify({action:action,payload:payload})}).then(function(r){return r.json();}).then(function(j){if(j&&j.success)return j.data;throw new Error((j&&j.error&&j.error.message)||"That did not work just now. Please try again.");},function(e){if(e&&e.message&&!/fetch/i.test(e.message))throw e;throw new Error("We could not connect. Check your internet connection and try again.");});}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function when(a,b){if(!a)return "Date to be confirmed";var d=new Date(a);if(isNaN(d))return "";var o={weekday:"long",month:"long",day:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"};var s=d.toLocaleString(undefined,o);if(b){var e=new Date(b);if(!isNaN(e)){if(e.toDateString()===d.toDateString())s=d.toLocaleString(undefined,{weekday:"long",month:"long",day:"numeric",hour:"numeric",minute:"2-digit"})+" - "+e.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit",timeZoneName:"short"});}}return s;}
+var CSS="#ysr{position:fixed;inset:0;z-index:9999;background:var(--bg,#f5f6f8);overflow:auto;color:var(--tx,#0f1218);font-size:15px;line-height:1.5}#ysr *{box-sizing:border-box}#ysr .ysr-w{max-width:560px;margin:0 auto;padding:28px 16px 48px}#ysr .ysr-top{display:flex;align-items:center;gap:10px;margin-bottom:18px}#ysr .ysr-brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none}#ysr .ysr-lg{width:38px;height:38px;flex:none;display:block}#ysr .ysr-lg svg{width:100%;height:100%;display:block}#ysr .ysr-bt{display:flex;flex-direction:column;line-height:1.1}#ysr .ysr-bt b{font-size:16px;letter-spacing:-.3px}#ysr .ysr-bt small{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--ac,#4f46e5);margin-top:2px}#ysr .ysr-x{margin-left:auto;background:none;border:1px solid var(--line2,#d5d9e0);border-radius:9px;padding:6px 10px;color:var(--tx2,#5a6170);cursor:pointer;font:inherit;font-size:13px}#ysr .ysr-card{background:var(--panel,#fff);border:1px solid var(--line,#e5e7eb);border-radius:16px;box-shadow:var(--sh2,0 10px 30px rgba(16,20,30,.13));padding:22px}#ysr .ysr-tag{display:inline-block;font-size:12px;font-weight:600;color:var(--ac,#4f46e5);background:var(--acs,#eef2ff);border-radius:999px;padding:3px 10px;margin-bottom:8px;text-transform:capitalize}#ysr h1{font-size:26px;line-height:1.2;letter-spacing:-.5px;margin:0 0 12px}#ysr .ysr-meta{display:grid;gap:6px;margin-bottom:12px;color:var(--tx2,#5a6170)}#ysr .ysr-meta a{color:var(--ac,#4f46e5)}#ysr .ysr-desc{margin:0 0 14px;color:var(--tx,#0f1218);white-space:pre-line}#ysr .ysr-go{font-size:13px;color:var(--tx2,#5a6170);margin-bottom:16px}#ysr hr{border:0;border-top:1px solid var(--line,#e5e7eb);margin:16px 0}#ysr h2{font-size:17px;margin:0 0 10px}#ysr label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}#ysr input{width:100%;padding:10px 12px;border:1px solid var(--line2,#d5d9e0);border-radius:10px;font:inherit;background:var(--panel,#fff);color:var(--tx,#0f1218)}#ysr .ysr-opt{font-weight:400;color:var(--tx3,#8b91a0)}#ysr .ysr-ch{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}#ysr .ysr-ch button{padding:12px 6px;border:1.5px solid var(--line2,#d5d9e0);border-radius:12px;background:var(--panel,#fff);color:var(--tx,#0f1218);font:inherit;font-weight:600;cursor:pointer}#ysr .ysr-ch button.ysr-on{border-color:var(--ac,#4f46e5);background:var(--acs,#eef2ff);color:var(--ac,#4f46e5)}#ysr .ysr-party{display:flex;align-items:center;gap:10px}#ysr .ysr-party button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line2,#d5d9e0);background:var(--panel,#fff);color:var(--tx,#0f1218);font-size:18px;cursor:pointer}#ysr .ysr-party span{min-width:28px;text-align:center;font-weight:700;font-size:17px}#ysr .ysr-send{margin-top:18px;width:100%;padding:13px;border:0;border-radius:12px;background:var(--ac,#4f46e5);color:#fff;font:inherit;font-weight:700;font-size:16px;cursor:pointer}#ysr .ysr-send[disabled]{opacity:.6;cursor:default}#ysr .ysr-err{color:var(--err,#c0392b);font-size:13px;margin-top:10px;min-height:1px}#ysr .ysr-as{font-size:13px;color:var(--tx2,#5a6170);margin-bottom:10px}#ysr .ysr-as a,#ysr .ysr-lnk{color:var(--ac,#4f46e5);cursor:pointer;background:none;border:0;padding:0;font:inherit;text-decoration:underline}#ysr .ysr-done{text-align:center;padding:8px 0}#ysr .ysr-done .ysr-big{font-size:40px}#ysr .ysr-done p{margin:6px 0 14px;color:var(--tx2,#5a6170)}#ysr .ysr-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}#ysr .ysr-b2{padding:10px 14px;border-radius:10px;border:1px solid var(--line2,#d5d9e0);background:var(--panel,#fff);color:var(--tx,#0f1218);font:inherit;font-weight:600;cursor:pointer}#ysr .ysr-b2.ysr-p{background:var(--ac,#4f46e5);border-color:var(--ac,#4f46e5);color:#fff}#ysr .ysr-ft{text-align:center;font-size:12px;color:var(--tx3,#8b91a0);margin-top:16px}";
+/* v52: member limit and queue on the RSVP page */
+var CAPCSS="#ysr .ysr-cap{margin:0 0 14px;padding:10px 12px;border-radius:12px;background:var(--acs,#eef2ff);color:var(--tx,#0f1218);font-size:14px}#ysr .ysr-cap.full{background:#fff7e6;border:1px solid #f5c26b;color:#4a3410}#ysr .ysr-cap.offer{background:#e8f7ef;border:1px solid #7fd1a5;color:#0f3d26}#ysr .ysr-cap b{font-weight:700}";
+function capCss(){if(!document.getElementById("ysr-cap-css")){var c=document.createElement("style");c.id="ysr-cap-css";c.textContent=CAPCSS;document.head.appendChild(c);}}
+function capUntil(v){var d=new Date(v);return isNaN(d)?"":d.toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});}
+function capPpl(n){return esc(n)+(Number(n)===1?' person':' people');}
+function capHolds(me){return !!me&&(me.rsvp==="yes"||me.rsvp==="maybe"||(me.rsvp==="pending"&&me.approved));}
+function capHead(d,h){var c=d.cap,me=d.me||{};if(!c)return h;capCss();var t;
+ if(me.rsvp==="waitlist"&&me.offered)t='<div class="ysr-cap offer"><b>A spot is free for you!</b> Reply <b>Yes</b> or <b>Maybe</b> below'+(me.offer_until?' by '+esc(capUntil(me.offer_until)):' within 24 hours')+' to take it. After that it goes to the next person in the queue.</div>';
+ else if(me.rsvp==="waitlist")t='<div class="ysr-cap full"><b>This event is full.</b> The maximum of '+capPpl(c.max)+' has been reached. You are number <b>'+esc(me.pos||"?")+'</b> in the queue. We have let the organiser know, and '+(d.as==="member"?'we will notify you in Y Square (the bell at the top) if a spot opens up.':'if a spot opens up you will see it here when you open this link again. Sign in to get a notification instead.')+'</div>';
+ else if(!capHolds(me)&&c.spots<=0)t='<div class="ysr-cap full"><b>This event is full.</b> The maximum of '+capPpl(c.max)+' has been reached'+(c.queue?' and '+esc(c.queue)+(c.queue===1?' person is':' people are')+' already in the queue':'')+'. You can still reply: Yes or Maybe puts you in the queue, and you get the next free spot when someone can no longer go.</div>';
+ else t='<div class="ysr-cap">'+(capHolds(me)?'You have a spot. ':'')+'<b>'+esc(c.spots)+'</b>'+(c.spots===1?' spot':' spots')+' left of '+esc(c.max)+'.</div>';
+ return h+t;}
+function capAfterForm(){var d=st&&st.d;if(!d||!d.cap||!box)return;var me=d.me||{};var b=box.querySelector('[data-a="send"]'),h2=box.querySelector("h2");
+ if(me.rsvp==="waitlist"&&h2)h2.textContent=me.offered?"Take your spot":"You are in the queue";
+ if(!b||st.busy)return;
+ if(st.r==="no"&&me.rsvp==="waitlist")b.textContent="Leave the queue";
+ else if((st.r==="yes"||st.r==="maybe")&&!capHolds(me)&&!me.offered&&d.cap.spots<(st.n||1))b.textContent=me.rsvp==="waitlist"?"Stay in the queue":"Join the queue";}
+function capDone(res){var d=st.d,mem=d.as==="member";capCss();shell('<div class="ysr-card"><div class="ysr-done"><div class="ysr-big">&#9203;</div><h1>This event is full</h1><p>The maximum number of people'+(res.max?' ('+esc(res.max)+')':'')+' for '+esc(d.event.title)+' has been reached. We have let the organiser know, and you are number <b>'+esc(res.pos||"?")+'</b> in the queue.</p><p>If someone changes their RSVP to No, the next person in the queue is offered the spot'+(mem?' and gets a notification in Y Square.':'. Open this link again to check, or sign in so we can notify you in Y Square.')+' You then have 24 hours to reply Yes.</p><div class="ysr-row">'+(mem?'<button class="ysr-b2 ysr-p" type="button" data-a="open">Open the event page</button>':'<button class="ysr-b2 ysr-p" type="button" data-a="signin">Sign in for a notification</button>')+'<button class="ysr-b2" type="button" data-a="again">Change my reply</button></div></div></div>');}
+var st=null,box=null;
+function close(){if(box){box.remove();box=null;}document.documentElement.style.overflow="";if(RE.test(location.hash||""))location.hash="#/";}
+function shell(inner){if(!box){if(!document.getElementById("ysr-css")){var c=document.createElement("style");c.id="ysr-css";c.textContent=CSS;document.head.appendChild(c);}box=document.createElement("div");box.id="ysr";box.setAttribute("role","dialog");box.setAttribute("aria-label","RSVP");document.body.appendChild(box);document.documentElement.style.overflow="hidden";}box.innerHTML='<div class="ysr-w"><div class="ysr-top"><a class="ysr-brand" href="#/" data-a="close" aria-label="Y Square Workplace - Home"><span class="ysr-lg"><svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="ysr-g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f46e5"></stop><stop offset=".55" stop-color="#7c3aed"></stop><stop offset="1" stop-color="#db2777"></stop></linearGradient><linearGradient id="ysr-g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"></stop><stop offset=".6" stop-color="#fff" stop-opacity="0"></stop></linearGradient></defs><rect width="40" height="40" rx="11" fill="url(#ysr-g1)"></rect><rect width="40" height="40" rx="11" fill="url(#ysr-g2)"></rect><text x="17" y="29" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-weight="900" font-size="24" fill="#fff" letter-spacing="-1">Y</text><text x="30" y="16" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-weight="800" font-size="12" fill="#fbbf24">2</text></svg></span><span class="ysr-bt"><b>Y Square</b><small>Workplace</small></span></a><button class="ysr-x" type="button" data-a="close">Visit Y Square</button></div>'+inner+'<div class="ysr-ft">Your reply goes only to the organisers of this event.</div></div>';}
+function evHead(d){return capHead(d,evHead0(d));}function evHead0(d){var e=d.event,map=e.address?' <a href="https://maps.google.com/?q='+encodeURIComponent(e.address)+'" target="_blank" rel="noopener">map</a>':"";return '<span class="ysr-tag">'+esc(e.type||"event")+'</span><h1>'+esc(e.title)+'</h1><div class="ysr-meta"><div>&#128197; '+esc(when(e.starts_at,e.ends_at))+'</div>'+(e.venue||e.address?'<div>&#128205; '+esc([e.venue,e.address].filter(Boolean).join(", "))+map+'</div>':"")+(e.owner_name?'<div>&#128100; Hosted by '+esc(e.owner_name)+'</div>':"")+'</div>'+(e.description?'<p class="ysr-desc">'+esc(e.description)+'</p>':"")+(d.going>0?'<div class="ysr-go">'+d.going+(d.going===1?" person is":" people are")+' going</div>':"");}
+function form(){var cm=st.d&&st.d.me;if(st.r==null&&cm&&cm.rsvp==="waitlist")st.r=cm.wait_rsvp||"yes";form0();capAfterForm();}function form0(){var d=st.d,mem=d.as==="member",me=d.me||{};if(st.r==null&&me.rsvp&&me.rsvp!=="pending")st.r=me.rsvp;if(st.n==null)st.n=me.party_size||1;
+ var who=mem?'<div class="ysr-as">Replying as <b>'+esc(d.name)+'</b> (signed in). You will see updates and chat on the event page.</div>':'<div class="ysr-as">No account needed. Have one? <button class="ysr-lnk" type="button" data-a="signin">Sign in</button> to reply as a member and get event updates.</div>';
+ var h=evHead(d)+'<hr><h2>'+(me.rsvp&&me.rsvp!=="pending"?"Change your reply":"Will you be there?")+'</h2>'+who+'<div class="ysr-ch">'+[["yes","Yes, I'm going"],["maybe","Maybe"],["no","Can't go"]].map(function(o){return '<button type="button" data-r="'+o[0]+'" class="'+(st.r===o[0]?"ysr-on":"")+'">'+o[1]+'</button>';}).join("")+'</div>';
+ if(st.r!=="no")h+='<label>How many people, including you?</label><div class="ysr-party"><button type="button" data-a="minus" aria-label="Fewer">-</button><span>'+st.n+'</span><button type="button" data-a="plus" aria-label="More">+</button></div>';
+ if(!mem)h+='<label for="ysr-name">Your name</label><input id="ysr-name" maxlength="60" autocomplete="name" value="'+esc(st.name!=null?st.name:(me.name||""))+'"><label for="ysr-ct">Email or phone <span class="ysr-opt">(optional, so the organiser can reach you)</span></label><input id="ysr-ct" maxlength="120" autocomplete="email" value="'+esc(st.ct||"")+'">';
+ h+='<button class="ysr-send" type="button" data-a="send"'+(st.busy?" disabled":"")+'>'+(st.busy?"Sending...":"Send my RSVP")+'</button><div class="ysr-err">'+esc(st.err||"")+'</div>';
+ shell('<div class="ysr-card">'+h+'</div>');}
+function done(res){if(res&&res.rsvp==="waitlist"){st.last=Object.assign({},res,{rsvp:res.wait_rsvp||"yes"});capDone(res);return;}done0(res);if(res&&res.requested>res.party_size&&res.rsvp!=="no"&&box){var p0=box.querySelector(".ysr-done p");if(p0)p0.insertAdjacentHTML("afterend",'<p>The event is nearly full, so '+res.party_size+(res.party_size===1?' place is':' places are')+' kept for you instead of '+res.requested+'.</p>');}}function done0(res){var d=st.d,mem=d.as==="member",msg=res.rsvp==="yes"?"You're going"+(res.party_size>1?" (party of "+res.party_size+")":"")+"! See you there.":res.rsvp==="maybe"?"Thanks - we've noted you as a maybe.":"Thanks for letting the organiser know.";
+ shell('<div class="ysr-card"><div class="ysr-done"><div class="ysr-big">'+(res.rsvp==="yes"?"&#127881;":res.rsvp==="maybe"?"&#129300;":"&#128075;")+'</div><h1>'+esc(msg)+'</h1><p>'+esc(d.event.title)+' - '+esc(when(d.event.starts_at,d.event.ends_at))+'</p><div class="ysr-row">'+(mem?'<button class="ysr-b2 ysr-p" type="button" data-a="open">Open the event page</button>':'<button class="ysr-b2 ysr-p" type="button" data-a="signin">Sign in for updates</button>')+'<button class="ysr-b2" type="button" data-a="again">Change my reply</button></div></div></div>');}
+function load(code){st={code:code,r:null,n:null};shell('<div class="ysr-card"><div class="ysr-as">Loading the event...</div></div>');call("rsvp.info",{code:code}).then(function(d){if(!st||st.code!==code)return;st.d=d;form();}).catch(function(e){shell('<div class="ysr-card"><h2>We could not open this RSVP</h2><div class="ysr-as">'+esc(e.message)+'</div><button class="ysr-b2" type="button" data-a="close">Go to Y Square</button></div>');});}
+function send(){if(st.busy||!st.r){if(!st.r){st.err="Choose Yes, Maybe or Can't go.";form();}return;}var p={code:st.code,rsvp:st.r,partySize:st.r==="no"?1:st.n};if(st.d.as!=="member"){var ni=document.getElementById("ysr-name"),ci=document.getElementById("ysr-ct");st.name=ni?ni.value:"";st.ct=ci?ci.value:"";if(st.name.trim().length<2){st.err="Please type your name so the organiser knows who is coming.";form();var n2=document.getElementById("ysr-name");if(n2)n2.focus();return;}p.name=st.name;p.contact=st.ct;}st.busy=true;st.err="";form();call("rsvp.reply",p).then(function(res){st.busy=false;st.d.me={rsvp:res.rsvp,party_size:res.party_size,name:st.name,approved:true,wait_rsvp:res.wait_rsvp,pos:res.pos,offered:res.offered,offer_until:res.offer_until};call("rsvp.info",{code:st.code}).then(function(i){if(st&&st.d&&i){st.d.cap=i.cap;if(i.me)st.d.me=i.me;st.d.going=i.going;}}).catch(function(){});st.last=res;done(res);}).catch(function(e){st.busy=false;st.err=e.message;form();});}
+document.addEventListener("click",function(ev){if(!box||!box.contains(ev.target))return;var t=ev.target.closest("[data-a],[data-r]");if(!t)return;var a=t.getAttribute("data-a"),r=t.getAttribute("data-r");
+ if(r||a==="minus"||a==="plus"){var ni=document.getElementById("ysr-name"),ci=document.getElementById("ysr-ct");if(ni)st.name=ni.value;if(ci)st.ct=ci.value;}
+ if(r){st.r=r;st.err="";form();}else if(a==="minus"){st.n=Math.max(1,st.n-1);form();}else if(a==="plus"){st.n=Math.min(20,st.n+1);form();}else if(a==="send")send();else if(a==="again"){st.r=st.last?st.last.rsvp:st.r;form();}else if(a==="close")close();
+ else if(a==="open"){var id=st.d.event.id;box.remove();box=null;document.documentElement.style.overflow="";location.hash="#/events/"+id;location.reload();}
+ else if(a==="signin"){try{sessionStorage.setItem("ysr.back",JSON.stringify({h:location.hash,t:Date.now()}));}catch(e){}box.remove();box=null;document.documentElement.style.overflow="";if(window.A&&typeof A.openSignIn==="function")A.openSignIn();}});
+document.addEventListener("keydown",function(ev){if(box&&ev.key==="Enter"&&ev.target&&ev.target.tagName==="INPUT"){ev.preventDefault();send();}});
+function check(){var m=(location.hash||"").match(RE);if(m){var c=m[1].toUpperCase();if(!box||!st||st.code!==c)load(c);}else if(box){box.remove();box=null;document.documentElement.style.overflow="";}}
+window.addEventListener("hashchange",check);check();
+/* after signing in from the RSVP page, come back to it */
+setInterval(function(){var b=null;try{b=JSON.parse(sessionStorage.getItem("ysr.back")||"null");}catch(e){}if(!b||box)return;if(!b.h||Date.now()-b.t>900000){try{sessionStorage.removeItem("ysr.back");}catch(e){}return;}b=b.h;if(rd("token")&&rd("user")){try{sessionStorage.removeItem("ysr.back");}catch(e){}if(location.hash===b){st=null;check();}else location.hash=b;}},1000);
+/* organiser side: a "Copy RSVP link" button next to "Share the code" on the event page */
+function addBtn(){if(!/^#\/events\/EV-/i.test(location.hash||""))return;var els=document.querySelectorAll("div.muted.small");for(var i=0;i<els.length;i++){var el=els[i];if(el.getAttribute("data-ysr"))continue;var b=el.querySelector("b");if(!b||el.textContent.indexOf("Share the code")!==0)continue;var code=(b.textContent||"").trim();if(!/^[A-Za-z0-9]{4,12}$/.test(code))continue;el.setAttribute("data-ysr","1");var url=location.origin+location.pathname+"#/rsvp/"+code;var w=document.createElement("div");w.style.cssText="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center";w.innerHTML='<input readonly value="'+esc(url)+'" aria-label="RSVP link" style="flex:1;min-width:180px;padding:7px 9px;border:1px solid var(--line2);border-radius:9px;font-size:12px;background:var(--panel2);color:var(--tx)"><button type="button" class="btn xs p">Copy RSVP link</button>';var inp=w.querySelector("input"),btn=w.querySelector("button");inp.addEventListener("focus",function(){inp.select();});btn.addEventListener("click",function(){var ok=function(){btn.textContent="Copied!";setTimeout(function(){btn.textContent="Copy RSVP link";},1800);};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(ok,function(){inp.select();document.execCommand("copy");ok();});else{inp.select();document.execCommand("copy");ok();}});var note=document.createElement("div");note.className="muted small";note.style.marginTop="4px";note.textContent="Anyone with this link can RSVP: members reply with their account, others just type their name.";el.appendChild(w);el.appendChild(note);}}
+new MutationObserver(function(){addBtn();}).observe(document.body,{childList:true,subtree:true});addBtn();
+})();</script>
+<script>/* ysquare-evmanage: for an event's organisers and Y Square admins on #/events/<id>: the "people going" number links to the event's Google Sheet of RSVPs, "Manage RSVPs" adds, changes and removes people, and "Moderate chat" deletes chat messages (POST /svc/event-manage) */(function(){
+var EVRE=/^#\/events\/(EV-[A-Za-z0-9]{3,20})/;
+function base(){var m=location.pathname.match(/^(.*?\/(?:webhook\/)?Y2Workplace)(?:\/|$)/i);return location.origin+(m?m[1]:"");}
+function rd(k){try{var v=localStorage.getItem("ys."+k);if(v==null)v=sessionStorage.getItem("ys."+k);return v==null?null:JSON.parse(v);}catch(e){return null;}}
+function call(action,payload){var h={"Content-Type":"application/json"},g=rd("guest"),t=rd("token"),u=rd("user");if(typeof g==="string")h["X-Guest-Id"]=g;if(t&&u)h.Authorization="Bearer "+t;return fetch(base()+"/svc/event-manage",{method:"POST",headers:h,body:JSON.stringify({action:action,payload:payload})}).then(function(r){return r.json();}).then(function(j){if(j&&j.success)return j.data;throw new Error((j&&j.error&&j.error.message)||"That did not work just now. Please try again.");},function(e){if(e&&e.message&&!/fetch/i.test(e.message))throw e;throw new Error("We could not connect. Check your internet connection and try again.");});}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function when(v){var d=new Date(v);return isNaN(d)?"":d.toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});}
+function toast(msg,bad){var t=document.createElement("div");t.className="ysm-toast"+(bad?" bad":"");t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove();},3200);}
+function refresh(){try{if(window.A&&typeof A.refreshEvent==="function")A.refreshEvent();}catch(e){}}
+var CSS="#ysm{position:fixed;inset:0;z-index:9998;background:rgba(15,18,24,.45);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px}#ysm *{box-sizing:border-box}#ysm .ysm-box{background:var(--panel,#fff);color:var(--tx,#0f1218);border-radius:16px;box-shadow:var(--sh2,0 10px 30px rgba(16,20,30,.2));width:100%;max-width:980px;padding:18px 18px 22px;font-size:14px}#ysm .ysm-hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}#ysm .ysm-hd h2{font-size:18px;margin:0;flex:1;min-width:0}#ysm .ysm-x{border:1px solid var(--line2,#d5d9e0);background:var(--panel,#fff);color:var(--tx2,#5a6170);border-radius:9px;padding:5px 10px;cursor:pointer;font:inherit}#ysm .ysm-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line,#e5e7eb);margin-bottom:12px}#ysm .ysm-tabs button{border:0;background:none;padding:8px 10px;font:inherit;font-weight:600;color:var(--tx2,#5a6170);cursor:pointer;border-bottom:2px solid transparent}#ysm .ysm-tabs button.on{color:var(--ac,#4f46e5);border-bottom-color:var(--ac,#4f46e5)}#ysm .ysm-sum{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}#ysm .ysm-pill{background:var(--muts,#f0f1f4);border-radius:999px;padding:4px 10px;font-size:13px}#ysm .ysm-pill b{font-weight:700}#ysm .ysm-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}#ysm .ysm-btn{border:1px solid var(--line2,#d5d9e0);background:var(--panel,#fff);color:var(--tx,#0f1218);border-radius:9px;padding:7px 11px;font:inherit;font-weight:600;cursor:pointer}#ysm .ysm-btn.p{background:var(--ac,#4f46e5);border-color:var(--ac,#4f46e5);color:#fff}#ysm .ysm-btn.d{color:var(--err,#c0392b)}#ysm .ysm-btn[disabled]{opacity:.55;cursor:default}#ysm .ysm-note{font-size:12.5px;color:var(--tx2,#5a6170)}#ysm .ysm-note.bad{color:var(--err,#c0392b)}#ysm .ysm-tw{overflow:auto;border:1px solid var(--line,#e5e7eb);border-radius:12px}#ysm table{border-collapse:collapse;width:100%;min-width:760px}#ysm th,#ysm td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line,#e5e7eb);vertical-align:middle}#ysm th{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--tx2,#5a6170);background:var(--panel2,#fafbfc);cursor:pointer;white-space:nowrap;user-select:none}#ysm tr:last-child td{border-bottom:0}#ysm td select,#ysm td input,#ysm .ysm-add input,#ysm .ysm-add select{padding:6px 8px;border:1px solid var(--line2,#d5d9e0);border-radius:8px;font:inherit;background:var(--panel,#fff);color:var(--tx,#0f1218)}#ysm td input[type=number]{width:64px}#ysm .ysm-add{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;padding:10px;border:1px dashed var(--line2,#d5d9e0);border-radius:12px}#ysm .ysm-add input[name=name]{flex:1;min-width:150px}#ysm .ysm-add input[name=contact]{flex:1;min-width:150px}#ysm .ysm-add input[name=party]{width:70px}#ysm .ysm-tag{font-size:12px;color:var(--tx2,#5a6170)}#ysm .ysm-msg{display:flex;gap:10px;align-items:flex-start;padding:10px;border-bottom:1px solid var(--line,#e5e7eb)}#ysm .ysm-msg:last-child{border-bottom:0}#ysm .ysm-msg .b{flex:1;min-width:0;white-space:pre-wrap;word-wrap:break-word}#ysm .ysm-msg .a{font-weight:700}#ysm .ysm-empty{padding:18px;text-align:center;color:var(--tx2,#5a6170)}.ysm-go{cursor:pointer}.ysm-go .ysm-num{color:var(--ac,#4f46e5);text-decoration:underline;text-underline-offset:3px}.ysm-golink{display:block;margin-top:2px;font-size:11.5px;color:var(--ac,#4f46e5);font-weight:600}.ysm-tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.ysm-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;background:#0d8a5f;color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.2)}.ysm-toast.bad{background:#c0392b}";
+function css(){if(!document.getElementById("ysm-css")){var c=document.createElement("style");c.id="ysm-css";c.textContent=CSS;document.head.appendChild(c);}}
+var acc={},M=null;
+function evId(){var m=(location.hash||"").match(EVRE);return m?m[1]:null;}
+/* ---- Google Sheet ---- */
+var sheetPoll=null;
+function sheetMsg(sh){if(!sh)return "";if(sh.status==="ready"&&sh.url)return "Updates within about 2 minutes of any change"+(sh.synced_at?" (last update "+when(sh.synced_at)+")":"")+".";if(sh.status==="error")return /credential|401|reach Google/i.test(sh.error||"")?"The Google Sheet is not connected yet: an admin needs to connect Google Sheets in n8n.":"The Google Sheet could not be made: "+(sh.error||"unknown error");return "Making your Google Sheet... this takes about a minute.";}
+function openSheet(id){var w=null;try{w=window.open("about:blank","_blank");}catch(e){}
+ call("sheet.open",{eventId:id}).then(function(d){var sh=d.sheet||{};acc[id]=acc[id]||{};acc[id].sheet=sh;
+  if(sh.status==="ready"&&sh.url){if(w)w.location.href=sh.url;else location.href=sh.url;return;}
+  if(w)try{w.close();}catch(e){}
+  toast(sheetMsg(sh),sh.status==="error");if(M)paint();
+  if(sh.status!=="error")pollSheet(id);
+ }).catch(function(e){if(w)try{w.close();}catch(x){}toast(e.message,true);});}
+function pollSheet(id){clearInterval(sheetPoll);var n=0;sheetPoll=setInterval(function(){if(++n>45||evId()!==id){clearInterval(sheetPoll);return;}call("manage.access",{eventId:id}).then(function(d){acc[id]=d;if(d.sheet&&(d.sheet.status==="ready"||d.sheet.status==="error")){clearInterval(sheetPoll);decorate(true);if(M)paint();if(d.sheet.status==="ready")toast("Your Google Sheet is ready - click the number of people going to open it.");else toast(sheetMsg(d.sheet),true);}}).catch(function(){});},4000);}
+/* ---- manage window ---- */
+function open(tab){var id=evId();if(!id)return;css();M={id:id,tab:tab||"rsvp",rows:null,msgs:null,sort:"joined_at",dir:1,err:""};var b=document.createElement("div");b.id="ysm";b.setAttribute("role","dialog");b.setAttribute("aria-label","Manage event");document.body.appendChild(b);b.addEventListener("click",onClick);b.addEventListener("change",onChange);b.addEventListener("submit",onSubmit);paint();load();}
+function close(){var b=document.getElementById("ysm");if(b)b.remove();M=null;}
+function load(){if(!M)return;var id=M.id;if(M.tab==="rsvp")call("rsvp.list",{eventId:id}).then(function(d){if(!M||M.id!==id)return;M.rows=d.rows||[];M.cap=d.cap||null;M.title=d.event&&d.event.title;if(d.sheet){acc[id]=acc[id]||{};acc[id].sheet=d.sheet;}M.err="";paint();}).catch(function(e){if(M){M.err=e.message;paint();}});
+ else call("chat.list",{eventId:id}).then(function(d){if(!M||M.id!==id)return;M.msgs=d.messages||[];M.err="";paint();}).catch(function(e){if(M){M.err=e.message;paint();}});}
+function sorted(){var k=M.sort,dir=M.dir;return M.rows.slice().sort(function(a,b){var x=a[k],y=b[k];if(k==="party"){x=+x;y=+y;}else{x=String(x||"").toLowerCase();y=String(y||"").toLowerCase();}return x<y?-dir:x>y?dir:0;});}
+function paint(){var b=document.getElementById("ysm");if(!b||!M)return;var sh=(acc[M.id]||{}).sheet;
+ var h='<div class="ysm-box"><div class="ysm-hd"><h2>'+esc(M.title||"Manage event")+'</h2><button type="button" class="ysm-x" data-a="close">Close</button></div>';
+ h+='<div class="ysm-tabs"><button type="button" data-a="tab" data-t="rsvp" class="'+(M.tab==="rsvp"?"on":"")+'">RSVPs'+(M.rows?" ("+M.rows.length+")":"")+'</button><button type="button" data-a="tab" data-t="chat" class="'+(M.tab==="chat"?"on":"")+'">Chat messages</button></div>';
+ if(M.err)h+='<div class="ysm-note bad" style="margin-bottom:10px">'+esc(M.err)+'</div>';
+ if(M.tab==="rsvp"){
+  if(!M.rows)h+='<div class="ysm-empty">Loading RSVPs...</div>';else{
+   var go=0,mb=0,no=0,pe=0;M.rows.forEach(function(r){if(r.rsvp==="yes")go+=+r.party||1;else if(r.rsvp==="maybe")mb++;else if(r.rsvp==="no")no++;else if(r.rsvp==="waitlist"){}else pe++;});
+   h+='<div class="ysm-sum"><span class="ysm-pill"><b>'+go+'</b> going</span><span class="ysm-pill"><b>'+mb+'</b> maybe</span><span class="ysm-pill"><b>'+no+'</b> can\'t go</span><span class="ysm-pill"><b>'+pe+'</b> no reply yet</span></div>';
+   h+=capBar();h+='<div class="ysm-bar"><button type="button" class="ysm-btn p" data-a="sheet">Open Google Sheet</button><span class="ysm-note'+(sh&&sh.status==="error"?" bad":"")+'">'+esc(sh?sheetMsg(sh):"A Google Sheet with every column, for sorting and filtering. Add or remove people here; the sheet follows.")+'</span></div>';
+   var cols=[["name","Name"],["rsvp","RSVP"],["party","Party"],["contact","Email or phone"],["type","Type"],["role","Role"],["joined_at","Replied"]];
+   h+='<div class="ysm-tw"><table><thead><tr>'+cols.map(function(c){return '<th data-a="sort" data-k="'+c[0]+'">'+c[1]+(M.sort===c[0]?(M.dir>0?" &#9650;":" &#9660;"):"")+'</th>';}).join("")+'<th></th></tr></thead><tbody>';
+   if(!M.rows.length)h+='<tr><td colspan="8" class="ysm-empty">No RSVPs yet.</td></tr>';
+   sorted().forEach(function(r){var fixed=r.owner||r.me;h+='<tr data-k="'+esc(r.key)+'"><td><b>'+esc(r.name||"(no name)")+'</b>'+(r.approved?"":' <span class="ysm-tag">waiting for approval</span>')+(r.rsvp==="waitlist"?' <span class="ysm-tag">'+(r.offered?"spot offered":"in the queue")+'</span>':'')+(r.override?' <span class="ysm-tag">let in by organiser</span>':'')+'</td><td><select data-f="rsvp">'+(r.rsvp==="waitlist"?'<option value="waitlist" selected disabled>In queue #'+esc(r.pos||"?")+'</option>':'')+["yes","maybe","no","pending"].map(function(o){return '<option value="'+o+'"'+(r.rsvp===o?" selected":"")+'>'+({yes:"Yes",maybe:"Maybe",no:"Can't go",pending:"No reply"})[o]+'</option>';}).join("")+'</select></td><td><input type="number" min="1" max="50" data-f="party" value="'+esc(r.party)+'"></td><td>'+esc(r.contact)+'</td><td class="ysm-tag">'+esc(r.type)+'</td><td class="ysm-tag">'+esc(r.role)+'</td><td class="ysm-tag">'+esc(when(r.joined_at))+'</td><td>'+(fixed?'<span class="ysm-tag">'+(r.owner?"owner":"you")+'</span>':(r.rsvp==="waitlist"?'<button type="button" class="ysm-btn" data-a="admit">Let in</button> ':'')+'<button type="button" class="ysm-btn d" data-a="remove">Remove</button>')+'</td></tr>';});
+   h+='</tbody></table></div>';
+   h+='<form class="ysm-add"><b>Add someone</b><input name="name" maxlength="60" placeholder="Name" required><select name="rsvp"><option value="yes">Yes</option><option value="maybe">Maybe</option><option value="no">Can\'t go</option></select><input name="party" type="number" min="1" max="50" value="1" title="Party size"><input name="contact" maxlength="120" placeholder="Email or phone (optional)"><button class="ysm-btn p" type="submit">Add</button></form>';
+  }
+ }else{
+  if(!M.msgs)h+='<div class="ysm-empty">Loading chat messages...</div>';else{
+   h+='<div class="ysm-note" style="margin-bottom:8px">Delete messages that should not stay in the event chat. Everyone in the event stops seeing them straight away.</div><div class="ysm-tw">';
+   if(!M.msgs.length)h+='<div class="ysm-empty">No chat messages.</div>';
+   M.msgs.forEach(function(m){h+='<div class="ysm-msg" data-m="'+esc(m.id)+'"><div class="b"><span class="a">'+esc(m.author||"Someone")+'</span> <span class="ysm-tag">'+esc(when(m.created_at))+'</span><br>'+esc(m.body)+'</div><button type="button" class="ysm-btn d" data-a="delmsg">Delete</button></div>';});
+   h+='</div>';
+  }
+ }
+ b.innerHTML=h+'</div>';}
+function onClick(e){if(e.target.id==="ysm"){close();return;}var t=e.target.closest("[data-a]");if(!t||!M)return;var a=t.getAttribute("data-a");
+ if(a==="close")close();
+ else if(a==="tab"){M.tab=t.getAttribute("data-t");M.err="";paint();load();}
+ else if(a==="sort"){var k=t.getAttribute("data-k");if(M.sort===k)M.dir=-M.dir;else{M.sort=k;M.dir=1;}paint();}
+ else if(a==="sheet")openSheet(M.id);else if(a==="capsave")capSave(t);else if(a==="admit")capAdmit(t);
+ else if(a==="remove"){var tr=t.closest("tr"),k2=tr.getAttribute("data-k"),nm=(M.rows.filter(function(r){return r.key===k2;})[0]||{}).name||"this person";if(!confirm("Remove "+nm+" from the RSVP list?"))return;t.disabled=true;call("rsvp.remove",{eventId:M.id,key:k2}).then(function(){toast(nm+" was removed");load();refresh();}).catch(function(x){t.disabled=false;toast(x.message,true);});}
+ else if(a==="delmsg"){var row=t.closest("[data-m]");if(!confirm("Delete this chat message for everyone?"))return;t.disabled=true;call("chat.delete",{eventId:M.id,messageId:row.getAttribute("data-m")}).then(function(){toast("Message deleted");var mid=row.getAttribute("data-m");M.msgs=M.msgs.filter(function(m){return m.id!==mid;});paint();refresh();}).catch(function(x){t.disabled=false;toast(x.message,true);});}}
+function onChange(e){var f=e.target.getAttribute("data-f");if(!f||!M)return;var tr=e.target.closest("tr");if(!tr)return;var p={eventId:M.id,key:tr.getAttribute("data-k")};if(f==="rsvp")p.rsvp=e.target.value;else p.partySize=e.target.value;e.target.disabled=true;
+ call("rsvp.update",p).then(function(){e.target.disabled=false;M.rows.forEach(function(r){if(r.key===p.key){if(p.rsvp)r.rsvp=p.rsvp;if(p.partySize)r.party=+p.partySize;}});toast("Saved");paint();refresh();}).catch(function(x){e.target.disabled=false;toast(x.message,true);load();});}
+function onSubmit(e){e.preventDefault();if(!M)return;var f=e.target,btn=f.querySelector("button");btn.disabled=true;
+ call("rsvp.add",{eventId:M.id,name:f.name.value,rsvp:f.rsvp.value,partySize:f.party.value,contact:f.contact.value}).then(function(){toast(f.name.value+" was added");load();refresh();}).catch(function(x){btn.disabled=false;toast(x.message,true);});}
+/* ---- v52: member limit and queue ---- */
+function capBar(){var c=M.cap||{},has=c.max!=null;
+ var h='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px;padding:10px;border:1px solid var(--line,#e5e7eb);border-radius:12px"><b>Member limit</b><input data-cap="max" type="number" min="1" max="100000" step="1" placeholder="No limit" value="'+esc(has?c.max:"")+'" style="width:110px;padding:6px 8px;border:1px solid var(--line2,#d5d9e0);border-radius:8px;font:inherit;background:var(--panel,#fff);color:var(--tx,#0f1218)"><button type="button" class="ysm-btn" data-a="capsave">Save limit</button><span class="ysm-note">'+
+  (has?'<b>'+esc(c.taken)+'</b> of <b>'+esc(c.max)+'</b> spots taken'+(c.spots<=0?' - <b>full</b>':' - '+esc(c.spots)+' left')+(c.queue?', <b>'+esc(c.queue)+'</b> in the queue':''):'No limit. Set one and new people stop at that number: after that they wait in a queue.')+'</span></div>';
+ if(c.queue&&M.rows){var q=M.rows.filter(function(r){return r.rsvp==="waitlist";}).sort(function(a,b){return (a.pos||999)-(b.pos||999);});
+  h+='<div class="ysm-note" style="margin:-4px 0 10px"><b>Queue:</b> '+q.map(function(r){return '#'+esc(r.pos||"?")+' '+esc(r.name||"(no name)")+(r.party>1?' ('+esc(r.party)+')':'')+(r.offered?' - spot offered'+(r.offer_until?' until '+esc(when(r.offer_until)):''):'');}).join(" &middot; ")+'. Party sizes count; organisers do not. When someone replies No, the next person in the queue is offered the spot (24 hours to take it). Use Let in to give someone a spot now.</div>';}
+ return h;}
+function capSave(t){var inp=document.querySelector('#ysm [data-cap="max"]');if(!inp)return;var v=String(inp.value||"").trim();if(v!==""&&!(/^[0-9]{1,6}$/.test(v)&&Number(v)>=1)){toast("Type a whole number of 1 or more, or leave it empty for no limit.",true);return;}t.disabled=true;call("capacity.set",{eventId:M.id,max:v}).then(function(d){toast(d.max==null?"No member limit now":"Member limit set to "+d.max);load();refresh();}).catch(function(x){t.disabled=false;toast(x.message,true);});}
+function capAdmit(t){var tr=t.closest("tr"),k=tr.getAttribute("data-k"),nm=(M.rows.filter(function(r){return r.key===k;})[0]||{}).name||"this person";if(!confirm("Give "+nm+" a spot now, even though the event is full?"))return;t.disabled=true;call("waitlist.admit",{eventId:M.id,key:k}).then(function(){toast(nm+" now has a spot");load();refresh();}).catch(function(x){t.disabled=false;toast(x.message,true);});}
+/* ---- event page decorations ---- */
+function decorate(force){var id=evId();if(!id)return;var a=acc[id];
+ if(!a){acc[id]={loading:true};call("manage.access",{eventId:id}).then(function(d){acc[id]=d;decorate(true);}).catch(function(){acc[id]={allowed:false};});return;}
+ if(!a.allowed)return;css();
+ var labels=document.querySelectorAll("div,span,small,p");for(var i=0;i<labels.length;i++){var el=labels[i];if(el.children.length||el.textContent.trim()!=="people going")continue;var tile=el.parentElement;if(!tile||tile.getAttribute("data-ysm"))continue;tile.setAttribute("data-ysm","1");tile.classList.add("ysm-go");tile.title="Open the Google Sheet of RSVPs";var num=tile.firstElementChild;if(num&&num!==el)num.classList.add("ysm-num");var lk=document.createElement("span");lk.className="ysm-golink";lk.textContent="Open Google Sheet";el.appendChild(lk);tile.addEventListener("click",function(){openSheet(evId());});}
+ var hs=document.querySelectorAll(".card .hd h3");for(var j=0;j<hs.length;j++){var h3=hs[j],txt=h3.textContent.trim(),card=h3.closest(".card");if(!card||card.getAttribute("data-ysm"))continue;
+  if(/^People \(/.test(txt)){card.setAttribute("data-ysm","1");var bd=card.querySelector(".bd")||card;var tl=document.createElement("div");tl.className="ysm-tools";tl.innerHTML='<button type="button" class="btn xs p" data-ysm-a="rsvp">Manage RSVPs</button><button type="button" class="btn xs" data-ysm-a="sheet">Google Sheet</button>';bd.appendChild(tl);}
+  else if(/^Latest in chat/.test(txt)){card.setAttribute("data-ysm","1");var hd=h3.parentElement,bt=document.createElement("button");bt.type="button";bt.className="btn xs";bt.setAttribute("data-ysm-a","chat");bt.textContent="Moderate";hd.insertBefore(bt,hd.querySelector(".sp")?hd.querySelector(".sp").nextSibling:null);}}
+}
+document.addEventListener("click",function(e){var t=e.target.closest&&e.target.closest("[data-ysm-a]");if(!t)return;var a=t.getAttribute("data-ysm-a");if(a==="sheet")openSheet(evId());else open(a);});
+var tm=null;new MutationObserver(function(){if(tm)return;tm=setTimeout(function(){tm=null;decorate();},150);}).observe(document.body,{childList:true,subtree:true});
+window.addEventListener("hashchange",function(){if(M&&M.id!==evId())close();decorate();});
+decorate();
+})();</script>
+<script>/* ysquare-linkify: in the AI Playground "Announcements" cards (Middle School / High School, coach and student views), http(s) links in the title or message become clickable. Links to this site open in the same tab (e.g. #/rsvp/...), others in a new tab. Text stays escaped: links are built as DOM nodes, never innerHTML. */(function(){
+var CSS=".ysl-a{color:var(--ac);text-decoration:underline;text-underline-offset:2px;word-break:break-word}.ysl-a:hover{opacity:.85}";
+var st=document.createElement("style");st.textContent=CSS;document.head.appendChild(st);
+var URLRE=/\bhttps?:\/\/[^\s<>"']+/gi;
+function trimUrl(u){var t="";while(/[.,;:!?)\]}'"]$/.test(u)){var c=u.slice(-1);if(c===")"&&(u.split("(").length>u.split(")").length-1))break;t=c+t;u=u.slice(0,-1);}return [u,t];}
+function mkLink(u){var a=document.createElement("a");a.className="ysl-a";a.href=u;a.textContent=u;var same=false;try{same=new URL(u).host===location.host;}catch(e){}if(!same){a.target="_blank";a.rel="noopener noreferrer";}return a;}
+function linkText(node){
+ var s=node.nodeValue;URLRE.lastIndex=0;if(!URLRE.test(s))return;URLRE.lastIndex=0;
+ var frag=document.createDocumentFragment(),last=0,m;
+ while((m=URLRE.exec(s))){var p=trimUrl(m[0]),u=p[0];if(!/^https?:\/\/[^\/\s]+\.[^\/\s]/i.test(u))continue;
+  if(m.index>last)frag.appendChild(document.createTextNode(s.slice(last,m.index)));
+  frag.appendChild(mkLink(u));last=m.index+u.length;}
+ if(!last)return;
+ if(last<s.length)frag.appendChild(document.createTextNode(s.slice(last)));
+ node.parentNode.replaceChild(frag,node);
+}
+function decorate(){
+ var hs=document.querySelectorAll(".card .hd h3");
+ for(var i=0;i<hs.length;i++){
+  if(hs[i].textContent.trim()!=="Announcements")continue;
+  var card=hs[i].closest(".card");if(!card)continue;
+  var els=card.querySelectorAll(".upd p:not([data-ysl]),.upd h4:not([data-ysl])");
+  for(var j=0;j<els.length;j++){var el=els[j];el.setAttribute("data-ysl","1");
+   var w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,null),list=[],n;
+   while((n=w.nextNode()))if(!(n.parentNode.closest&&n.parentNode.closest("a")))list.push(n);
+   for(var k=0;k<list.length;k++)linkText(list[k]);}
+ }
+}
+var tm=null;new MutationObserver(function(){if(tm)return;tm=setTimeout(function(){tm=null;decorate();},120);}).observe(document.body,{childList:true,subtree:true});
+decorate();
+})();</script>
 </body>
 </html>

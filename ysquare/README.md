@@ -215,7 +215,7 @@ number so it cannot clash with the next numbered block.
 
 ## Follow Y Square (Instagram)
 
-`yfl` block (source `ui/yfl_follow.js`, placed after `yat` and before `ysa`), Y Square Community > Follow Y Square (`#/follow`):
+`yfl` block (source `ui/yfl_follow.js`, inserted just before the `ysa` block of the live page), Y Square Community > Follow Y Square (`#/follow`):
 
 - **What people see**: Y Square's promotional announcements and reels from Instagram, pinned ones first, with a Follow
   button for the account, filters (All / Announcements / Reels and shorts) and an optional button under each post that
