@@ -761,6 +761,7 @@ select.inp.dv-small{height:30px}
 .pp-msg.a{justify-self:start;background:var(--panel2);border:1px solid var(--line)}.pp-msg.a p{margin:0 0 7px}.pp-msg.a ul{margin:0 0 7px 18px}
 @media(max-width:1000px){.pp-steps{grid-template-columns:1fr 1fr}.pp-g2,.pp-resp{grid-template-columns:1fr}.pp-secs{position:static}}
 @media(max-width:640px){.pp-steps{grid-template-columns:1fr}.pp-tbl{font-size:12px}.pp-tbl th,.pp-tbl td{padding:8px}}
+/* odf-sso */.sso-or{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--tx3);font-size:12px}.sso-or:before,.sso-or:after{content:"";flex:1;height:1px;background:var(--line)}.sso-ms{display:flex;align-items:center;justify-content:center;gap:10px}.ms-logo{width:17px;height:17px;flex:none}
 /* odf-brand-v3: OraDayForce brand layer (see oradayforce/brand/workplace-theme.css) */
 :root{--brand-grad:linear-gradient(120deg,#4f46e5 0%,#7c3aed 55%,#db2777 100%);--brand-grad-text:linear-gradient(92deg,#4f46e5,#7c3aed 55%,#db2777)}
 [data-t="dark"]{--brand-grad-text:linear-gradient(92deg,#818cf8,#a78bfa 55%,#f472b6)}
@@ -1076,6 +1077,8 @@ function vLogin(){
   '<div class="fld"><label class="fl" for="li_e">Work email</label><input class="inp" id="li_e" type="email" autocomplete="username" placeholder="you@oradayforce.com"></div>'+
   '<div class="fld"><label class="fl" for="li_p">Password</label><input class="inp" id="li_p" type="password" autocomplete="current-password" placeholder="••••••••"></div>'+
   '<button class="btn btn-p btn-w" data-a="login"'+(S.loginBusy?" disabled":"")+'>'+(S.loginBusy?ic("sync","spin")+'Signing in…':ic("lock")+'Sign in')+'</button>'+
+  '<div class="sso-or"><span>or</span></div>'+
+  '<button class="btn btn-g btn-w sso-ms" data-a="ssoms"'+(S.loginBusy?" disabled":"")+'><svg class="ms-logo" viewBox="0 0 21 21" aria-hidden="true"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>Sign in with Microsoft</button>'+
   '<p class="meta" style="margin-top:14px">Sessions last 12 hours. Credentials are verified server-side; no password is stored in your browser.</p>'+
   '</div></div>'+
   '<div class="pub-alt">No account yet? <a href="#/signup">Request access</a></div>'+
@@ -3696,6 +3699,27 @@ function doSearchSample(pid){
  api("/search",{query:q,projectId:pid||null,topK:5}).then(function(r){S.kb.busy=false;S.kb.res=(r&&r.data&&r.data.results)||[];render();})
  .catch(function(e){S.kb.busy=false;S.kb.res=[];toast("Search unavailable",e.message,"er");render();});
 }
+/* odf-sso: Microsoft (Entra ID) sign-in for OraDayForce staff */
+function ssoReturn(){
+ var h=location.hash||"", m=/^#sso=([a-f0-9]{48})&email=([^&]*)/.exec(h), e=/^#sso_error=([^&]*)/.exec(h);
+ if(!m&&!e)return false;
+ try{history.replaceState(null,"",location.pathname+location.search+"#/signin");}catch(x){location.hash="#/signin";}
+ S.route=parseHash();
+ if(e){var msg="";try{msg=decodeURIComponent(e[1]);}catch(x){msg="Microsoft sign-in did not complete.";}S.loginErr=msg;render();return true;}
+ var email="";try{email=decodeURIComponent(m[2]);}catch(x){}
+ S.loginBusy=true;S.loginErr=null;render();
+ fetch(API+"/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,ssoTicket:m[1]})})
+ .then(function(r){return r.json();})
+ .then(function(j){
+  S.loginBusy=false;
+  if(!j||!j.success){S.loginErr=(j&&j.error&&j.error.message)||"Microsoft sign-in failed.";render();return;}
+  S.token=j.data.token;
+  try{sessionStorage.setItem("wp.token",S.token);}catch(x){}
+  try{history.replaceState(null,"",location.pathname+location.search+"#/dashboard");}catch(x){}
+  S.route=parseHash();S.auth=true;boot();
+ }).catch(function(x){S.loginBusy=false;S.loginErr="Could not reach the sign-in service. "+x.message;render();});
+ return true;
+}
 function doLogin(){
  var e=(document.getElementById("li_e")||{}).value||"",p=(document.getElementById("li_p")||{}).value||"";
  if(!e.trim()||!p){S.loginErr="Enter your email and password.";render();return;}
@@ -3782,7 +3806,7 @@ document.addEventListener("click",function(ev){
  if(a==="selmodel"){S.chat.model=v;S.chat.modelOpen=false;try{localStorage.setItem("wp.model",v);}catch(e){}toast("Model changed",modelOf(v).name+" will answer from your next message","ok");render();return;}
  if(a==="planinfo"){var lm=null,ms=models(),z;for(z=0;z<ms.length;z++)if(ms[z].id===v)lm=ms[z];
   toast("Not in your plan",(lm?lm.name:"That model")+" needs the premium plan. "+(isAdmin()?"You can change the plan in Settings.":"Ask an administrator to upgrade."),"warn");render();return;}
- if(a==="login"){doLogin();return;}
+ if(a==="login"){doLogin();return;} if(a==="ssoms"){location.href=API+"/sso/start?app=workplace";return;}
  if(a==="signout"){signOut("You have been signed out.");return;}
  if(a==="nav"){ev.preventDefault();S.gq="";go(v);return;}
  if(a==="theme"){var cur=document.documentElement.getAttribute("data-t"),nx=cur==="dark"?"light":"dark";document.documentElement.setAttribute("data-t",nx);try{localStorage.setItem("wp.theme",nx);}catch(e){}render();return;}
@@ -3891,7 +3915,7 @@ function createProject(){
  S.modal=null;toast("Project created",client+" — "+name,"ok");go("#/projects/"+p.id);
 }
 S.route=parseHash();
-if(S.token){S.auth=true;boot();}else{render();}
+if(ssoReturn()){}else if(S.token){S.auth=true;boot();}else{render();}
 })();
 
 /* Phone swipe between the tab-bar views. Reads the DOM rather than app state, because the
