@@ -40,11 +40,37 @@ node, with no staging row, no md5 check and no way back.
 | WorkPlace - DB Signup Approvals | `Wmgq0CX1CtlLdj4E` | idempotent: the `status` / `requested_at` / `approved_by` columns |
 | WorkPlace - DB Plans and Admin | `NOqAoFOcakzclZ9W` | idempotent: org plans, the admin flag and `wp_models` |
 | WorkPlace Services | `V5SDJzqlQTdFf7dD` | authenticated API: login, bootstrap, chat routed across five models, knowledge search, ingestion |
+| WorkPlace Leads Contacts API | `L9pk44Z8wrVAlOTJ` | `/svc/leads`: add a contact to the lead pipeline (Pipeline form or My Buddy), sending status, and send a lead's email from the signed-in person's Microsoft 365 mailbox |
 | WorkPlace — DB Migration | `h1RHiUgggb5TUzQ1` | idempotent schema + seed (not active) |
 | WorkPlace | `LpSwabUQbgzZ2PM1` | the original single-workflow MVP (not active) |
 
 A snapshot of `WorkPlace Services` as it ran before the database work, with the md5s of every Code node,
 is kept at [`workflows/snapshots/WorkPlace_Services.pre-db.json`](workflows/snapshots/WorkPlace_Services.pre-db.json).
+
+## Pipeline contacts and sending email
+
+Added 2026-10-17. Page block `ui/lc_lead_contacts.js` (marker `odf-leadcontacts`, inserted just before the start-up
+lines at the end of the main script); service sources in [`services/`](services) (`leads_contacts_route.js`,
+`leads_send_mail.js`, `leads_shape.js`, `leads_contacts_workflow.sdk.js`).
+
+- **Add contact** on the Pipeline: name, email, phone, company, role, website, stage and notes, or paste an email
+  signature and press **Fill**. The contact becomes a `wp_leads` row (`signal = 'Added'`, score 0, owner = who added
+  it) and is listed first, marked "Contact added by ...". The same email again adds the new details to the existing
+  lead; addresses, companies or websites in `wp_lead_optout` are refused. A free-mail domain (gmail, outlook, ...) is
+  never used as the company or website.
+- **My Buddy** understands pasted contact details (an email, or a phone number with 10+ digits, or "add contact ...")
+  and asks before adding: *Add to pipeline*, *Edit first* (opens the Pipeline form filled in) or *Cancel*. After adding
+  it offers *Draft an email*. "email Jane" (a name, company or address) drafts an email for that lead.
+- **Send now** in the email draft sends it from the signed-in person's own mailbox through Microsoft Graph
+  (`POST /users/{their address}/sendMail`, saved to their Sent Items), logs it on the lead as
+  "Sent from WorkPlace to ..." and moves a New lead to Contacted. It asks for confirmation, refuses opted-out
+  addresses and companies, and allows 50 sends per person per 24 hours. **Open in my mail app** stays.
+- **Switching sending on**: the token comes from the existing "OraDayForce WorkPlace SSO" app registration
+  (`wp_sso_config`), which today has no application permissions. In Microsoft Entra admin center > App registrations >
+  OraDayForce WorkPlace SSO > API permissions, add **Microsoft Graph > Application permissions > Mail.Send** and press
+  **Grant admin consent**. No new secret is needed; WorkPlace notices within a minute. To limit which mailboxes the app
+  may send as, add an Exchange Online application access policy for that app (for example, a mail-enabled group of
+  the staff who use WorkPlace). Until then the draft shows why Send now is off.
 
 ## Data
 
