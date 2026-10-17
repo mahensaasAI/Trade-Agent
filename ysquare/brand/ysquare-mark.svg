@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Y Square"><defs>
+<linearGradient id="ylg" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#4f46e5"/><stop offset=".55" stop-color="#7c3aed"/><stop offset="1" stop-color="#db2777"/>
+</linearGradient>
+<linearGradient id="ysh" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#ffffff" stop-opacity=".28"/><stop offset=".6" stop-color="#ffffff" stop-opacity="0"/>
+</linearGradient>
+</defs><g transform="translate(0,0) scale(1.000000)"><rect width="512" height="512" rx="140.80" fill="url(#ylg)"/><rect width="512" height="512" rx="140.80" fill="url(#ysh)"/><path d="M239.80 284.50V371.20H195.70V284.50L120.40 159.85H166.75L217.45 249.25L268.75 159.85H315.10Z" fill="#ffffff"/><path d="M346.61 204.80V190.18Q350.74 181.10 358.35 172.48Q365.96 163.85 377.51 154.48Q388.61 145.48 393.08 139.63Q397.54 133.78 397.54 128.15Q397.54 114.35 383.66 114.35Q376.91 114.35 373.35 117.99Q369.79 121.63 368.74 128.90L347.51 127.70Q349.31 113.00 358.50 105.28Q367.69 97.55 383.51 97.55Q400.61 97.55 409.76 105.35Q418.91 113.15 418.91 127.25Q418.91 134.68 415.99 140.68Q413.06 146.68 408.49 151.74Q403.91 156.80 398.33 161.23Q392.74 165.65 387.49 169.85Q382.24 174.05 377.93 178.33Q373.61 182.60 371.51 187.48H420.56V204.80Z" fill="#fbbf24"/></g></svg>

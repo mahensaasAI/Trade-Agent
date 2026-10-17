@@ -1,0 +1,377 @@
+# Y Square Workplace
+
+Y Square Workplace is built on the same lines as the Neon Logistics workplace: a single-page app served by n8n, a
+JSON services API, an agents chat with a Model Router, and a shared Postgres. It hosts three agents:
+
+| Agent | What it does | Backend |
+| --- | --- | --- |
+| **Athlete Edge** | The go-to for young athletes: what to eat and drink before, during and after training, games and tournaments, matched to the athlete profile (sport, age group, schedule, allergies and diet). Grounded on a sports-nutrition knowledge base with citations, safety rules (food first, no supplements or diets for minors) and a meal-plan card. | Y Square Agents (Model Router) |
+| **StudyPals** | Tutor, lesson generator, quizzes and Q&A over the class materials a coach uploaded. It runs entirely inside Y Square - there is no separate StudyPals site to visit. | The StudyPals workflow family on this same n8n (see below) |
+| **SynthIQ** | Research companion for medical and health-science students. Searches only the sources the student switches on - PubMed/MEDLINE, PubMed Central, Cochrane reviews, ClinicalTrials.gov, medRxiv/bioRxiv preprints and Crossref - then answers from the records it retrieved and marks every claim with the paper it came from. Citations render as links to PubMed, the DOI or the trial registry. | Y Square SynthIQ (own workflow) |
+| **Event Planner** | Replaces WhatsApp threads with one place per event: checklist with owners and due dates, RSVPs and headcount, pinned information and announcements, and an event chat. The AI planner drafts checklists and announcements from a brief and adds them with one click. | Y Square Services + Agents |
+
+**Models.** Free (no sign-up): Gemini Flash, Mistral, Groq. Premium: Claude and ChatGPT. Guests are identified by a
+browser-generated guest id; Premium needs a quick sign-up (Google or email + password) and a subscription.
+
+Model ids live in `ys_models` (editable by an admin in the app). Groq is set to `openai/gpt-oss-120b` because the older
+Llama ids are no longer served on this Groq account; Gemini and Groq run with an 8000-token output budget because both
+spend part of it on reasoning. If a provider answers with a rate-limit error (seen once with Mistral's free key), the
+reply says so and the user can pick another free model.
+
+## URLs
+
+Production is `https://ysquareai.com` and non-prod is the duckdns host below. Both are served by the same GCP VM and the
+same n8n instance; see [Hosting and domains](#hosting-and-domains) for how one is routed to the other.
+
+| Purpose | URL |
+| --- | --- |
+| App (production) | `https://ysquareai.com/` |
+| App (non-prod) | `https://n8n-neonai.duckdns.org/webhook/Y2Workplace` |
+| Services API | `POST https://n8n-neonai.duckdns.org/webhook/Y2Workplace/svc/api` `{action, payload}` |
+| Agents chat | `POST https://n8n-neonai.duckdns.org/webhook/Y2Workplace/svc/chat` `{agentId, message, model, conversationId, context}` |
+| SynthIQ chat | `POST https://n8n-neonai.duckdns.org/webhook/Y2Workplace/svc/synthiq` `{message, model, conversationId, context:{sources,years,types,openAccess,perSource}}` |
+| Deploy page | `POST https://n8n-neonai.duckdns.org/webhook/Y2Workplace/deploy-ui` (header `X-Deploy-Key`) |
+| Billing webhook | `POST https://n8n-neonai.duckdns.org/webhook/Y2Workplace/billing/stripe?key=...` |
+
+Callers send either `X-Guest-Id: guest-...` (free version) or `Authorization: Bearer <token>` (member).
+
+## n8n workflows
+
+| Workflow | Role |
+| --- | --- |
+| Y Square UI | Serves the page from `ys_ui_pages`; key-protected deploy endpoint |
+| Y Square Services | API: guests, sign-up, login, Google sign-in, events, tasks, updates, RSVPs, admin |
+| Y Square Agents | Chat: live context, daily limits, free/premium tiers, Model Router, StudyPals proxy |
+| Y Square SynthIQ | SynthIQ chat: literature retrieval from the selected sources, daily limits, free/premium tiers, Model Router, cited answers. Deliberately separate from Y Square Agents so retrieval problems cannot affect the other three agents |
+| Y Square - DB Migration | Creates the `ys_*` tables and seeds models, settings, knowledge and a sample event (idempotent) |
+| Y Square - DB Functions | `ys_effective_plan`, `ys_bootstrap`, `ys_event_detail`, `ys_admin_overview` (idempotent) |
+| Y Square - Deploy UI Page | Manual alternative to `deploy_ui.js`: fetches `dist/live/ysquare.html` (the live page snapshot) from GitHub and upserts it into the row named by `TARGET` in the Page Source node (`ysquare-next` by default) |
+| Y Square - Promote UI to Production | Copies `ysquare-next` onto `ysquare`, backing the current production page up to `ysquare-prev` first |
+| Y Square - Roll Back UI | Restores `ysquare-prev` onto `ysquare`, undoing the last promotion |
+| Y Square - Cutover Check | Read-only: resolves ysquareai.com, reports what each hostname serves, checks the n8n editor is 404 on production, and lists the `ys_ui_pages` rows |
+| Y Square - Upload UI Page (chunked) | Manual helper: uploads the page in MD5-verified chunks via workflow executions (never publish it) |
+| Y Square - Volunteer Links (Dallas) | Weekly link keeper for the volunteer board: re-checks the curated Dallas listings, falls back to the next candidate URL, refreshes each blurb from the page itself and upserts them into `ys_volunteer` |
+| Y Square Billing | Records payment events and switches plans (Stripe Payment Link / Checkout) |
+| Y Square - Startup Jobs (Y Combinator) | Every morning (06:17) reads `ycombinator.com/jobs`, keeps the top 10 listings (one per company, in YC's order) and writes them to `ys_settings.organization.startupJobs` for the Jobs page. Keeps the previous list if the page can't be read |
+| Y Square - Ecosystem Interest | `POST /svc/interest`: the "send us a message" form on the Startups page. Stores the message in `ys_interest` and notifies every admin in the app |
+| Y Square - DB Update v44 (ecosystem interest) | Manual, idempotent: creates `ys_interest` |
+| Y Square - My Plan | `POST /svc/plan` (list, save, save_many, delete, prefs, feed, and `plan.parse`: a sentence or an Athlete Edge / StudyPals answer turned into plan items by Gemini) and `GET /svc/calendar?k=...`, the private iCalendar feed. Checks sessions exactly like Y Square Services |
+| Y Square - My Plan Reminders | Every 5 minutes: due reminders into the notification bell (`plan_reminder`). Every hour: the 7am "Your plan today" email, in each person's time zone, never to under-13 accounts |
+| Y Square - DB Update My Plan v1 | Manual, idempotent: `ys_plan_items`, `ys_plan_sent`, `ys_plan_prefs` and `ys_plan_occ(from, to)` |
+| Y Square - Event Admin | `POST /svc/events-admin`: `events.admin_list` (admins: every event with its people, tasks, updates and chat counts) and `events.delete` (admins any event; organisers - signed in, or the guest who created it - their own). Removes the event with its tasks, updates, chat and members and notifies the other members (`event_removed`) |
+| Y Square - DB Update v44b (interest track) | Manual, idempotent: `ys_interest.track` |
+| Y Square - Account Basics | `POST /svc/me`: the signed-in person's own name and month and year of birth (same session check as Y Square Services), so the Athlete Edge profile form can be filled in for them |
+| Y Square - Follow Y Square | `POST /svc/follow`: `follow.list` and `follow.hit` for everyone (live posts; page visits, posts shown and played, Instagram and Follow taps, each viewer once a day), and for admins `follow.admin_list`, `follow.save`, `follow.toggle` (pin, hide), `follow.order`, `follow.delete`, `follow.prefs` (account, intro, on/off, hide from under-13s). Admin changes go to the activity log |
+| Y Square - DB Update Follow v1 | Manual, idempotent: `ys_follow_posts`, `ys_follow_stats`, `ys_follow_seen`, `ys_follow_prefs` |
+
+The SDK code that created each workflow is in `dist/workflows/*.sdk.js`, generated from the sources below.
+
+## Project layout
+
+```
+ysquare/
+  db/schema.sql          tables (ys_* prefix, shared Postgres)
+  db/seed.sql            models, agent defaults, settings, knowledge base, sample event, admin user
+  db/functions.sql       Postgres functions used by the API (split on "-- @@")
+  services/route_request.js     Services: permissions + one parameterised SQL statement per action
+  services/format_response.js   Services: API envelope, sessions, agent catalogue
+  agents/prepare_chat.js        Agents: caller + live-context query
+  agents/build_prompt.js        Agents: limits, tiers, personas, system prompt, StudyPals proxy
+  agents/format_reply.js        Agents: normalise output, plan/action blocks, run log
+  ui/index.html, ui/styles.css, ui/app.js   the single-page app
+  workflows/gen_ui.js           assembles dist/ysquare.html
+  workflows/gen_workflows.js    emits dist/workflows/*.sdk.js (embeds the sources above)
+  workflows/deploy_ui.js        publishes dist/ysquare.html to a ys_ui_pages row (YSQUARE_PAGE, default ysquare-next)
+  workflows/check.js            parse-checks every Code node body and the app
+  workflows/keys.sha256.json    SHA-256 of the deploy key and billing key (the keys themselves are not in git)
+  deploy/nginx/                 nginx server block for the production hostname
+  deploy/README.md              runbook for putting the app on ysquareai.com
+```
+
+## Working on it
+
+```bash
+cd ysquare
+npm run check                 # parse-check the Code node bodies and the app
+npm run gen                   # rebuild dist/ysquare.html and dist/workflows/*.sdk.js
+YSQUARE_DEPLOY_KEY=... npm run deploy:ui     # publish the repo build (dist/ysquare.html) to the ysquare-next row
+# the repo build is behind dist/live/ysquare.html, so this never targets production unless YSQUARE_PAGE=ysquare is set
+# to ship the live page instead, run "Y Square - Deploy UI Page" in n8n (see Live page snapshot below)
+```
+
+After changing a Code node body or the SQL, regenerate and update the matching workflow in n8n (validate the SDK code,
+then `update_workflow`), and re-run the DB Migration / DB Functions workflows when the SQL changed. They are idempotent.
+
+## Accounts, plans and payments
+
+* Admin: `raju@oradayforce.com` with the same password as WorkPlace / Neon Logistics (seeded as Premium).
+* Sign-up is free and keeps the guest's events, RSVPs and athlete profile (they are moved to the new account).
+* Google sign-in: create an OAuth Web client in Google Cloud, add the site origin to the authorised JavaScript origins and
+  paste the client id in Admin > Settings. The API verifies the ID token with Google and checks the audience.
+* Premium: put a Stripe Payment Link in Admin > Settings (checkout URL). The app appends `client_reference_id` (user id)
+  and `prefilled_email`; point the Stripe webhook at the billing URL above with the billing key, and
+  `checkout.session.completed` / `invoice.paid` activate Premium for a month (plus 3 days grace). Admins can also set a
+  plan manually in Admin > Users. For production, add Stripe signature verification to the billing workflow.
+* Daily limits (Admin > Settings): guests 30 messages, free members 150, premium 1000 by default.
+
+## API actions
+
+Guest level: `bootstrap`, `profile.save`, `knowledge.search`, `events.list|create|join|get|update`, `tasks.create|update`,
+`updates.post|pin`, `messages.post`, `rsvp.set`, `members.set_role`. Open: `signup`, `login`, `login.google`.
+Member: `logout`, `account.get`, `billing.checkout`. Admin: `admin.overview`, `users.set_plan`, `users.update`,
+`models.update`, `agents.set_model`, `settings.update`, `agents.runs`.
+
+Chat context: `{eventId}` for Event Planner, `{grade, subject, topic, studentId}` for StudyPals. Replies may carry a
+`plan` card (Athlete Edge) or `actions` (`create_tasks`, `post_update`) that the UI applies through the API.
+
+## SynthIQ sources
+
+SynthIQ never answers from the model's memory: `Fetch Papers` retrieves records first and the prompt is built
+around them, so an empty search produces "nothing found", not an invented answer. Each source the student
+switches on is one API call, run in parallel, de-duplicated by DOI / PMID / registry id and capped at 14 records.
+
+| Source key | Shown as | Retrieved from |
+| --- | --- | --- |
+| `pubmed` | PubMed / MEDLINE | Europe PMC REST, `SRC:MED` (the MEDLINE records, linked back to pubmed.ncbi.nlm.nih.gov) |
+| `pmc` | PubMed Central | Europe PMC REST, `SRC:PMC` (open-access full text) |
+| `cochrane` | Cochrane Reviews | Europe PMC REST, filtered to the Cochrane Database of Systematic Reviews |
+| `trials` | ClinicalTrials.gov | ClinicalTrials.gov API v2 (`/api/v2/studies`) |
+| `preprints` | Preprints (medRxiv, bioRxiv) | Europe PMC REST, `SRC:PPR` |
+| `crossref` | Crossref journals | Crossref REST (`/works`), for literature beyond biomedicine |
+
+Filters passed in `context`: `years` (`any`, `5`, `10`), `types` (`any` or `evidence` = reviews, meta-analyses and
+trials), `openAccess` (free full text only) and `perSource` (3, 5 or 8). No API keys are needed and no personal
+data is sent to any of these services - only the question text. The panel choices are stored in the browser
+(`ys.sq` in localStorage) and re-sanitised server-side against the fixed source list.
+
+Answers cite as `[P1]`, `[P2]`; `Format Reply` keeps only the citations the answer actually used and returns them
+with their URLs, which the page renders as links under the message.
+
+## Volunteer listings (Dallas)
+
+The volunteer board carries six curated listings for the Dallas area alongside whatever members post. They are
+not typed into the database by hand: `volunteer/dallas.json` is the catalogue, and the
+"Y Square - Volunteer Links (Dallas)" workflow keeps them true.
+
+| Slot | Organisation | Link |
+| --- | --- | --- |
+| Community | Karya Siddhi Hanuman Temple (listed as "Hanuman Temple") | `dallashanuman.org/volunteer` |
+| Medical | Parkland Health | `parklandhealth.org/volunteer` |
+| Business | United Way of Metropolitan Dallas | `unitedwaydallas.org/volunteer/` |
+| Law | Dallas Volunteer Attorney Program | `dallasvolunteerattorneyprogram.org` |
+| IT | Tech Titans | `techtitans.org/volunteer` |
+| Red Cross / relief | American Red Cross, North Texas | `redcross.org/local/texas/north-texas/volunteer.html` |
+
+The board is aimed at students aged 12 to 21 who are building a profile, so every listing shows "Ages 12 to 21";
+where an organisation sets its own minimum age, the catalogue carries a `note` that is appended to the description
+rather than a guessed number.
+
+Every Monday (and on demand from the workflow's "Refresh Now" trigger) `Resolve Links` requests each candidate URL
+in the catalogue, keeps the first one that still answers, and refreshes the listing's description from that page's
+own meta description. Sites that only block datacentre traffic (403, 429 and friends) count as live. If every
+candidate for a listing is dead the row is soft-removed with `removed_at`, so the board drops it instead of sending
+students to a 404.
+
+Rows are written as `vol-dallas-<key>` with `created_by = 'system'` and `status = 'approved'`, so they sit next to
+community submissions rather than in the admin approval queue. `vol.list` needs a session, so the same list is also
+mirrored into `ys_settings.organization.volunteerOpportunities`, which is the fallback the page reads when nobody is
+signed in. To change what is listed, edit `volunteer/dallas.json`, run `npm run gen:volunteer`, update the workflow
+from `dist/workflows/volunteer_links.sdk.js` and run it once. Other cities get their own catalogue file the same way.
+
+## Y Square Community: Startups and Jobs
+
+The menu section "Community" is now "Y Square Community": Volunteer, Startups and Jobs. The pages are the
+`ysc` block near the end of the live page script (source: `ui/ysc_startups_jobs.js`), which wraps the sidebar,
+tab bar and router the same way the numbered `vNN` blocks do. It uses its own `ysc` prefix rather than a version
+number so it cannot clash with the next numbered block.
+
+- **Startups** (`#/startups`) tells Y Square's goal (a billion-dollar startup from young founders), describes the
+  Y Square Entrepreneurship and Startup Program for middle school (grades 6-8) and high school (grades 9-12), and ends
+  with a "Be part of the Y Square ecosystem" form. The form posts to `/svc/interest`
+  (`services/interest_check.js`, `services/interest_save.sql`, `services/interest_reply.js`): name, email, who they
+  are, grade and a message. Students must confirm they are 13 or older; younger students are asked to have a parent
+  or guardian send it. A hidden field catches bots, one email is accepted once an hour, a network (the daily-salted
+  `ys_net_key`, kept 2 days) 5 times a day, and 300 messages a day in total. Each message becomes an `interest`
+  notification for every active admin; the rows stay in `ys_interest` (`status` starts as `new`).
+- **Jobs** (`#/jobs`) lists what the Startup Jobs workflow saved (`services/startup_jobs_parse.js`): title, company,
+  YC batch, one-liner, location, type, role, salary and experience, each linking to the listing on ycombinator.com.
+  Only `https://www.ycombinator.com/companies/...` links are shown. With no saved list the page says so and links to
+  the board - listings are never made up.
+
+## Events: Agent Planner on the page, and removing events
+
+`yev` block (source `ui/yev_events.js`, placed after `ypl`):
+
+- **Agent Planner** opens as a panel at the top of the Events page instead of a pop-up. Its **Create an event** tab is
+  the existing Agent Planner conversation (describe it, answer what is missing, it creates the event); its
+  **AI Planner** tab is the Event Planner agent's chat for checklists, roles, budgets and announcements before an event
+  exists (inside an event the AI Planner tab still sees the live tasks and RSVPs). The panel re-uses the Agent
+  Planner's own code: `agpShow` repaints the panel, and `renderModal` skips the Agent Planner's clean-up while the
+  panel is open so the conversation is not lost on background redraws.
+- **Deleting.** Organisers get a "Delete this event" section at the bottom of the event's Edit window; admins get the
+  **Admin > Events** tab (every event, "looks unused" = nobody else joined and no tasks, updates or chat, with one
+  button to delete all unused ones) and a "Delete (admin)" button on events they are in but not organising.
+  Deleting cannot be undone; setting the status to cancelled keeps the history instead.
+
+## Follow Y Square (Instagram)
+
+`yfl` block (source `ui/yfl_follow.js`, inserted just before the `ysa` block of the live page), Y Square Community > Follow Y Square (`#/follow`):
+
+- **What people see**: Y Square's promotional announcements and reels from Instagram, pinned ones first, with a Follow
+  button for the account, filters (All / Announcements / Reels and shorts) and an optional button under each post that
+  leads to a Y Square page (Startups, Events, ...). Each post is a placeholder until it is tapped; only then does
+  Instagram's player load (it sets its own cookies). "Always load on this device" loads them all. A loaded player keeps
+  playing when the page redraws (it is parked and moved back, not rebuilt).
+- **Under 13**: members under 13 see a short note instead of the posts while "hide from under-13s" is on (default).
+- **Admin > Follow Y Square**: add a post by pasting its Instagram link (post or reel; the link is checked and cut down
+  to `instagram.com/p|reel/<code>/`), with title, short description, optional button, show from / until, pin and
+  "keep hidden". Each post can be edited, pinned, hidden or shown, moved up or down and deleted. Settings: the Instagram
+  username, the intro, the section on or off (off: only admins see it) and the under-13 rule. Numbers: page visits
+  (7 and 30 days), posts played, Follow taps, and per post how often it was shown, played and opened on Instagram.
+  These are counted on ysquareai.com; Instagram's own likes and views stay in Instagram Insights.
+- **Publishing**: post the reel or announcement on Instagram first, then add its link here. Publishing to Instagram
+  from Y Square would need a Meta app with the Instagram content publishing permission (not set up).
+
+## Athlete Edge for every age
+
+`yat` block (source `ui/yat_athlete_age.js`, placed after `yev` and before `ysa`):
+
+- **Age groups** run 8-11, 12-14, 15-17, 18-22, 23-29, 30-39, 40-49, 50-59 and 60+ (22 used to be the oldest).
+- **Filled in for you.** Signed in, "Add profile" / "Edit" opens with the blanks filled from the account: the first
+  name, and the age group from the month and year of birth given at sign-up (`POST /svc/me`, counted the conservative
+  way sign-up does: in the birth month the birthday is taken as not reached). Only empty fields are filled, plus an old
+  "18-22" the account's age has outgrown; a note says what was filled. Nothing is saved until Save profile.
+- **The agent** (Build Prompt in Y Square Agents, source `agents/build_prompt.js`) keeps the child rules for anyone under
+  18 or with no age group (no supplements, caffeine, energy drinks, fasting or diets) and, from 18, may explain the
+  evidence on caffeine, protein powder or creatine in general terms, never weight-loss doses, fasting or weight
+  cutting, and points to a doctor or registered dietitian first; over-40s also hear about recovery, protein spread,
+  bone health and hydration.
+
+## Startups: Undergraduates (Future Founders Academy)
+
+The Startups page also presents the **Y Square Future Founders Academy - Career Advantage** program for undergraduates
+(and experienced professionals): five tracks - Agentic AI, BPM, ERP, Career Edge, Upskill - with "Entrepreneurship is
+built into every track" and where each track can lead (engineering, business, global). Each track has an
+"I am interested" button that opens the message form with the track chosen. The form now also takes "College /
+undergraduate student" and "Working professional", and stores the chosen track in `ys_interest.track`; the admin
+notification names the track.
+
+## My Plan
+
+One personal calendar for meals, workouts, study and events (`ypl` block, source `ui/ypl_my_plan.js`, placed between
+`ysc` and `ysa`). It is the second item in the menu, the **Plan** tab on phones (Events moves under More), and a
+**Today** card at the top of Home for signed-in members.
+
+- **Adding things.** "Describe it" takes a typed or spoken sentence ("Gym Mon, Wed, Fri at 5pm"); the AI reading
+  (`services/plan_prompt.js`, `plan_clean.js`) is always shown for approval before anything is saved, and a vague
+  request gets one question back ("What day and time is the dentist appointment?"). There is also a plain form, and
+  an **Add to My Plan** button under Athlete Edge and StudyPals answers that turns a meal, workout or study plan into
+  repeating items. Parsing is limited to 40 a day per person.
+- **Storage.** `ys_plan_items` holds one row per item; a repeating item (daily, weekdays, or weekly on chosen days,
+  optionally until a date) is stored once with its IANA time zone, so 7am stays 7am across daylight-saving changes.
+  `ys_plan_occ(from, to)` expands occurrences for the reminders; the page expands them itself. Group events the
+  person is going to are shown alongside (read-only). Every request is checked in `services/plan_route.js`.
+- **Reminders.** In the bell (every 5 minutes, once per occurrence via `ys_plan_sent`), a 7am email on days with
+  something planned (switch in My Plan > Settings; not sent to under-13 accounts or unverified emails), an
+  **Add to Google Calendar** link on every item, and a private subscription link (Settings) for Google Calendar,
+  Apple Calendar or Outlook so the phone reminds them too (`services/plan_ics.js`). Making a new link turns the old
+  one off.
+
+## Signing in: one place, top right
+
+Sign-in lives in one place, the top-right corner, the way Google's apps do it (`ysa` block, source
+`ui/ysa_account_menu.js`, appended after `ysc`). Signed out, the header shows a single **Sign in** button that opens
+the sign-in page (`#/account`: Google sign-in, email sign-in and sign-up, unchanged). Signed in, it shows the member's
+picture or initials, which opens a card with their email, name, plan, **Manage your account** (`#/account`) and
+**Sign out**. The old header chip, the menu's "Sign in / Sign up" / "Account" items and the plan box's Sign in button
+are gone, and a small sweep after every redraw removes sign-in buttons inside pages and turns sign-in links into plain
+text, so a later block that adds one does not bring the clutter back. Pop-ups that are a step of something the person
+started (the upgrade window, saving a profile) and the sign-in page itself still offer sign-in.
+
+## Chat layout for the agents
+
+`ych` block (source `ui/ych_chat_layout.js`, appended after `ysa`, just before `render();boot();`):
+
+- **Laptops.** Athlete Edge, SynthIQ and StudyPals (Tutor and Ask AI) fit the window: the settings bar, the chat and a
+  slim footer, with no page scroll. The chat takes the height that is left (the message area on a 1440x860 screen went
+  from 291 to 407 px on SynthIQ, more once the starter questions go). The layout switches on only when a chat view is on
+  screen (`body.ych`, plus `ych-sp` for StudyPals); every other page scrolls as before.
+- **SynthIQ** shows the sources and a **Filters** button on one line; the button counts the filters that differ from
+  the defaults and opens the year, study type, results per source and free-full-text options underneath.
+- **StudyPals** shows grade, subject and topic on one line (labels hidden, the selects say what they are) with slimmer tabs.
+- **Disclaimers** move from above the chat to one small line under the message box, inside the chat card. Phones get a
+  one-line short form for Athlete Edge and SynthIQ (`YCH_SHORT`), where before they showed no disclaimer at all.
+
+## Hosting and domains
+
+One GCP VM runs everything: nginx terminates TLS, n8n runs behind it, and the database is CloudSQL. The two hostnames
+resolve to that same VM and differ only in which page row they get:
+
+| | Production | Non-prod |
+| --- | --- | --- |
+| Hostname | `ysquareai.com`, `www.ysquareai.com` | `n8n-neonai.duckdns.org` |
+| DNS | Route 53 A record -> the VM's static IP | duckdns A record -> the same IP |
+| App path | `/` | `/webhook/Y2Workplace` |
+| `ys_ui_pages` row | `ysquare` | `ysquare-next`, falling back to `ysquare` |
+
+The **Y Square UI** workflow reads the `Host` header (`X-Forwarded-Host` when nginx sets it) in its Pick Page node. The
+production hostnames select the `ysquare` row; every other host selects `ysquare-next`. The query coalesces to `ysquare`,
+so a missing `ysquare-next` row serves production rather than an error page, and the non-prod host keeps working before
+anything has been staged.
+
+The page finds its own API base at runtime: `detectBase()` keeps everything after `/webhook/Y2Workplace` when that appears
+in the path, and otherwise uses `location.origin`, which is what makes the same HTML work mounted at the site root.
+
+nginx on the production server only needs to expose the app and its API, not the n8n editor:
+
+| Location | Proxied to |
+| --- | --- |
+| `/` | `/webhook/Y2Workplace` |
+| `/svc/` | `/webhook/Y2Workplace/svc/` |
+| `/studypals/` | `/webhook/studypals/` |
+| `/billing/stripe` | `/webhook/Y2Workplace/billing/stripe` |
+
+Everything else on the production hostname should 404. Keep `X-Robots-Tag: noindex` on the duckdns server block so the
+non-prod copy stays out of search results, and add `https://ysquareai.com` to the Google OAuth authorised origins.
+
+The server block is checked in at [`deploy/nginx/ysquareai.com.conf`](deploy/nginx/ysquareai.com.conf), and
+[`deploy/README.md`](deploy/README.md) is the step-by-step cutover runbook: reserving the IP in GCP, the Route 53
+records, installing the block, certbot, the OAuth origins and the promotion.
+
+## StudyPals
+
+StudyPals is not a separate product with its own URL. Its workflows - tutor, lesson generator, quiz generator, student
+Q&A, teacher upload, library read/download/delete, voice and the scheduled activity rollups - live on this same n8n and
+this same CloudSQL database, all under the `/webhook/studypals/` path. Y Square is the only front end for them, so a
+student never leaves `ysquareai.com`.
+
+There are two ways they get called, and they are deliberately different:
+
+| Caller | URL it uses | Why |
+| --- | --- | --- |
+| The browser (teacher library, uploads, downloads, deletes) | `<site origin>/studypals/...` | derived from the page's own origin, so nginx maps it to `/webhook/studypals/...` on whichever hostname the visitor is on |
+| The Agents workflow (tutor chat) | `http://127.0.0.1:5678/webhook/studypals/tutor/ask` | n8n calling itself; no DNS, no TLS handshake and no trip out to the public internet and back |
+
+The server-side base comes from `ys_settings.studypals.baseUrl` and is editable in Admin > Settings. Keep it on loopback
+unless StudyPals moves to a different host: pointing it at a public hostname makes production depend on that name
+resolving, and hard-codes one environment's hostname into the other's traffic.
+
+There used to be an `openUrl` setting linking out to a standalone StudyPals app. The tutor, lessons, quizzes and
+materials are all inside Y Square now, so that setting is gone and nothing links off-site.
+
+## Live page snapshot
+
+`dist/live/ysquare.html` is the page served from `ys_ui_pages`. It carries features that were added to the live page
+directly (Volunteer opportunities and their moderation queue, notifications, AI Playground, Teacher Tools, OTP sign-up)
+and are not in `ui/` yet, so the repo build in `dist/ysquare.html` is behind it. Until those sources are merged into
+`ui/`, publish only the snapshot, and never run `npm run deploy:ui` without setting `YSQUARE_PAGE` - it publishes
+`dist/ysquare.html`, the older repo build.
+
+To ship a change:
+
+1. edit `dist/live/ysquare.html`, commit and push;
+2. run **Y Square - Deploy UI Page** with `TARGET = "ysquare-next"` and check the md5 it returns against the local file
+   (`md5sum dist/live/ysquare.html`);
+3. test on `https://n8n-neonai.duckdns.org/webhook/Y2Workplace`, which now serves that staging row;
+4. run **Y Square - Promote UI to Production** to copy it onto `ysquare`. It saves the outgoing page to `ysquare-prev`
+   first, so **Y Square - Roll Back UI** can undo the promotion.
